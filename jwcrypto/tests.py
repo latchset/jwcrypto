@@ -1,6 +1,7 @@
 # Copyright (C) 2015  JWCrypto Project Contributors - see LICENSE file
 
 from jwcrypto import jwk
+from jwcrypto import jws
 import json
 import unittest
 
@@ -176,3 +177,36 @@ class TestJWK(unittest.TestCase):
 
         _ = jwk.JWK(**Useofx5c)  # pylint: disable=star-args
         _ = jwk.JWK(**RSAPrivateKey)  # pylint: disable=star-args
+
+
+# draft-ietf-jose-json-web-signature-41 - A.1
+A1_protected = \
+    [123, 34, 116, 121, 112, 34, 58, 34, 74, 87, 84, 34, 44, 13, 10, 32,
+     34, 97, 108, 103, 34, 58, 34, 72, 83, 50, 53, 54, 34, 125]
+A1_payload = \
+    [123, 34, 105, 115, 115, 34, 58, 34, 106, 111, 101, 34, 44, 13, 10,
+     32, 34, 101, 120, 112, 34, 58, 49, 51, 48, 48, 56, 49, 57, 51, 56,
+     48, 44, 13, 10, 32, 34, 104, 116, 116, 112, 58, 47, 47, 101, 120, 97,
+     109, 112, 108, 101, 46, 99, 111, 109, 47, 105, 115, 95, 114, 111,
+     111, 116, 34, 58, 116, 114, 117, 101, 125]
+A1_signature = \
+    [116, 24, 223, 180, 151, 153, 224, 37, 79, 250, 96, 125, 216, 173,
+     187, 186, 22, 212, 37, 77, 105, 214, 191, 240, 91, 88, 5, 88, 83,
+     132, 141, 121]
+Ex_HMAC_SHA_256 = {'key': SymmetricKeys['keys'][1],
+                   'alg': 'HS256',
+                   'protected': ''.join([chr(x) for x in A1_protected]),
+                   'payload': ''.join([chr(x) for x in A1_payload]),
+                   'signature': ''.join([chr(x) for x in A1_signature])}
+
+
+class TestJWS(unittest.TestCase):
+    def test_sign(self):
+        S = jws.JWSCore(Ex_HMAC_SHA_256['alg'],
+                        jwk.JWK(**Ex_HMAC_SHA_256['key']),
+                        Ex_HMAC_SHA_256['protected'],
+                        Ex_HMAC_SHA_256['payload'])
+        sig = S.sign()
+        self.assertEqual(jws.base64url_decode(sig['signature']),
+                         Ex_HMAC_SHA_256['signature'])
+        S.verify(sig['signature'])
