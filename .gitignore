@@ -1,0 +1,5 @@
+build/
+dist/
+*.pyc
+*.pyo
+cscope.out
