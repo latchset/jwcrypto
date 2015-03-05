@@ -20,3 +20,11 @@ def base64url_decode(payload):
     elif l != 0:
         raise ValueError('Invalid base64 string')
     return urlsafe_b64decode(payload)
+
+
+class InvalidJWAAlgorithm(Exception):
+    def __init__(self, message=None):
+        msg = 'Invalid JWS Algorithm name'
+        if message:
+            msg += ' (%s)' % message
+        super(InvalidJWAAlgorithm, self).__init__(msg)
