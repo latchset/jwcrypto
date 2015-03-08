@@ -437,6 +437,61 @@ class TestJWS(unittest.TestCase):
         self.assertEqual(False, S.objects['valid'])
 
 
+E_A1_plaintext = \
+    [84, 104, 101, 32, 116, 114, 117, 101, 32, 115, 105, 103, 110, 32,
+     111, 102, 32, 105, 110, 116, 101, 108, 108, 105, 103, 101, 110, 99,
+     101, 32, 105, 115, 32, 110, 111, 116, 32, 107, 110, 111, 119, 108,
+     101, 100, 103, 101, 32, 98, 117, 116, 32, 105, 109, 97, 103, 105,
+     110, 97, 116, 105, 111, 110, 46]
+E_A1_protected = "eyJhbGciOiJSU0EtT0FFUCIsImVuYyI6IkEyNTZHQ00ifQ"
+E_A1_key = \
+    {"kty": "RSA",
+     "n": "oahUIoWw0K0usKNuOR6H4wkf4oBUXHTxRvgb48E-BVvxkeDNjbC4he8rUW"
+          "cJoZmds2h7M70imEVhRU5djINXtqllXI4DFqcI1DgjT9LewND8MW2Krf3S"
+          "psk_ZkoFnilakGygTwpZ3uesH-PFABNIUYpOiN15dsQRkgr0vEhxN92i2a"
+          "sbOenSZeyaxziK72UwxrrKoExv6kc5twXTq4h-QChLOln0_mtUZwfsRaMS"
+          "tPs6mS6XrgxnxbWhojf663tuEQueGC-FCMfra36C9knDFGzKsNa7LZK2dj"
+          "YgyD3JR_MB_4NUJW_TqOQtwHYbxevoJArm-L5StowjzGy-_bq6Gw",
+     "e": "AQAB",
+     "d": "kLdtIj6GbDks_ApCSTYQtelcNttlKiOyPzMrXHeI-yk1F7-kpDxY4-WY5N"
+          "WV5KntaEeXS1j82E375xxhWMHXyvjYecPT9fpwR_M9gV8n9Hrh2anTpTD9"
+          "3Dt62ypW3yDsJzBnTnrYu1iwWRgBKrEYY46qAZIrA2xAwnm2X7uGR1hghk"
+          "qDp0Vqj3kbSCz1XyfCs6_LehBwtxHIyh8Ripy40p24moOAbgxVw3rxT_vl"
+          "t3UVe4WO3JkJOzlpUf-KTVI2Ptgm-dARxTEtE-id-4OJr0h-K-VFs3VSnd"
+          "VTIznSxfyrj8ILL6MG_Uv8YAu7VILSB3lOW085-4qE3DzgrTjgyQ",
+     "p": "1r52Xk46c-LsfB5P442p7atdPUrxQSy4mti_tZI3Mgf2EuFVbUoDBvaRQ-"
+          "SWxkbkmoEzL7JXroSBjSrK3YIQgYdMgyAEPTPjXv_hI2_1eTSPVZfzL0lf"
+          "fNn03IXqWF5MDFuoUYE0hzb2vhrlN_rKrbfDIwUbTrjjgieRbwC6Cl0",
+     "q": "wLb35x7hmQWZsWJmB_vle87ihgZ19S8lBEROLIsZG4ayZVe9Hi9gDVCOBm"
+          "UDdaDYVTSNx_8Fyw1YYa9XGrGnDew00J28cRUoeBB_jKI1oma0Orv1T9aX"
+          "IWxKwd4gvxFImOWr3QRL9KEBRzk2RatUBnmDZJTIAfwTs0g68UZHvtc",
+     "dp": "ZK-YwE7diUh0qR1tR7w8WHtolDx3MZ_OTowiFvgfeQ3SiresXjm9gZ5KL"
+           "hMXvo-uz-KUJWDxS5pFQ_M0evdo1dKiRTjVw_x4NyqyXPM5nULPkcpU827"
+           "rnpZzAJKpdhWAgqrXGKAECQH0Xt4taznjnd_zVpAmZZq60WPMBMfKcuE",
+     "dq": "Dq0gfgJ1DdFGXiLvQEZnuKEN0UUmsJBxkjydc3j4ZYdBiMRAy86x0vHCj"
+           "ywcMlYYg4yoC4YZa9hNVcsjqA3FeiL19rk8g6Qn29Tt0cj8qqyFpz9vNDB"
+           "UfCAiJVeESOjJDZPYHdHY8v1b-o-Z2X5tvLx-TCekf7oxyeKDUqKWjis",
+     "qi": "VIMpMYbPf47dT1w_zDUXfPimsSegnMOA1zTaX7aGk_8urY6R8-ZW1FxU7"
+           "AlWAyLWybqq6t16VFd7hQd0y6flUK4SlOydB61gwanOsXGOAOv82cHq0E3"
+           "eL4HrtZkUuKvnPrMnsUUFlfUdybVzxyjz9JF_XyaY14ardLSjf4L_FNY"}
+E_A1_vector = \
+    "eyJhbGciOiJSU0EtT0FFUCIsImVuYyI6IkEyNTZHQ00ifQ." \
+    "OKOawDo13gRp2ojaHV7LFpZcgV7T6DVZKTyKOMTYUmKoTCVJRgckCL9kiMT03JGe" \
+    "ipsEdY3mx_etLbbWSrFr05kLzcSr4qKAq7YN7e9jwQRb23nfa6c9d-StnImGyFDb" \
+    "Sv04uVuxIp5Zms1gNxKKK2Da14B8S4rzVRltdYwam_lDp5XnZAYpQdb76FdIKLaV" \
+    "mqgfwX7XWRxv2322i-vDxRfqNzo_tETKzpVLzfiwQyeyPGLBIO56YJ7eObdv0je8" \
+    "1860ppamavo35UgoRdbYaBcoh9QcfylQr66oc6vFWXRcZ_ZT2LawVCWTIy3brGPi" \
+    "6UklfCpIMfIjf7iGdXKHzg." \
+    "48V1_ALb6US04U3b." \
+    "5eym8TW_c8SuK0ltJ3rpYIzOeDQz7TALvtu6UG9oMo4vpzs9tX_EFShS8iB7j6ji" \
+    "SdiwkIr3ajwQzaBtQD_A." \
+    "XFBoMYUZodetZdvTiFvSkQ"
+
+E_A1_ex = {'key': jwk.JWK(**E_A1_key),  # pylint: disable=star-args
+           'protected': base64url_decode(E_A1_protected),
+           'plaintext': E_A1_plaintext,
+           'vector': E_A1_vector}
+
 E_A2_plaintext = "Live long and prosper."
 E_A2_protected = "eyJhbGciOiJSU0ExXzUiLCJlbmMiOiJBMTI4Q0JDLUhTMjU2In0"
 E_A2_key = \
@@ -486,14 +541,96 @@ E_A2_ex = {'key': jwk.JWK(**E_A2_key),  # pylint: disable=star-args
            'plaintext': E_A2_plaintext,
            'vector': E_A2_vector}
 
+E_A3_plaintext = "Live long and prosper."
+E_A3_protected = "eyJhbGciOiJBMTI4S1ciLCJlbmMiOiJBMTI4Q0JDLUhTMjU2In0"
+E_A3_key = {"kty": "oct", "k": "GawgguFyGrWKav7AX4VKUg"}
+E_A3_vector = \
+    "eyJhbGciOiJBMTI4S1ciLCJlbmMiOiJBMTI4Q0JDLUhTMjU2In0." \
+    "6KB707dM9YTIgHtLvtgWQ8mKwboJW3of9locizkDTHzBC2IlrT1oOQ." \
+    "AxY8DCtDaGlsbGljb3RoZQ." \
+    "KDlTtXchhZTGufMYmOYGS4HffxPSUrfmqCHXaI9wOGY." \
+    "U0m_YmjN04DJvceFICbCVQ"
+
+E_A3_ex = {'key': jwk.JWK(**E_A3_key),  # pylint: disable=star-args
+           'protected': base64url_decode(E_A3_protected),
+           'plaintext': E_A3_plaintext,
+           'vector': E_A3_vector}
+
+E_A4_protected = "eyJlbmMiOiJBMTI4Q0JDLUhTMjU2In0"
+E_A4_unprotected = {"jku": "https://server.example.com/keys.jwks"}
+E_A4_vector = \
+    '{"protected":"eyJlbmMiOiJBMTI4Q0JDLUhTMjU2In0",' \
+    '"unprotected":{"jku":"https://server.example.com/keys.jwks"},' \
+    '"recipients":[' \
+    '{"header":{"alg":"RSA1_5","kid":"2011-04-29"},' \
+    '"encrypted_key":'\
+    '"UGhIOguC7IuEvf_NPVaXsGMoLOmwvc1GyqlIKOK1nN94nHPoltGRhWhw7Zx0-' \
+    'kFm1NJn8LE9XShH59_i8J0PH5ZZyNfGy2xGdULU7sHNF6Gp2vPLgNZ__deLKx' \
+    'GHZ7PcHALUzoOegEI-8E66jX2E4zyJKx-YxzZIItRzC5hlRirb6Y5Cl_p-ko3' \
+    'YvkkysZIFNPccxRU7qve1WYPxqbb2Yw8kZqa2rMWI5ng8OtvzlV7elprCbuPh' \
+    'cCdZ6XDP0_F8rkXds2vE4X-ncOIM8hAYHHi29NX0mcKiRaD0-D-ljQTP-cFPg' \
+    'wCp6X-nZZd9OHBv-B3oWh2TbqmScqXMR4gp_A"},' \
+    '{"header":{"alg":"A128KW","kid":"7"},' \
+    '"encrypted_key":' \
+    '"6KB707dM9YTIgHtLvtgWQ8mKwboJW3of9locizkDTHzBC2IlrT1oOQ"}],' \
+    '"iv":"AxY8DCtDaGlsbGljb3RoZQ",' \
+    '"ciphertext":"KDlTtXchhZTGufMYmOYGS4HffxPSUrfmqCHXaI9wOGY",' \
+    '"tag":"Mz-VPPyU4RlcuYv1IwIvzw"}'
+
+E_A4_ex = {'key1': jwk.JWK(**E_A2_key),  # pylint: disable=star-args
+           'header1': '{"alg":"RSA1_5","kid":"2011-04-29"}',
+           'key2': jwk.JWK(**E_A3_key),  # pylint: disable=star-args
+           'header2': '{"alg":"A128KW","kid":"7"}',
+           'protected': base64url_decode(E_A4_protected),
+           'unprotected': json.dumps(E_A4_unprotected),
+           'plaintext': E_A3_plaintext,
+           'vector': E_A4_vector}
+
+E_A5_ex = \
+    '{"protected":"eyJlbmMiOiJBMTI4Q0JDLUhTMjU2In0",' \
+    '"unprotected":{"jku":"https://server.example.com/keys.jwks"},' \
+    '"header":{"alg":"A128KW","kid":"7"},' \
+    '"encrypted_key":' \
+    '"6KB707dM9YTIgHtLvtgWQ8mKwboJW3of9locizkDTHzBC2IlrT1oOQ",' \
+    '"iv":"AxY8DCtDaGlsbGljb3RoZQ",' \
+    '"ciphertext":"KDlTtXchhZTGufMYmOYGS4HffxPSUrfmqCHXaI9wOGY",' \
+    '"tag":"Mz-VPPyU4RlcuYv1IwIvzw"}'
+
 
 class TestJWE(unittest.TestCase):
-    def test_A2(self):
-        E = jwe.JWE(E_A2_ex['plaintext'], E_A2_ex['protected'])
-        E.add_recipient(E_A2_ex['key'])
+    def check_enc(self, plaintext, protected, key, vector):
+        E = jwe.JWE(plaintext, protected)
+        E.add_recipient(key)
         # Encrypt and serialize using compact
-        e = E.serialize(compact=True)
+        e = E.serialize()
         # And test that we can decrypt our own
-        E.deserialize(e, E_A2_ex['key'])
+        E.deserialize(e, key)
         # Now test the Spec Test Vector
-        E.deserialize(E_A2_ex['vector'], E_A2_ex['key'])
+        E.deserialize(vector, key)
+
+    def test_A1(self):
+        self.check_enc(E_A1_ex['plaintext'], E_A1_ex['protected'],
+                       E_A1_ex['key'], E_A1_ex['vector'])
+
+    def test_A2(self):
+        self.check_enc(E_A2_ex['plaintext'], E_A2_ex['protected'],
+                       E_A2_ex['key'], E_A2_ex['vector'])
+
+    def test_A3(self):
+        self.check_enc(E_A3_ex['plaintext'], E_A3_ex['protected'],
+                       E_A3_ex['key'], E_A3_ex['vector'])
+
+    def test_A4(self):
+        E = jwe.JWE(E_A4_ex['plaintext'], E_A4_ex['protected'])
+        E.add_recipient(E_A4_ex['key1'], E_A4_ex['header1'])
+        E.add_recipient(E_A4_ex['key2'], E_A4_ex['header2'])
+        e = E.serialize()
+        E.deserialize(e, E_A4_ex['key1'])
+        E.deserialize(e, E_A4_ex['key2'])
+        # Now test the Spec Test Vector
+        E.deserialize(E_A4_ex['vector'], E_A4_ex['key1'])
+        E.deserialize(E_A4_ex['vector'], E_A4_ex['key2'])
+
+    def test_A5(self):
+        E = jwe.JWE()
+        E.deserialize(E_A5_ex)

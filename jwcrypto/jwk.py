@@ -155,6 +155,10 @@ class JWK(object):
         return json.dumps(d)
 
     @property
+    def key_type(self):
+        return self._params.get('kty', None)
+
+    @property
     def key_id(self):
         return self._params.get('kid', None)
 
