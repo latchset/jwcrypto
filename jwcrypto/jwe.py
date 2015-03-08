@@ -1,7 +1,7 @@
 # Copyright (C) 2015 JWCrypto Project Contributors - see LICENSE file
 
 from cryptography.hazmat.backends import default_backend
-from cryptography.hazmat.primitives import hashes, hmac
+from cryptography.hazmat.primitives import constant_time, hashes, hmac
 from cryptography.hazmat.primitives.padding import PKCS7
 from cryptography.hazmat.primitives.asymmetric import padding
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
@@ -183,7 +183,7 @@ class _aes_cbc_hmac_sha2(_raw_jwe):
         dkey = k[self.blocksize:]
 
         # verify mac
-        if t != self._mac(hkey, a, iv, e):
+        if not constant_time.bytes_eq(t, self._mac(hkey, a, iv, e)):
             raise InvalidJWEData('Failed to verify MAC')
 
         # decrypt
