@@ -61,7 +61,7 @@ class InvalidJWEData(Exception):
 
 class InvalidCEKeyLength(Exception):
     def __init__(self, expected, obtained):
-        msg = 'Expected key og length %d, got %d' % (expected, obtained)
+        msg = 'Expected key of length %d, got %d' % (expected, obtained)
         super(InvalidCEKeyLength, self).__init__(msg)
 
 
@@ -133,7 +133,7 @@ class _aes_kw(_raw_key_mgmt):
             cek = os.urandom(keylen)
         rk = base64url_decode(key.get_op_key('encrypt'))
 
-        # Implement RFC 3994 Key Unwrap - 2.2.2
+        # Implement RFC 3394 Key Unwrap - 2.2.2
         # TODO: Use cryptography once issue #1733 is resolved
         iv = 'a6a6a6a6a6a6a6a6'
         A = iv.decode('hex')
@@ -155,7 +155,7 @@ class _aes_kw(_raw_key_mgmt):
         self.check_key(key)
         rk = base64url_decode(key.get_op_key('decrypt'))
 
-        # Implement RFC 3994 Key Unwrap - 2.2.3
+        # Implement RFC 3394 Key Unwrap - 2.2.3
         # TODO: Use cryptography once issue #1733 is resolved
         iv = 'a6a6a6a6a6a6a6a6'
         Aiv = iv.decode('hex')
