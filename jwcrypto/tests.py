@@ -634,3 +634,11 @@ class TestJWE(unittest.TestCase):
     def test_A5(self):
         E = jwe.JWE()
         E.deserialize(E_A5_ex)
+
+
+class ConformanceTests(unittest.TestCase):
+
+    def test_unknown_key_params(self):
+        key = jwk.JWK(kty='oct', k='secret', unknown='mystery')
+        # pylint: disable=protected-access
+        self.assertEqual('mystery', key._unknown['unknown'])

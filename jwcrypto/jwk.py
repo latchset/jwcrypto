@@ -142,6 +142,14 @@ class JWK(object):
                 while name in names:
                     names.remove(name)
 
+        # Unknown key parameters are allowed
+        # Let's just store them out of the way
+        self._unknown = dict()
+        for name in names:
+            self._unknown[name] = kwargs[name]
+            while name in names:
+                names.remove(name)
+
         if len(names) != 0:
             raise InvalidJWKValue('Unknown key parameters: %s' % names)
 
@@ -152,6 +160,7 @@ class JWK(object):
         d = dict()
         d.update(self._params)
         d.update(self._key)
+        d.update(self._unknown)
         return json.dumps(d)
 
     @property
