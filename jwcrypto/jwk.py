@@ -252,19 +252,7 @@ class JWK(object):
         return ec.EllipticCurvePrivateNumbers(self._decode_int(k['d']),
                                               self._ec_pub(k, curve))
 
-    def sign_key(self, arg=None):
-        self._check_constraints('sig', 'sign')
-        if self._params['kty'] == 'oct':
-            return self._key['k']
-        elif self._params['kty'] == 'RSA':
-            return self._rsa_pri(self._key).private_key(default_backend())
-        elif self._params['kty'] == 'EC':
-            return self._ec_pri(self._key, arg).private_key(default_backend())
-        else:
-            raise NotImplementedError
-
-    def verify_key(self, arg=None):
-        self._check_constraints('sig', 'verify')
+    def _get_public_key(self, arg=None):
         if self._params['kty'] == 'oct':
             return self._key['k']
         elif self._params['kty'] == 'RSA':
@@ -274,25 +262,36 @@ class JWK(object):
         else:
             raise NotImplementedError
 
-    def encrypt_key(self, arg=None):
-        self._check_constraints('enc', 'encrypt')
-        if self._params['kty'] == 'oct':
-            return self._key['k']
-        elif self._params['kty'] == 'RSA':
-            return self._rsa_pub(self._key).public_key(default_backend())
-        elif self._params['kty'] == 'EC':
-            return self._ec_pub(self._key, arg).public_key(default_backend())
-        else:
-            raise NotImplementedError
-
-    def decrypt_key(self, arg=None):
-        self._check_constraints('enc', 'decrypt')
+    def _get_private_key(self, arg=None):
         if self._params['kty'] == 'oct':
             return self._key['k']
         elif self._params['kty'] == 'RSA':
             return self._rsa_pri(self._key).private_key(default_backend())
         elif self._params['kty'] == 'EC':
             return self._ec_pri(self._key, arg).private_key(default_backend())
+        else:
+            raise NotImplementedError
+
+    def get_op_key(self, operation=None, arg=None):
+        validops = self._params.get('key_ops', JWKOperationsRegistry.keys())
+        if validops is not list:
+            validops = [validops]
+        if operation is None:
+            if self._params['kty'] == 'oct':
+                return self._key['k']
+            raise InvalidJWKOperation(operation, validops)
+        elif operation == 'sign':
+            self._check_constraints('sig', operation)
+            return self._get_private_key(arg)
+        elif operation == 'verify':
+            self._check_constraints('sig', operation)
+            return self._get_public_key(arg)
+        elif operation == 'encrypt' or operation == 'wrapKey':
+            self._check_constraints('enc', operation)
+            return self._get_public_key(arg)
+        elif operation == 'decrypt' or operation == 'unwrapKey':
+            self._check_constraints('enc', operation)
+            return self._get_private_key(arg)
         else:
             raise NotImplementedError
 

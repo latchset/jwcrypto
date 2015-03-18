@@ -83,12 +83,12 @@ class _raw_hmac(_raw_jws):
         return h
 
     def sign(self, key, payload):
-        skey = base64url_decode(key.sign_key())
+        skey = base64url_decode(key.get_op_key('sign'))
         h = self._hmac_setup(skey, payload)
         return h.finalize()
 
     def verify(self, key, payload, signature):
-        vkey = base64url_decode(key.verify_key())
+        vkey = base64url_decode(key.get_op_key('verify'))
         h = self._hmac_setup(vkey, payload)
         try:
             h.verify(signature)
@@ -102,13 +102,13 @@ class _raw_rsa(_raw_jws):
         self.hashfn = hashfn
 
     def sign(self, key, payload):
-        skey = key.sign_key()
+        skey = key.get_op_key('sign')
         signer = skey.signer(self.padfn, self.hashfn)
         signer.update(payload)
         return signer.finalize()
 
     def verify(self, key, payload, signature):
-        pkey = key.verify_key()
+        pkey = key.get_op_key('verify')
         verifier = pkey.verifier(signature, self.padfn, self.hashfn)
         verifier.update(payload)
         verifier.verify()
@@ -126,7 +126,7 @@ class _raw_ec(_raw_jws):
         return e.decode('hex')
 
     def sign(self, key, payload):
-        skey = key.sign_key(self.curve)
+        skey = key.get_op_key('sign', self.curve)
         signer = skey.signer(ec.ECDSA(self.hashfn))
         signer.update(payload)
         signature = signer.finalize()
@@ -135,7 +135,7 @@ class _raw_ec(_raw_jws):
         return self.encode_int(r, l) + self.encode_int(s, l)
 
     def verify(self, key, payload, signature):
-        pkey = key.verify_key(self.curve)
+        pkey = key.get_op_key('verify', self.curve)
         r = signature[:len(signature)/2]
         s = signature[len(signature)/2:]
         enc_signature = ec_utils.encode_rfc6979_signature(

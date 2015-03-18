@@ -174,8 +174,8 @@ class TestJWK(unittest.TestCase):
         keylist = SymmetricKeys['keys']
         for key in keylist:
             jwkey = jwk.JWK(**key)  # pylint: disable=star-args
-            _ = jwkey.sign_key()
-            _ = jwkey.verify_key()
+            _ = jwkey.get_op_key('sign')
+            _ = jwkey.get_op_key('verify')
             e = jwkey.export()
             self.assertEqual(json.loads(e), key)
 

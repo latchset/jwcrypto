@@ -106,13 +106,13 @@ class _rsa(_raw_key_mgmt):
         self.check_key(key)
         if not cek:
             cek = os.urandom(keylen)
-        rk = key.encrypt_key()
+        rk = key.get_op_key('encrypt')
         ek = rk.encrypt(cek, self.padfn)
         return (cek, ek)
 
     def unwrap(self, key, ek):
         self.check_key(key)
-        rk = key.decrypt_key()
+        rk = key.get_op_key('decrypt')
         cek = rk.decrypt(ek, self.padfn)
         return cek
 
@@ -131,7 +131,7 @@ class _aes_kw(_raw_key_mgmt):
         self.check_key(key)
         if not cek:
             cek = os.urandom(keylen)
-        rk = base64url_decode(key.encrypt_key())
+        rk = base64url_decode(key.get_op_key('encrypt'))
 
         # Implement RFC 3994 Key Unwrap - 2.2.2
         # TODO: Use cryptography once issue #1733 is resolved
@@ -153,7 +153,7 @@ class _aes_kw(_raw_key_mgmt):
 
     def unwrap(self, key, ek):
         self.check_key(key)
-        rk = base64url_decode(key.decrypt_key())
+        rk = base64url_decode(key.get_op_key('decrypt'))
 
         # Implement RFC 3994 Key Unwrap - 2.2.3
         # TODO: Use cryptography once issue #1733 is resolved
@@ -189,7 +189,7 @@ class _direct(_raw_key_mgmt):
         self.check_key(key)
         if cek:
             return (cek, None)
-        k = base64url_decode(key.encrypt_key())
+        k = base64url_decode(key.get_op_key('encrypt'))
         if len(k) != keylen:
             raise InvalidCEKeyLength(keylen, len(k))
         return (k, '')
@@ -198,7 +198,7 @@ class _direct(_raw_key_mgmt):
         self.check_key(key)
         if ek != '':
             raise InvalidJWEData('Invalid Encryption Key.')
-        return base64url_decode(key.decrypt_key())
+        return base64url_decode(key.get_op_key('decrypt'))
 
 
 class _raw_jwe(object):
