@@ -1,6 +1,6 @@
 # Copyright (C) 2015  JWCrypto Project Contributors - see LICENSE file
 
-from jwcrypto.common import base64url_decode
+from jwcrypto.common import base64url_decode, base64url_encode
 from jwcrypto import jwk
 from jwcrypto import jws
 from jwcrypto import jwe
@@ -651,5 +651,23 @@ class ConformanceTests(unittest.TestCase):
 
     def test_jwe_no_protected_header(self):
         enc = jwe.JWE(plaintext='plain')
-        enc.add_recipient(jwk.JWK(kty='oct', k='A'*32),
+        enc.add_recipient(jwk.JWK(kty='oct', k=base64url_encode('A'*16)),
                           '{"alg":"A128KW","enc":"A128GCM"}')
+
+    def test_aes_128(self):
+        enc = jwe.JWE(plaintext='plain')
+        key128 = jwk.JWK(kty='oct', k=base64url_encode('A' * (128 / 8)))
+        enc.add_recipient(key128, '{"alg":"A128KW","enc":"A128CBC-HS256"}')
+        enc.add_recipient(key128, '{"alg":"A128KW","enc":"A128GCM"}')
+
+    def test_aes_192(self):
+        enc = jwe.JWE(plaintext='plain')
+        key192 = jwk.JWK(kty='oct', k=base64url_encode('B' * (192 / 8)))
+        enc.add_recipient(key192, '{"alg":"A192KW","enc":"A192CBC-HS384"}')
+        enc.add_recipient(key192, '{"alg":"A192KW","enc":"A192GCM"}')
+
+    def test_aes_256(self):
+        enc = jwe.JWE(plaintext='plain')
+        key256 = jwk.JWK(kty='oct', k=base64url_encode('C' * (256 / 8)))
+        enc.add_recipient(key256, '{"alg":"A256KW","enc":"A256CBC-HS512"}')
+        enc.add_recipient(key256, '{"alg":"A256KW","enc":"A256GCM"}')
