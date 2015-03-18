@@ -648,3 +648,8 @@ class ConformanceTests(unittest.TestCase):
                           kty='RSA', n=1, key_ops=['sign'], use='enc')
         self.assertRaises(jwk.InvalidJWKValue, jwk.JWK,
                           kty='RSA', n=1, key_ops=['sign', 'sign'])
+
+    def test_jwe_no_protected_header(self):
+        enc = jwe.JWE(plaintext='plain')
+        enc.add_recipient(jwk.JWK(kty='oct', k='A'*32),
+                          '{"alg":"A128KW","enc":"A128GCM"}')
