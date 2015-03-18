@@ -156,6 +156,34 @@ class JWK(object):
         if len(self._key) == 0:
             raise InvalidJWKValue('No Key Values found')
 
+        # check key_ops
+        if 'key_ops' in self._params:
+            for ko in self._params['key_ops']:
+                c = 0
+                for cko in self._params['key_ops']:
+                    if ko == cko:
+                        c += 1
+                if c != 1:
+                    raise InvalidJWKValue('Duplicate values in "key_ops"')
+
+        # check use/key_ops consistency
+        if 'use' in self._params and 'key_ops' in self._params:
+            sigl = ['sign', 'verify']
+            encl = ['encrypt', 'decrypt', 'wrapKey', 'unwrapKey',
+                    'deriveKey', 'deriveBits']
+            if self._params['use'] == 'sig':
+                for op in encl:
+                    if op in self._params['key_ops']:
+                        raise InvalidJWKValue('Incompatible "use" and'
+                                              ' "key_ops" values specified at'
+                                              ' the same time')
+            elif self._params['use'] == 'enc':
+                for op in sigl:
+                    if op in self._params['key_ops']:
+                        raise InvalidJWKValue('Incompatible "use" and'
+                                              ' "key_ops" values specified at'
+                                              ' the same time')
+
     def export(self):
         d = dict()
         d.update(self._params)
