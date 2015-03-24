@@ -654,6 +654,18 @@ class ConformanceTests(unittest.TestCase):
         enc.add_recipient(jwk.JWK(kty='oct', k=base64url_encode('A'*16)),
                           '{"alg":"A128KW","enc":"A128GCM"}')
 
+    def test_jwe_no_alg_in_jose_headers(self):
+        enc = jwe.JWE(plaintext='plain')
+        self.assertRaises(jwe.InvalidJWEData, enc.add_recipient,
+                          jwk.JWK(kty='oct', k=base64url_encode('A'*16)),
+                          '{"enc":"A128GCM"}')
+
+    def test_jwe_no_enc_in_jose_headers(self):
+        enc = jwe.JWE(plaintext='plain')
+        self.assertRaises(jwe.InvalidJWEData, enc.add_recipient,
+                          jwk.JWK(kty='oct', k=base64url_encode('A'*16)),
+                          '{"alg":"A128KW"}')
+
     def test_aes_128(self):
         enc = jwe.JWE(plaintext='plain')
         key128 = jwk.JWK(kty='oct', k=base64url_encode('A' * (128 / 8)))

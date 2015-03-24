@@ -440,6 +440,17 @@ class JWE(object):
             jh = self.merge_headers(jh, rh)
         return jh
 
+    def get_alg_enc_from_headers(self, jh):
+        algname = jh.get('alg', None)
+        if algname is None:
+            raise InvalidJWEData('Missing "alg" from headers')
+        alg = self._jwa(algname)
+        encname = jh.get('enc', None)
+        if encname is None:
+            raise InvalidJWEData('Missing "enc" from headers')
+        enc = self._jwa(encname)
+        return alg, enc
+
     def add_recipient(self, key, header=None):
         """ Encrypt the provided payload with the given key.
 
@@ -455,8 +466,7 @@ class JWE(object):
             raise ValueError('key is not a JWK object')
 
         jh = self.get_jose_header(header)
-        alg = self._jwa(jh.get('alg', None))
-        enc = self._jwa(jh.get('enc', None))
+        alg, enc = self.get_alg_enc_from_headers(jh)
 
         rec = dict()
         if header:
