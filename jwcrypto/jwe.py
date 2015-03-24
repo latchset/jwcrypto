@@ -556,7 +556,7 @@ class JWE(object):
                                          '"%s"' % k)
 
     # FIXME: allow to specify which algorithms to accept as valid
-    def decrypt(self, key, ppe):
+    def _decrypt(self, key, ppe):
 
         jh = self.get_jose_header(ppe.get('header', None))
 
@@ -649,12 +649,12 @@ class JWE(object):
             if 'recipients' in self.objects:
                 for rec in self.objects['recipients']:
                     try:
-                        self.decrypt(key, rec)
+                        self._decrypt(key, rec)
                     except Exception, e:  # pylint: disable=broad-except
                         self.decryptlog.append('Failed: [%s]' % str(e))
             else:
                 try:
-                    self.decrypt(key, self.objects)
+                    self._decrypt(key, self.objects)
                 except Exception, e:  # pylint: disable=broad-except
                     self.decryptlog.append('Failed: [%s]' % str(e))
 
