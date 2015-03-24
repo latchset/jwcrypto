@@ -159,8 +159,11 @@ class _raw_none(_raw_jws):
 class JWSCore(object):
 
     def __init__(self, alg, key, header, payload):
-        """ Generates or verifies JWS tokens.
+        """ Core JWS token handling.
             See draft-ietf-jose-json-web-signature-41
+
+            NOTE: Users should normally use JWS, not JWSCore,
+            as JWS perform necessary checks not performed by JWSCore.
 
         :param alg: The algorithm used to produce the signature.
                     See draft-ietf-jose-json-web-algorithms-24
