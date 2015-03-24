@@ -337,7 +337,7 @@ class JWS(object):
                         o['signatures'].append(os)
                 else:
                     o['protected'] = base64url_decode(str(djws['protected']))
-                    o['protected'] = base64url_decode(str(djws['signature']))
+                    o['signature'] = base64url_decode(str(djws['signature']))
                     if 'header' in djws:
                         o['header'] = json.dumps(djws['header'])
                     try:

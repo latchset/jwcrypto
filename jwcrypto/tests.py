@@ -683,3 +683,12 @@ class ConformanceTests(unittest.TestCase):
         key256 = jwk.JWK(kty='oct', k=base64url_encode('C' * (256 / 8)))
         enc.add_recipient(key256, '{"alg":"A256KW","enc":"A256CBC-HS512"}')
         enc.add_recipient(key256, '{"alg":"A256KW","enc":"A256GCM"}')
+
+    def test_jws_loopback(self):
+        sign = jws.JWS(payload='message')
+        sign.add_signature(jwk.JWK(kty='oct', k=base64url_encode('A'*16)),
+                           alg="HS512")
+        o = sign.serialize()
+        check = jws.JWS()
+        check.deserialize(o, jwk.JWK(kty='oct', k=base64url_encode('A'*16)))
+        self.assertTrue(check.objects['valid'])
