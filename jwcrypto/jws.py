@@ -252,7 +252,7 @@ class JWSCore(object):
             signing_input = '.'.join([self.protected, self.payload])
             self.engine.verify(self.key, signing_input, signature)
         except Exception, e:  # pylint: disable=broad-except
-            raise InvalidJWSSignature('Verification failed', e)
+            raise InvalidJWSSignature('Verification failed', repr(e))
         return True
 
 
@@ -281,9 +281,13 @@ class JWS(object):
     def verify(self, alg, key, payload, signature, protected, header=None):
         # verify it is a valid JSON object and keep a decode copy
         p = json.loads(protected)
+        if not isinstance(p, dict):
+            raise InvalidJWSSignature('Invalid Protected header')
         # merge heders, and verify there are no duplicates
         if header:
             h = json.loads(header)
+            if not isinstance(h, dict):
+                raise InvalidJWSSignature('Invalid Unprotected header')
             for k in p.keys():
                 if k in h:
                     raise InvalidJWSSignature('Duplicate header: "%s"' % k)
@@ -322,6 +326,7 @@ class JWS(object):
                 if 'signatures' in djws:
                     o['signatures'] = list()
                     valid = False
+                    faillog = []
                     for s in djws['signatures']:
                         os = dict()
                         os['protected'] = base64url_decode(str(s['protected']))
@@ -335,11 +340,13 @@ class JWS(object):
                             os['valid'] = True
                             # Ok if at least one verifies
                             valid = True
-                        except Exception:  # pylint: disable=broad-except
+                        except Exception as e:  # pylint: disable=broad-except
+                            faillog.append(str(e))
                             os['valid'] = False
                         o['signatures'].append(os)
                     if raise_invalid and not valid:
-                        raise InvalidJWSSignature('Verification failed')
+                        raise InvalidJWSSignature('Verification failed',
+                                                  faillog)
                 else:
                     o['protected'] = base64url_decode(str(djws['protected']))
                     o['signature'] = base64url_decode(str(djws['signature']))
@@ -363,7 +370,7 @@ class JWS(object):
             except ValueError:
                 c = raw_jws.split('.')
                 if len(c) != 3:
-                    raise InvalidJWSObject()
+                    raise InvalidJWSObject('Unrecognized representation')
                 o['protected'] = base64url_decode(str(c[0]))
                 o['payload'] = base64url_decode(str(c[1]))
                 o['signature'] = base64url_decode(str(c[2]))
