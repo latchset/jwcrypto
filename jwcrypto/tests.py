@@ -433,8 +433,8 @@ class TestJWS(unittest.TestCase):
 
     def test_E(self):
         S = jws.JWS(A6_example['payload'])
-        S.deserialize(E_negative)
-        self.assertEqual(False, S.objects['valid'])
+        self.assertRaises(jws.InvalidJWSSignature,
+                          S.deserialize, E_negative)
 
 
 E_A1_plaintext = \

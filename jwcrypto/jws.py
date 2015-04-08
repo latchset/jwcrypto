@@ -304,12 +304,12 @@ class JWS(object):
         else:
             a = p['alg']
 
-        # the following will verify the "alg" iss upported and the signature
+        # the following will verify the "alg" is upported and the signature
         # verifies
         S = JWSCore(a, key, protected, payload)
         S.verify(signature)
 
-    def deserialize(self, raw_jws, key=None, alg=None):
+    def deserialize(self, raw_jws, key=None, alg=None, raise_invalid=True):
         """ Destroys any current status and tries to import the raw
             JWS provided.
         """
@@ -321,6 +321,7 @@ class JWS(object):
                 o['payload'] = base64url_decode(str(djws['payload']))
                 if 'signatures' in djws:
                     o['signatures'] = list()
+                    valid = False
                     for s in djws['signatures']:
                         os = dict()
                         os['protected'] = base64url_decode(str(s['protected']))
@@ -332,9 +333,13 @@ class JWS(object):
                                         os['signature'], os['protected'],
                                         os.get('header', None))
                             os['valid'] = True
+                            # Ok if at least one verifies
+                            valid = True
                         except Exception:  # pylint: disable=broad-except
                             os['valid'] = False
                         o['signatures'].append(os)
+                    if raise_invalid and not valid:
+                        raise InvalidJWSSignature('Verification failed')
                 else:
                     o['protected'] = base64url_decode(str(djws['protected']))
                     o['signature'] = base64url_decode(str(djws['signature']))
@@ -345,8 +350,15 @@ class JWS(object):
                                     o['signature'], o['protected'],
                                     o.get('header', None))
                         o['valid'] = True
-                    except Exception:  # pylint: disable=broad-except
+
+                    except InvalidJWSSignature:
                         o['valid'] = False
+                        if raise_invalid:
+                            raise
+                    except Exception as e:  # pylint: disable=broad-except
+                        o['valid'] = False
+                        if raise_invalid:
+                            raise InvalidJWSSignature('Verification failed', e)
 
             except ValueError:
                 c = raw_jws.split('.')
@@ -359,9 +371,17 @@ class JWS(object):
                     self.verify(alg, key, o['payload'], o['signature'],
                                 o['protected'], None)
                     o['valid'] = True
-                except Exception:  # pylint: disable=broad-except
+                except InvalidJWSSignature:
                     o['valid'] = False
+                    if raise_invalid:
+                        raise
+                except Exception as e:  # pylint: disable=broad-except
+                    o['valid'] = False
+                    if raise_invalid:
+                        raise InvalidJWSSignature('Verification failed', e)
 
+        except InvalidJWSSignature:
+            raise
         except Exception, e:  # pylint: disable=broad-except
             raise InvalidJWSObject('Invalid format', e)
 
