@@ -291,7 +291,7 @@ class JWS(object):
             for k in p.keys():
                 if k in h:
                     raise InvalidJWSSignature('Duplicate header: "%s"' % k)
-            p.update(header)
+            p.update(h)
         # verify critical headers
         # TODO: allow caller to specify list of headers it understands
         if 'crit' in p:
