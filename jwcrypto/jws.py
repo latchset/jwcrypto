@@ -185,7 +185,10 @@ class JWSCore(object):
             raise ValueError('key is not a JWK object')
         self.key = key
 
-        self.protected = base64url_encode(unicode(header, 'utf-8'))
+        if header is not None:
+            self.protected = base64url_encode(unicode(header, 'utf-8'))
+        else:
+            self.protected = ''
         self.payload = base64url_encode(payload)
 
     def _jwa_HS256(self):
@@ -280,7 +283,10 @@ class JWS(object):
     # TODO: support selecting key with 'kid' and passing in multiple keys
     def verify(self, alg, key, payload, signature, protected, header=None):
         # verify it is a valid JSON object and keep a decode copy
-        p = json.loads(protected)
+        if protected is not None:
+            p = json.loads(protected)
+        else:
+            p = dict()
         if not isinstance(p, dict):
             raise InvalidJWSSignature('Invalid Protected header')
         # merge heders, and verify there are no duplicates
@@ -297,10 +303,10 @@ class JWS(object):
         if 'crit' in p:
             self.check_crit(p['crit'])
         # check 'alg' is present
-        if 'alg' not in p:
-            raise InvalidJWSSignature('No "alg" in protected header')
+        if alg is None and 'alg' not in p:
+            raise InvalidJWSSignature('No "alg" in headers')
         if alg:
-            if alg != p['alg']:
+            if 'alg' in p and alg != p['alg']:
                 raise InvalidJWSSignature('"alg" mismatch, requested '
                                           '"%s", found "%s"' % (alg,
                                                                 p['alg']))
@@ -329,14 +335,17 @@ class JWS(object):
                     faillog = []
                     for s in djws['signatures']:
                         os = dict()
-                        os['protected'] = base64url_decode(str(s['protected']))
                         os['signature'] = base64url_decode(str(s['signature']))
+                        if 'protected' in s:
+                            os['protected'] = \
+                                base64url_decode(str(s['protected']))
                         if 'header' in s:
                             os['header'] = json.dumps(s['header'])
                         try:
                             self.verify(alg, key, o['payload'],
-                                        os['signature'], os['protected'],
-                                        os.get('header', None))
+                                        os['signature'],
+                                        os.get('protected'),
+                                        os.get('header'))
                             os['valid'] = True
                             # Ok if at least one verifies
                             valid = True
@@ -348,14 +357,17 @@ class JWS(object):
                         raise InvalidJWSSignature('Verification failed',
                                                   faillog)
                 else:
-                    o['protected'] = base64url_decode(str(djws['protected']))
                     o['signature'] = base64url_decode(str(djws['signature']))
+                    if 'protected' in djws:
+                        o['protected'] = \
+                            base64url_decode(str(djws['protected']))
                     if 'header' in djws:
                         o['header'] = json.dumps(djws['header'])
                     try:
                         self.verify(alg, key, o['payload'],
-                                    o['signature'], o['protected'],
-                                    o.get('header', None))
+                                    o['signature'],
+                                    o.get('protected'),
+                                    o.get('header'))
                         o['valid'] = True
 
                     except InvalidJWSSignature:
@@ -371,12 +383,14 @@ class JWS(object):
                 c = raw_jws.split('.')
                 if len(c) != 3:
                     raise InvalidJWSObject('Unrecognized representation')
-                o['protected'] = base64url_decode(str(c[0]))
+                p = base64url_decode(str(c[0]))
+                if p != '':
+                    o['protected'] = p
                 o['payload'] = base64url_decode(str(c[1]))
                 o['signature'] = base64url_decode(str(c[2]))
                 try:
                     self.verify(alg, key, o['payload'], o['signature'],
-                                o['protected'], None)
+                                o.get('protected'), None)
                     o['valid'] = True
                 except InvalidJWSSignature:
                     o['valid'] = False
@@ -398,22 +412,20 @@ class JWS(object):
         if not self.objects.get('payload', None):
             raise InvalidJWSObject('Missing Payload')
 
-        o = dict()
-        p = None
-        if alg is None and protected is None:
-            raise ValueError('"alg" not specified')
+        p = dict()
         if protected:
             p = json.loads(protected)
-        else:
-            p = {'alg': alg}
-            protected = json.dumps(p)
-        if alg and alg != p['alg']:
-            raise ValueError('"alg" value mismatch, specified "alg" does '
-                             'not match "protected" header value')
-        a = alg if alg else p['alg']
-        # TODO: allow caller to specify list of headers it understands
-        if 'crit' in p:
-            self.check_crit(p['crit'])
+            if 'alg' in p:
+                if alg is None:
+                    alg = p['alg']
+                elif alg != p['alg']:
+                    raise ValueError('"alg" value mismatch, specified "alg" '
+                                     'does not match "protected" header '
+                                     'alg value')
+
+            # TODO: allow caller to specify list of headers it understands
+            if 'crit' in p:
+                self.check_crit(p['crit'])
 
         if header:
             h = json.loads(header)
@@ -421,11 +433,24 @@ class JWS(object):
                 if k in h:
                     raise ValueError('Duplicate header: "%s"' % k)
 
-        S = JWSCore(a, key, protected, self.objects['payload'])
+            if 'alg' in h:
+                if alg is None:
+                    alg = h['alg']
+                elif alg != h['alg']:
+                    raise ValueError('"alg" value mismatch, specified "alg" '
+                                     'does not match "unprotected" header '
+                                     'alg value')
+
+        if alg is None:
+            raise ValueError('"alg" not specified')
+
+        S = JWSCore(alg, key, protected, self.objects['payload'])
         sig = S.sign()
 
+        o = dict()
         o['signature'] = base64url_decode(sig['signature'])
-        o['protected'] = protected
+        if protected:
+            o['protected'] = protected
         if header:
             o['header'] = h
         o['valid'] = True
@@ -437,7 +462,8 @@ class JWS(object):
             n = dict()
             n['signature'] = self.objects['signature']
             del self.objects['signature']
-            n['protected'] = self.objects['protected']
+            if 'protected' in self.objects:
+                n['protected'] = self.objects['protected']
             del self.objects['protected']
             if 'header' in self.objects:
                 n['header'] = self.objects['header']
@@ -460,7 +486,11 @@ class JWS(object):
                 raise InvalidJWSSignature("No available signature")
             if not self.objects.get('valid', False):
                 raise InvalidJWSSignature("No valid signature found")
-            return '.'.join([base64url_encode(self.objects['protected']),
+            if 'protected' in self.objects:
+                protected = base64url_encode(self.objects['protected'])
+            else:
+                protected = ''
+            return '.'.join([protected,
                              base64url_encode(self.objects['payload']),
                              base64url_encode(self.objects['signature'])])
         else:
@@ -469,8 +499,9 @@ class JWS(object):
                 if not obj.get('valid', False):
                     raise InvalidJWSSignature("No valid signature found")
                 sig = {'payload': base64url_encode(obj['payload']),
-                       'protected': base64url_encode(obj['protected']),
                        'signature': base64url_encode(obj['signature'])}
+                if 'protected' in obj:
+                    sig['protected'] = base64url_encode(obj['protected'])
                 if 'header' in obj:
                     sig['header'] = obj['header']
             elif 'signatures' in obj:
@@ -479,8 +510,9 @@ class JWS(object):
                 for o in obj['signatures']:
                     if not o.get('valid', False):
                         continue
-                    s = {'protected': base64url_encode(o['protected']),
-                         'signature': base64url_encode(o['signature'])}
+                    s = {'signature': base64url_encode(o['signature'])}
+                    if 'protected' in o:
+                        s['protected'] = base64url_encode(o['protected'])
                     if 'header' in o:
                         s['header'] = o['header']
                     sig['signatures'].append(s)

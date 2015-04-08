@@ -690,5 +690,6 @@ class ConformanceTests(unittest.TestCase):
                            alg="HS512")
         o = sign.serialize()
         check = jws.JWS()
-        check.deserialize(o, jwk.JWK(kty='oct', k=base64url_encode('A'*16)))
+        check.deserialize(o, jwk.JWK(kty='oct', k=base64url_encode('A'*16)),
+                          alg="HS512")
         self.assertTrue(check.objects['valid'])
