@@ -217,17 +217,17 @@ class JWSCore(object):
 
     def _jwa_PS256(self):
         return _raw_rsa(padding.PSS(padding.MGF1(hashes.SHA256()),
-                                    padding.PSS.MAX_LENGTH),
+                                    hashes.SHA256.digest_size),
                         hashes.SHA256())
 
     def _jwa_PS384(self):
         return _raw_rsa(padding.PSS(padding.MGF1(hashes.SHA384()),
-                                    padding.PSS.MAX_LENGTH),
+                                    hashes.SHA384.digest_size),
                         hashes.SHA384())
 
     def _jwa_PS512(self):
         return _raw_rsa(padding.PSS(padding.MGF1(hashes.SHA512()),
-                                    padding.PSS.MAX_LENGTH),
+                                    hashes.SHA512.digest_size),
                         hashes.SHA512())
 
     def _jwa_none(self):
