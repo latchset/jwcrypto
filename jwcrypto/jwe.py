@@ -580,7 +580,7 @@ class JWE(object):
         if 'aad' in self.objects:
             aad += '.' + base64url_encode(self.objects['aad'])
 
-        cek = alg.unwrap(key, ppe.get('encrypted_key', None))
+        cek = alg.unwrap(key, ppe.get('encrypted_key', ''))
         data = enc.decrypt(cek, aad, self.objects['iv'],
                            self.objects['ciphertext'],
                            self.objects['tag'])
@@ -639,10 +639,12 @@ class JWE(object):
                 if len(c) != 5:
                     raise InvalidJWEData()
                 o['protected'] = base64url_decode(str(c[0]))
+                ekey = base64url_decode(str(c[1]))
+                if ekey != '':
+                    o['encrypted_key'] = base64url_decode(str(c[1]))
                 o['iv'] = base64url_decode(str(c[2]))
                 o['ciphertext'] = base64url_decode(str(c[3]))
                 o['tag'] = base64url_decode(str(c[4]))
-                o['encrypted_key'] = base64url_decode(str(c[1]))
 
             self.objects = o
 
