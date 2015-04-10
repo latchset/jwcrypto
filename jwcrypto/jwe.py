@@ -1,5 +1,6 @@
 # Copyright (C) 2015 JWCrypto Project Contributors - see LICENSE file
 
+from binascii import hexlify, unhexlify
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import constant_time, hashes, hmac
 from cryptography.hazmat.primitives.padding import PKCS7
@@ -40,11 +41,11 @@ def encode_int(n, l):
         e = e[:L]
     else:
         e = '0' * (L - el) + e  # pad as necessary
-    return e.decode('hex')
+    return unhexlify(e)
 
 
 def decode_int(n):
-    return int(n.encode('hex'), 16)
+    return int(hexlify(n), 16)
 
 
 class InvalidJWEData(Exception):
@@ -145,7 +146,7 @@ class _aes_kw(_raw_key_mgmt):
         # Implement RFC 3394 Key Unwrap - 2.2.2
         # TODO: Use cryptography once issue #1733 is resolved
         iv = 'a6a6a6a6a6a6a6a6'
-        A = iv.decode('hex')
+        A = unhexlify(iv)
         R = [cek[i:i+8] for i in range(0, len(cek), 8)]
         n = len(R)
         for j in range(0, 6):
@@ -166,7 +167,7 @@ class _aes_kw(_raw_key_mgmt):
         # Implement RFC 3394 Key Unwrap - 2.2.3
         # TODO: Use cryptography once issue #1733 is resolved
         iv = 'a6a6a6a6a6a6a6a6'
-        Aiv = iv.decode('hex')
+        Aiv = unhexlify(iv)
 
         R = [ek[i:i+8] for i in range(0, len(ek), 8)]
         A = R.pop(0)

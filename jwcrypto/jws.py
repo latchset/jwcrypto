@@ -1,5 +1,6 @@
 # Copyright (C) 2015 JWCrypto Project Contributors - see LICENSE file
 
+from binascii import hexlify, unhexlify
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes, hmac
 from cryptography.hazmat.primitives.asymmetric import padding
@@ -123,7 +124,7 @@ class _raw_ec(_raw_jws):
         e = hex(n).rstrip("L").lstrip("0x")
         L = (l + 7) / 8  # number of bytes rounded up
         e = '0' * (L * 2 - len(e)) + e  # pad as necessary
-        return e.decode('hex')
+        return unhexlify(e)
 
     def sign(self, key, payload):
         skey = key.get_op_key('sign', self.curve)
@@ -139,7 +140,7 @@ class _raw_ec(_raw_jws):
         r = signature[:len(signature)/2]
         s = signature[len(signature)/2:]
         enc_signature = ec_utils.encode_rfc6979_signature(
-            int(r.encode('hex'), 16), int(s.encode('hex'), 16))
+            int(hexlify(r), 16), int(hexlify(s), 16))
         verifier = pkey.verifier(enc_signature, ec.ECDSA(self.hashfn))
         verifier.update(payload)
         verifier.verify()

@@ -1,5 +1,6 @@
 # Copyright (C) 2015  JWCrypto Project Contributors - see LICENSE file
 
+from binascii import hexlify
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives.asymmetric import ec
@@ -228,7 +229,7 @@ class JWK(object):
         # TODO: check alg ?
 
     def _decode_int(self, n):
-        return int(base64url_decode(n).encode('hex'), 16)
+        return int(hexlify(base64url_decode(n)), 16)
 
     def _rsa_pub(self, k):
         return rsa.RSAPublicNumbers(self._decode_int(k['e']),
