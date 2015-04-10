@@ -199,9 +199,9 @@ A1_signature = \
      132, 141, 121]
 A1_example = {'key': SymmetricKeys['keys'][1],
               'alg': 'HS256',
-              'protected': ''.join([chr(x) for x in A1_protected]),
-              'payload': ''.join([chr(x) for x in A1_payload]),
-              'signature': ''.join([chr(x) for x in A1_signature])}
+              'protected': bytes(bytearray(A1_protected)),
+              'payload': bytes(bytearray(A1_payload)),
+              'signature': bytes(bytearray(A1_signature))}
 
 # draft-ietf-jose-json-web-signature-41 - A.2
 A2_protected = \
@@ -258,9 +258,9 @@ A2_signature = \
      251, 71]
 A2_example = {'key': A2_key,
               'alg': 'RS256',
-              'protected': ''.join([chr(x) for x in A2_protected]),
-              'payload': ''.join([chr(x) for x in A2_payload]),
-              'signature': ''.join([chr(x) for x in A2_signature])}
+              'protected': bytes(bytearray(A2_protected)),
+              'payload': bytes(bytearray(A2_payload)),
+              'signature': bytes(bytearray(A2_signature))}
 
 # draft-ietf-jose-json-web-signature-41 - A.3
 A3_protected = \
@@ -281,9 +281,9 @@ A3_signature = \
      143, 63, 127, 138, 131, 163, 84, 213]
 A3_example = {'key': A3_key,
               'alg': 'ES256',
-              'protected': ''.join([chr(x) for x in A3_protected]),
-              'payload': ''.join([chr(x) for x in A3_payload]),
-              'signature': ''.join([chr(x) for x in A3_signature])}
+              'protected': bytes(bytearray(A3_protected)),
+              'payload': bytes(bytearray(A3_payload)),
+              'signature': bytes(bytearray(A3_signature))}
 
 
 # draft-ietf-jose-json-web-signature-41 - A.4
@@ -312,9 +312,9 @@ A4_signature = \
      232, 148, 188, 222, 59, 242, 103]
 A4_example = {'key': A4_key,
               'alg': 'ES512',
-              'protected': ''.join([chr(x) for x in A4_protected]),
-              'payload': ''.join([chr(x) for x in A4_payload]),
-              'signature': ''.join([chr(x) for x in A4_signature])}
+              'protected': bytes(bytearray(A4_protected)),
+              'payload': bytes(bytearray(A4_payload)),
+              'signature': bytes(bytearray(A4_signature))}
 
 
 # draft-ietf-jose-json-web-signature-41 - A.4
@@ -326,7 +326,7 @@ A5_signature = ""
 A5_example = {'key': A5_key,
               'alg': 'none',
               'protected': base64url_decode(A5_protected),
-              'payload': ''.join([chr(x) for x in A5_payload]),
+              'payload': bytes(bytearray(A5_payload)),
               'signature': A5_signature}
 
 A6_serialized = \
@@ -353,12 +353,12 @@ A6_serialized = \
     'lSApmWQxfKTUJqPP3-Kg6NU1Q"}]' + \
     '}'
 A6_example = {
-    'payload': ''.join([chr(x) for x in A2_payload]),
+    'payload': bytes(bytearray(A2_payload)),
     'key1': jwk.JWK(**A2_key),  # pylint: disable=star-args
-    'protected1': ''.join([chr(x) for x in A2_protected]),
+    'protected1': bytes(bytearray(A2_protected)),
     'header1': json_encode({"kid": "2010-12-29"}),
     'key2': jwk.JWK(**A3_key),  # pylint: disable=star-args
-    'protected2': ''.join([chr(x) for x in A3_protected]),
+    'protected2': bytes(bytearray(A3_protected)),
     'header2': json_encode({"kid": "e9bc097a-ce51-4036-9562-d2ade882db0d"}),
     'serialized': A6_serialized}
 
