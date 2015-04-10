@@ -648,7 +648,7 @@ class JWE(object):
 
             self.objects = o
 
-        except Exception, e:  # pylint: disable=broad-except
+        except Exception as e:  # pylint: disable=broad-except
             raise InvalidJWEData('Invalid format', repr(e))
 
         if key:
@@ -662,12 +662,12 @@ class JWE(object):
                 for rec in self.objects['recipients']:
                     try:
                         self._decrypt(key, rec)
-                    except Exception, e:  # pylint: disable=broad-except
+                    except Exception as e:  # pylint: disable=broad-except
                         self.decryptlog.append('Failed: [%s]' % repr(e))
             else:
                 try:
                     self._decrypt(key, self.objects)
-                except Exception, e:  # pylint: disable=broad-except
+                except Exception as e:  # pylint: disable=broad-except
                     self.decryptlog.append('Failed: [%s]' % repr(e))
 
             if not self.plaintext:

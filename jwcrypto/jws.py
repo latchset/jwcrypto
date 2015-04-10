@@ -92,7 +92,7 @@ class _raw_hmac(_raw_jws):
         h = self._hmac_setup(vkey, payload)
         try:
             h.verify(signature)
-        except InvalidSignature, e:
+        except InvalidSignature as e:
             raise InvalidJWSSignature(exception=e)
 
 
@@ -254,7 +254,7 @@ class JWSCore(object):
         try:
             signing_input = '.'.join([self.protected, self.payload])
             self.engine.verify(self.key, signing_input, signature)
-        except Exception, e:  # pylint: disable=broad-except
+        except Exception as e:  # pylint: disable=broad-except
             raise InvalidJWSSignature('Verification failed', repr(e))
         return True
 
@@ -403,7 +403,7 @@ class JWS(object):
 
         except InvalidJWSSignature:
             raise
-        except Exception, e:  # pylint: disable=broad-except
+        except Exception as e:  # pylint: disable=broad-except
             raise InvalidJWSObject('Invalid format', e)
 
         self.objects = o
