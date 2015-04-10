@@ -1,10 +1,10 @@
 # Copyright (C) 2015  JWCrypto Project Contributors - see LICENSE file
 
 from jwcrypto.common import base64url_decode, base64url_encode
+from jwcrypto.common import json_decode, json_encode
 from jwcrypto import jwk
 from jwcrypto import jws
 from jwcrypto import jwe
-import json
 import unittest
 
 # draft-ietf-jose-json-web-key-41 - A.1
@@ -177,7 +177,7 @@ class TestJWK(unittest.TestCase):
             _ = jwkey.get_op_key('sign')
             _ = jwkey.get_op_key('verify')
             e = jwkey.export()
-            self.assertEqual(json.loads(e), key)
+            self.assertEqual(json_decode(e), key)
 
         _ = jwk.JWK(**Useofx5c)  # pylint: disable=star-args
         _ = jwk.JWK(**RSAPrivateKey)  # pylint: disable=star-args
@@ -356,10 +356,10 @@ A6_example = {
     'payload': ''.join([chr(x) for x in A2_payload]),
     'key1': jwk.JWK(**A2_key),  # pylint: disable=star-args
     'protected1': ''.join([chr(x) for x in A2_protected]),
-    'header1': json.dumps({"kid": "2010-12-29"}),
+    'header1': json_encode({"kid": "2010-12-29"}),
     'key2': jwk.JWK(**A3_key),  # pylint: disable=star-args
     'protected2': ''.join([chr(x) for x in A3_protected]),
-    'header2': json.dumps({"kid": "e9bc097a-ce51-4036-9562-d2ade882db0d"}),
+    'header2': json_encode({"kid": "e9bc097a-ce51-4036-9562-d2ade882db0d"}),
     'serialized': A6_serialized}
 
 A7_example = \
@@ -582,7 +582,7 @@ E_A4_ex = {'key1': jwk.JWK(**E_A2_key),  # pylint: disable=star-args
            'key2': jwk.JWK(**E_A3_key),  # pylint: disable=star-args
            'header2': '{"alg":"A128KW","kid":"7"}',
            'protected': base64url_decode(E_A4_protected),
-           'unprotected': json.dumps(E_A4_unprotected),
+           'unprotected': json_encode(E_A4_unprotected),
            'plaintext': E_A3_plaintext,
            'vector': E_A4_vector}
 

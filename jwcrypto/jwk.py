@@ -4,7 +4,7 @@ from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives.asymmetric import ec
 from jwcrypto.common import base64url_decode
-import json
+from jwcrypto.common import json_decode, json_encode
 
 # draft-ietf-jose-json-web-algorithms-24 - 7.4
 JWKTypesRegistry = {'EC': 'Elliptic Curve',
@@ -189,7 +189,7 @@ class JWK(object):
         d.update(self._params)
         d.update(self._key)
         d.update(self._unknown)
-        return json.dumps(d)
+        return json_encode(d)
 
     @property
     def key_type(self):
@@ -306,8 +306,8 @@ class JWKSet(set):
     def export(self):
         keys = list()
         for jwk in self:
-            keys.append(json.loads(jwk.export()))
-        return json.dumps({'keys': keys})
+            keys.append(json_decode(jwk.export()))
+        return json_encode({'keys': keys})
 
     def get_key(self, kid):
         for jwk in self:

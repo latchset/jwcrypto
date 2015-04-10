@@ -7,8 +7,8 @@ from cryptography.hazmat.primitives.asymmetric import padding
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from jwcrypto.common import base64url_encode, base64url_decode
 from jwcrypto.common import InvalidJWAAlgorithm
+from jwcrypto.common import json_decode, json_encode
 from jwcrypto.jwk import JWK
-import json
 import os
 import zlib
 
@@ -362,10 +362,10 @@ class JWE(object):
         if aad:
             self.objects['aad'] = aad
         if protected:
-            _ = json.loads(protected)  # check header encoding
+            _ = json_decode(protected)  # check header encoding
             self.objects['protected'] = protected
         if unprotected:
-            _ = json.loads(unprotected)  # check header encoding
+            _ = json_decode(unprotected)  # check header encoding
             self.objects['unprotected'] = unprotected
 
     # key wrapping mechanisms
@@ -430,13 +430,13 @@ class JWE(object):
     def get_jose_header(self, header=None):
         jh = dict()
         if 'protected' in self.objects:
-            ph = json.loads(self.objects['protected'])
+            ph = json_decode(self.objects['protected'])
             jh = self.merge_headers(jh, ph)
         if 'unprotected' in self.objects:
-            uh = json.loads(self.objects['unprotected'])
+            uh = json_decode(self.objects['unprotected'])
             jh = self.merge_headers(jh, uh)
         if header:
-            rh = json.loads(header)
+            rh = json_decode(header)
             jh = self.merge_headers(jh, rh)
         return jh
 
@@ -535,7 +535,7 @@ class JWE(object):
             if 'protected' in obj:
                 enc['protected'] = base64url_encode(obj['protected'])
             if 'unprotected' in obj:
-                enc['unprotected'] = json.loads(obj['unprotected'])
+                enc['unprotected'] = json_decode(obj['unprotected'])
             if 'aad' in obj:
                 enc['aad'] = base64url_encode(obj['aad'])
             if 'recipients' in obj:
@@ -546,15 +546,15 @@ class JWE(object):
                         e['encrypted_key'] = \
                             base64url_encode(rec['encrypted_key'])
                     if 'header' in rec:
-                        e['header'] = json.loads(rec['header'])
+                        e['header'] = json_decode(rec['header'])
                     enc['recipients'].append(e)
             else:
                 if 'encrypted_key' in obj:
                     enc['encrypted_key'] = \
                         base64url_encode(obj['encrypted_key'])
                 if 'header' in obj:
-                    enc['header'] = json.loads(obj['header'])
-            return json.dumps(enc)
+                    enc['header'] = json_decode(obj['header'])
+            return json_encode(enc)
 
     def check_crit(self, crit):
         for k in crit:
@@ -607,14 +607,14 @@ class JWE(object):
         o = dict()
         try:
             try:
-                djwe = json.loads(raw_jwe)
+                djwe = json_decode(raw_jwe)
                 o['iv'] = base64url_decode(str(djwe['iv']))
                 o['ciphertext'] = base64url_decode(str(djwe['ciphertext']))
                 o['tag'] = base64url_decode(str(djwe['tag']))
                 if 'protected' in djwe:
                     o['protected'] = base64url_decode(str(djwe['protected']))
                 if 'unprotected' in djwe:
-                    o['unprotected'] = json.dumps(djwe['unprotected'])
+                    o['unprotected'] = json_encode(djwe['unprotected'])
                 if 'aad' in djwe:
                     o['aad'] = base64url_decode(str(djwe['aad']))
                 if 'recipients' in djwe:
@@ -625,14 +625,14 @@ class JWE(object):
                             e['encrypted_key'] = \
                                 base64url_decode(str(rec['encrypted_key']))
                         if 'header' in rec:
-                            e['header'] = json.dumps(rec['header'])
+                            e['header'] = json_encode(rec['header'])
                         o['recipients'].append(e)
                 else:
                     if 'encrypted_key' in djwe:
                         o['encrypted_key'] = \
                             base64url_decode(str(djwe['encrypted_key']))
                     if 'header' in djwe:
-                        o['header'] = json.dumps(djwe['header'])
+                        o['header'] = json_encode(djwe['header'])
 
             except ValueError:
                 c = raw_jwe.split('.')

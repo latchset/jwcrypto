@@ -1,6 +1,7 @@
 # Copyright (C) 2015 JWCrypto Project Contributors - see LICENSE file
 
 from base64 import urlsafe_b64encode, urlsafe_b64decode
+import json
 
 
 # Padding stripping versions as described in
@@ -20,6 +21,16 @@ def base64url_decode(payload):
     elif l != 0:
         raise ValueError('Invalid base64 string')
     return urlsafe_b64decode(payload)
+
+
+# JSON encoding/decoding helpers with good defaults
+
+def json_encode(string):
+    return json.dumps(string, separators=(',', ':'))
+
+
+def json_decode(string):
+    return json.loads(string)
 
 
 class InvalidJWAAlgorithm(Exception):

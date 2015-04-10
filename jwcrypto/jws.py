@@ -8,8 +8,8 @@ from cryptography.hazmat.primitives.asymmetric import utils as ec_utils
 from cryptography.exceptions import InvalidSignature
 from jwcrypto.common import base64url_encode, base64url_decode
 from jwcrypto.common import InvalidJWAAlgorithm
+from jwcrypto.common import json_decode, json_encode
 from jwcrypto.jwk import JWK
-import json
 
 
 # draft-ietf-jose-json-web-signature-41 - 9.1
@@ -284,14 +284,14 @@ class JWS(object):
     def verify(self, alg, key, payload, signature, protected, header=None):
         # verify it is a valid JSON object and keep a decode copy
         if protected is not None:
-            p = json.loads(protected)
+            p = json_decode(protected)
         else:
             p = dict()
         if not isinstance(p, dict):
             raise InvalidJWSSignature('Invalid Protected header')
         # merge heders, and verify there are no duplicates
         if header:
-            h = json.loads(header)
+            h = json_decode(header)
             if not isinstance(h, dict):
                 raise InvalidJWSSignature('Invalid Unprotected header')
             for k in p.keys():
@@ -327,7 +327,7 @@ class JWS(object):
         o = dict()
         try:
             try:
-                djws = json.loads(raw_jws)
+                djws = json_decode(raw_jws)
                 o['payload'] = base64url_decode(str(djws['payload']))
                 if 'signatures' in djws:
                     o['signatures'] = list()
@@ -340,7 +340,7 @@ class JWS(object):
                             os['protected'] = \
                                 base64url_decode(str(s['protected']))
                         if 'header' in s:
-                            os['header'] = json.dumps(s['header'])
+                            os['header'] = json_encode(s['header'])
                         try:
                             self.verify(alg, key, o['payload'],
                                         os['signature'],
@@ -362,7 +362,7 @@ class JWS(object):
                         o['protected'] = \
                             base64url_decode(str(djws['protected']))
                     if 'header' in djws:
-                        o['header'] = json.dumps(djws['header'])
+                        o['header'] = json_encode(djws['header'])
                     try:
                         self.verify(alg, key, o['payload'],
                                     o['signature'],
@@ -414,7 +414,7 @@ class JWS(object):
 
         p = dict()
         if protected:
-            p = json.loads(protected)
+            p = json_decode(protected)
             if 'alg' in p:
                 if alg is None:
                     alg = p['alg']
@@ -428,7 +428,7 @@ class JWS(object):
                 self.check_crit(p['crit'])
 
         if header:
-            h = json.loads(header)
+            h = json_decode(header)
             for k in p.keys():
                 if k in h:
                     raise ValueError('Duplicate header: "%s"' % k)
@@ -520,4 +520,4 @@ class JWS(object):
                     raise InvalidJWSSignature("No valid signature found")
             else:
                 raise InvalidJWSSignature("No available signature")
-            return json.dumps(sig)
+            return json_encode(sig)

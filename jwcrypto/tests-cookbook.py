@@ -1,10 +1,10 @@
 # Copyright (C) 2015  JWCrypto Project Contributors - see LICENSE file
 
 from jwcrypto.common import base64url_decode  # , base64url_encode
+from jwcrypto.common import json_decode, json_encode
 from jwcrypto import jwk
 from jwcrypto import jws
 # from jwcrypto import jwe
-import json
 import unittest
 
 # Based on: draft-ietf-jose-cookbook-08
@@ -299,8 +299,8 @@ class Cookbook08JWSTests(unittest.TestCase):
         S = jws.JWS(payload=plaintext)
         S.add_signature(pri_key, None, protected)
         self.assertEqual(JWS_compact_4_1_3, S.serialize(compact=True))
-        S.deserialize(json.dumps(JWS_general_4_1_3), pub_key)
-        S.deserialize(json.dumps(JWS_flattened_4_1_3), pub_key)
+        S.deserialize(json_encode(JWS_general_4_1_3), pub_key)
+        S.deserialize(json_encode(JWS_flattened_4_1_3), pub_key)
 
     def test_4_2_signing(self):
         plaintext = base64url_decode(Payload_plaintext_b64_4)
@@ -315,8 +315,8 @@ class Cookbook08JWSTests(unittest.TestCase):
         S.deserialize(sig, pub_key)
         # Just deserialize each example form
         S.deserialize(JWS_compact_4_2_3, pub_key)
-        S.deserialize(json.dumps(JWS_general_4_2_3), pub_key)
-        S.deserialize(json.dumps(JWS_flattened_4_2_3), pub_key)
+        S.deserialize(json_encode(JWS_general_4_2_3), pub_key)
+        S.deserialize(json_encode(JWS_flattened_4_2_3), pub_key)
 
     def test_4_3_signing(self):
         plaintext = base64url_decode(Payload_plaintext_b64_4)
@@ -331,8 +331,8 @@ class Cookbook08JWSTests(unittest.TestCase):
         S.deserialize(sig, pub_key)
         # Just deserialize each example form
         S.deserialize(JWS_compact_4_3_3, pub_key)
-        S.deserialize(json.dumps(JWS_general_4_3_3), pub_key)
-        S.deserialize(json.dumps(JWS_flattened_4_3_3), pub_key)
+        S.deserialize(json_encode(JWS_general_4_3_3), pub_key)
+        S.deserialize(json_encode(JWS_flattened_4_3_3), pub_key)
 
     def test_4_4_signing(self):
         plaintext = base64url_decode(Payload_plaintext_b64_4)
@@ -345,46 +345,46 @@ class Cookbook08JWSTests(unittest.TestCase):
         self.assertEqual(sig, JWS_compact_4_4_3)
         # Just deserialize each example form
         S.deserialize(JWS_compact_4_4_3, key)
-        S.deserialize(json.dumps(JWS_general_4_4_3), key)
-        S.deserialize(json.dumps(JWS_flattened_4_4_3), key)
+        S.deserialize(json_encode(JWS_general_4_4_3), key)
+        S.deserialize(json_encode(JWS_flattened_4_4_3), key)
 
     def test_4_6_signing(self):
         plaintext = base64url_decode(Payload_plaintext_b64_4)
         protected = base64url_decode(JWS_Protected_Header_4_6_2)
-        header = json.dumps(JWS_Unprotected_Header_4_6_2)
+        header = json_encode(JWS_Unprotected_Header_4_6_2)
         key = jwk.JWK(**Symmetric_Key_MAC_3_5)  # pylint: disable=star-args
         S = jws.JWS(payload=plaintext)
         S.add_signature(key, None, protected, header)
         sig = S.serialize()
         S.deserialize(sig, key)
-        self.assertEqual(json.loads(sig), JWS_flattened_4_6_3)
+        self.assertEqual(json_decode(sig), JWS_flattened_4_6_3)
         # Just deserialize each example form
-        S.deserialize(json.dumps(JWS_general_4_6_3), key)
-        S.deserialize(json.dumps(JWS_flattened_4_6_3), key)
+        S.deserialize(json_encode(JWS_general_4_6_3), key)
+        S.deserialize(json_encode(JWS_flattened_4_6_3), key)
 
     def test_4_7_signing(self):
         plaintext = base64url_decode(Payload_plaintext_b64_4)
-        header = json.dumps(JWS_Unprotected_Header_4_7_2)
+        header = json_encode(JWS_Unprotected_Header_4_7_2)
         key = jwk.JWK(**Symmetric_Key_MAC_3_5)  # pylint: disable=star-args
         S = jws.JWS(payload=plaintext)
         S.add_signature(key, None, None, header)
         sig = S.serialize()
         S.deserialize(sig, key)
-        self.assertEqual(json.loads(sig), JWS_flattened_4_7_3)
+        self.assertEqual(json_decode(sig), JWS_flattened_4_7_3)
         # Just deserialize each example form
-        S.deserialize(json.dumps(JWS_general_4_7_3), key)
-        S.deserialize(json.dumps(JWS_flattened_4_7_3), key)
+        S.deserialize(json_encode(JWS_general_4_7_3), key)
+        S.deserialize(json_encode(JWS_flattened_4_7_3), key)
 
     def test_4_8_signing(self):
         plaintext = base64url_decode(Payload_plaintext_b64_4)
         S = jws.JWS(payload=plaintext)
         # 4_8_2
         protected = base64url_decode(JWS_Protected_Header_4_8_2)
-        header = json.dumps(JWS_Unprotected_Header_4_8_2)
+        header = json_encode(JWS_Unprotected_Header_4_8_2)
         pri_key = jwk.JWK(**RSA_Private_Key_3_4)  # pylint: disable=star-args
         S.add_signature(pri_key, None, protected, header)
         # 4_8_3
-        header = json.dumps(JWS_Unprotected_Header_4_8_3)
+        header = json_encode(JWS_Unprotected_Header_4_8_3)
         pri_key = jwk.JWK(**EC_Private_Key_3_2)  # pylint: disable=star-args
         S.add_signature(pri_key, None, None, header)
         # 4_8_4
@@ -400,6 +400,6 @@ class Cookbook08JWSTests(unittest.TestCase):
         S.deserialize(sig, ec_key)
         S.deserialize(sig, sym_key)
         # Just deserialize each example form
-        S.deserialize(json.dumps(JWS_general_4_8_5), rsa_key)
-        S.deserialize(json.dumps(JWS_general_4_8_5), ec_key)
-        S.deserialize(json.dumps(JWS_general_4_8_5), sym_key)
+        S.deserialize(json_encode(JWS_general_4_8_5), rsa_key)
+        S.deserialize(json_encode(JWS_general_4_8_5), ec_key)
+        S.deserialize(json_encode(JWS_general_4_8_5), sym_key)
