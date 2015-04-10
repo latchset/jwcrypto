@@ -152,7 +152,7 @@ class _raw_none(_raw_jws):
         return ''
 
     def verify(self, key, payload, signature):
-        if signature != '':
+        if signature != b'':
             raise InvalidJWSSignature('The "none" signature must be the '
                                       'empty string')
 
@@ -187,7 +187,7 @@ class JWSCore(object):
         self.key = key
 
         if header is not None:
-            self.protected = base64url_encode(unicode(header, 'utf-8'))
+            self.protected = base64url_encode(header.encode('utf-8'))
         else:
             self.protected = ''
         self.payload = base64url_encode(payload)
@@ -245,16 +245,16 @@ class JWSCore(object):
             raise InvalidJWAAlgorithm()
 
     def sign(self):
-        signing_input = str.encode('.'.join([self.protected, self.payload]))
-        signature = self.engine.sign(self.key, signing_input)
+        sigin = ('.'.join([self.protected, self.payload])).encode('utf-8')
+        signature = self.engine.sign(self.key, sigin)
         return {'protected': self.protected,
                 'payload': self.payload,
                 'signature': base64url_encode(signature)}
 
     def verify(self, signature):
         try:
-            signing_input = '.'.join([self.protected, self.payload])
-            self.engine.verify(self.key, signing_input, signature)
+            sigin = ('.'.join([self.protected, self.payload])).encode('utf-8')
+            self.engine.verify(self.key, sigin, signature)
         except Exception as e:  # pylint: disable=broad-except
             raise InvalidJWSSignature('Verification failed', repr(e))
         return True
@@ -338,8 +338,8 @@ class JWS(object):
                         os = dict()
                         os['signature'] = base64url_decode(str(s['signature']))
                         if 'protected' in s:
-                            os['protected'] = \
-                                base64url_decode(str(s['protected']))
+                            p = base64url_decode(str(s['protected']))
+                            os['protected'] = p.decode('utf-8')
                         if 'header' in s:
                             os['header'] = json_encode(s['header'])
                         try:
@@ -360,8 +360,8 @@ class JWS(object):
                 else:
                     o['signature'] = base64url_decode(str(djws['signature']))
                     if 'protected' in djws:
-                        o['protected'] = \
-                            base64url_decode(str(djws['protected']))
+                        p = base64url_decode(str(djws['protected']))
+                        o['protected'] = p.decode('utf-8')
                     if 'header' in djws:
                         o['header'] = json_encode(djws['header'])
                     try:
@@ -385,8 +385,8 @@ class JWS(object):
                 if len(c) != 3:
                     raise InvalidJWSObject('Unrecognized representation')
                 p = base64url_decode(str(c[0]))
-                if p != '':
-                    o['protected'] = p
+                if len(p) > 0:
+                    o['protected'] = p.decode('utf-8')
                 o['payload'] = base64url_decode(str(c[1]))
                 o['signature'] = base64url_decode(str(c[2]))
                 try:

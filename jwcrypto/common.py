@@ -9,7 +9,10 @@ import json
 
 
 def base64url_encode(payload):
-    return urlsafe_b64encode(payload).rstrip('=')
+    if not isinstance(payload, bytes):
+        payload = payload.encode('utf-8')
+    encode = urlsafe_b64encode(payload)
+    return encode.decode('utf-8').rstrip('=')
 
 
 def base64url_decode(payload):
@@ -20,16 +23,20 @@ def base64url_decode(payload):
         payload += '='
     elif l != 0:
         raise ValueError('Invalid base64 string')
-    return urlsafe_b64decode(payload)
+    return urlsafe_b64decode(payload.encode('utf-8'))
 
 
 # JSON encoding/decoding helpers with good defaults
 
 def json_encode(string):
+    if isinstance(string, bytes):
+        string = string.decode('utf-8')
     return json.dumps(string, separators=(',', ':'))
 
 
 def json_decode(string):
+    if isinstance(string, bytes):
+        string = string.decode('utf-8')
     return json.loads(string)
 
 

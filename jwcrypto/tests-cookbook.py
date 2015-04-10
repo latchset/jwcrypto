@@ -293,7 +293,8 @@ class Cookbook08JWSTests(unittest.TestCase):
 
     def test_4_1_signing(self):
         plaintext = base64url_decode(Payload_plaintext_b64_4)
-        protected = base64url_decode(JWS_Protected_Header_4_1_2)
+        protected = \
+            base64url_decode(JWS_Protected_Header_4_1_2).decode('utf-8')
         pub_key = jwk.JWK(**RSA_Public_Key_3_3)  # pylint: disable=star-args
         pri_key = jwk.JWK(**RSA_Private_Key_3_4)  # pylint: disable=star-args
         S = jws.JWS(payload=plaintext)
@@ -304,7 +305,8 @@ class Cookbook08JWSTests(unittest.TestCase):
 
     def test_4_2_signing(self):
         plaintext = base64url_decode(Payload_plaintext_b64_4)
-        protected = base64url_decode(JWS_Protected_Header_4_2_2)
+        protected = \
+            base64url_decode(JWS_Protected_Header_4_2_2).decode('utf-8')
         pub_key = jwk.JWK(**RSA_Public_Key_3_3)  # pylint: disable=star-args
         pri_key = jwk.JWK(**RSA_Private_Key_3_4)  # pylint: disable=star-args
         S = jws.JWS(payload=plaintext)
@@ -320,7 +322,8 @@ class Cookbook08JWSTests(unittest.TestCase):
 
     def test_4_3_signing(self):
         plaintext = base64url_decode(Payload_plaintext_b64_4)
-        protected = base64url_decode(JWS_Protected_Header_4_3_2)
+        protected = \
+            base64url_decode(JWS_Protected_Header_4_3_2).decode('utf-8')
         pub_key = jwk.JWK(**EC_Public_Key_3_1)  # pylint: disable=star-args
         pri_key = jwk.JWK(**EC_Private_Key_3_2)  # pylint: disable=star-args
         S = jws.JWS(payload=plaintext)
@@ -336,7 +339,8 @@ class Cookbook08JWSTests(unittest.TestCase):
 
     def test_4_4_signing(self):
         plaintext = base64url_decode(Payload_plaintext_b64_4)
-        protected = base64url_decode(JWS_Protected_Header_4_4_2)
+        protected = \
+            base64url_decode(JWS_Protected_Header_4_4_2).decode('utf-8')
         key = jwk.JWK(**Symmetric_Key_MAC_3_5)  # pylint: disable=star-args
         S = jws.JWS(payload=plaintext)
         S.add_signature(key, None, protected)
@@ -350,7 +354,8 @@ class Cookbook08JWSTests(unittest.TestCase):
 
     def test_4_6_signing(self):
         plaintext = base64url_decode(Payload_plaintext_b64_4)
-        protected = base64url_decode(JWS_Protected_Header_4_6_2)
+        protected = \
+            base64url_decode(JWS_Protected_Header_4_6_2).decode('utf-8')
         header = json_encode(JWS_Unprotected_Header_4_6_2)
         key = jwk.JWK(**Symmetric_Key_MAC_3_5)  # pylint: disable=star-args
         S = jws.JWS(payload=plaintext)
@@ -379,7 +384,8 @@ class Cookbook08JWSTests(unittest.TestCase):
         plaintext = base64url_decode(Payload_plaintext_b64_4)
         S = jws.JWS(payload=plaintext)
         # 4_8_2
-        protected = base64url_decode(JWS_Protected_Header_4_8_2)
+        protected = \
+            base64url_decode(JWS_Protected_Header_4_8_2).decode('utf-8')
         header = json_encode(JWS_Unprotected_Header_4_8_2)
         pri_key = jwk.JWK(**RSA_Private_Key_3_4)  # pylint: disable=star-args
         S.add_signature(pri_key, None, protected, header)
@@ -388,7 +394,8 @@ class Cookbook08JWSTests(unittest.TestCase):
         pri_key = jwk.JWK(**EC_Private_Key_3_2)  # pylint: disable=star-args
         S.add_signature(pri_key, None, None, header)
         # 4_8_4
-        protected = base64url_decode(JWS_Protected_Header_4_8_4)
+        protected = \
+            base64url_decode(JWS_Protected_Header_4_8_4).decode('utf-8')
         sym_key = jwk.JWK(**Symmetric_Key_MAC_3_5)  # pylint: disable=star-args
         S.add_signature(sym_key, None, protected)
         sig = S.serialize()
@@ -407,11 +414,11 @@ class Cookbook08JWSTests(unittest.TestCase):
 
 # 5.0
 Payload_plaintext_5 = \
-    "You can trust us to stick with you through thick and " + \
-    "thin\xe2\x80\x93to the bitter end. And you can trust us to " + \
-    "keep any secret of yours\xe2\x80\x93closer than you keep it " + \
-    "yourself. But you cannot trust us to let you face trouble " + \
-    "alone, and go off without a word. We are your friends, Frodo."
+    b"You can trust us to stick with you through thick and " + \
+    b"thin\xe2\x80\x93to the bitter end. And you can trust us to " + \
+    b"keep any secret of yours\xe2\x80\x93closer than you keep it " + \
+    b"yourself. But you cannot trust us to let you face trouble " + \
+    b"alone, and go off without a word. We are your friends, Frodo."
 
 # 5.1
 RSA_key_5_1_1 = {

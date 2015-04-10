@@ -1,5 +1,6 @@
 # Copyright (C) 2015  JWCrypto Project Contributors - see LICENSE file
 
+from __future__ import unicode_literals
 from jwcrypto.common import base64url_decode, base64url_encode
 from jwcrypto.common import json_decode, json_encode
 from jwcrypto import jwk
@@ -199,7 +200,7 @@ A1_signature = \
      132, 141, 121]
 A1_example = {'key': SymmetricKeys['keys'][1],
               'alg': 'HS256',
-              'protected': bytes(bytearray(A1_protected)),
+              'protected': bytes(bytearray(A1_protected)).decode('utf-8'),
               'payload': bytes(bytearray(A1_payload)),
               'signature': bytes(bytearray(A1_signature))}
 
@@ -258,7 +259,7 @@ A2_signature = \
      251, 71]
 A2_example = {'key': A2_key,
               'alg': 'RS256',
-              'protected': bytes(bytearray(A2_protected)),
+              'protected': bytes(bytearray(A2_protected)).decode('utf-8'),
               'payload': bytes(bytearray(A2_payload)),
               'signature': bytes(bytearray(A2_signature))}
 
@@ -281,7 +282,7 @@ A3_signature = \
      143, 63, 127, 138, 131, 163, 84, 213]
 A3_example = {'key': A3_key,
               'alg': 'ES256',
-              'protected': bytes(bytearray(A3_protected)),
+              'protected': bytes(bytearray(A3_protected)).decode('utf-8'),
               'payload': bytes(bytearray(A3_payload)),
               'signature': bytes(bytearray(A3_signature))}
 
@@ -312,7 +313,7 @@ A4_signature = \
      232, 148, 188, 222, 59, 242, 103]
 A4_example = {'key': A4_key,
               'alg': 'ES512',
-              'protected': bytes(bytearray(A4_protected)),
+              'protected': bytes(bytearray(A4_protected)).decode('utf-8'),
               'payload': bytes(bytearray(A4_payload)),
               'signature': bytes(bytearray(A4_signature))}
 
@@ -322,10 +323,10 @@ A5_protected = 'eyJhbGciOiJub25lIn0'
 A5_payload = A2_payload
 A5_key = \
     {"kty": "oct", "k": ""}
-A5_signature = ""
+A5_signature = b''
 A5_example = {'key': A5_key,
               'alg': 'none',
-              'protected': base64url_decode(A5_protected),
+              'protected': base64url_decode(A5_protected).decode('utf-8'),
               'payload': bytes(bytearray(A5_payload)),
               'signature': A5_signature}
 
@@ -355,10 +356,10 @@ A6_serialized = \
 A6_example = {
     'payload': bytes(bytearray(A2_payload)),
     'key1': jwk.JWK(**A2_key),  # pylint: disable=star-args
-    'protected1': bytes(bytearray(A2_protected)),
+    'protected1': bytes(bytearray(A2_protected)).decode('utf-8'),
     'header1': json_encode({"kid": "2010-12-29"}),
     'key2': jwk.JWK(**A3_key),  # pylint: disable=star-args
-    'protected2': bytes(bytearray(A3_protected)),
+    'protected2': bytes(bytearray(A3_protected)).decode('utf-8'),
     'header2': json_encode({"kid": "e9bc097a-ce51-4036-9562-d2ade882db0d"}),
     'serialized': A6_serialized}
 
@@ -489,7 +490,7 @@ E_A1_vector = \
 
 E_A1_ex = {'key': jwk.JWK(**E_A1_key),  # pylint: disable=star-args
            'protected': base64url_decode(E_A1_protected),
-           'plaintext': E_A1_plaintext,
+           'plaintext': bytes(bytearray(E_A1_plaintext)),
            'vector': E_A1_vector}
 
 E_A2_plaintext = "Live long and prosper."
@@ -552,7 +553,7 @@ E_A3_vector = \
     "U0m_YmjN04DJvceFICbCVQ"
 
 E_A3_ex = {'key': jwk.JWK(**E_A3_key),  # pylint: disable=star-args
-           'protected': base64url_decode(E_A3_protected),
+           'protected': base64url_decode(E_A3_protected).decode('utf-8'),
            'plaintext': E_A3_plaintext,
            'vector': E_A3_vector}
 
@@ -651,45 +652,45 @@ class ConformanceTests(unittest.TestCase):
 
     def test_jwe_no_protected_header(self):
         enc = jwe.JWE(plaintext='plain')
-        enc.add_recipient(jwk.JWK(kty='oct', k=base64url_encode('A'*16)),
+        enc.add_recipient(jwk.JWK(kty='oct', k=base64url_encode(b'A'*16)),
                           '{"alg":"A128KW","enc":"A128GCM"}')
 
     def test_jwe_no_alg_in_jose_headers(self):
         enc = jwe.JWE(plaintext='plain')
         self.assertRaises(jwe.InvalidJWEData, enc.add_recipient,
-                          jwk.JWK(kty='oct', k=base64url_encode('A'*16)),
+                          jwk.JWK(kty='oct', k=base64url_encode(b'A'*16)),
                           '{"enc":"A128GCM"}')
 
     def test_jwe_no_enc_in_jose_headers(self):
         enc = jwe.JWE(plaintext='plain')
         self.assertRaises(jwe.InvalidJWEData, enc.add_recipient,
-                          jwk.JWK(kty='oct', k=base64url_encode('A'*16)),
+                          jwk.JWK(kty='oct', k=base64url_encode(b'A'*16)),
                           '{"alg":"A128KW"}')
 
     def test_aes_128(self):
         enc = jwe.JWE(plaintext='plain')
-        key128 = jwk.JWK(kty='oct', k=base64url_encode('A' * (128 // 8)))
+        key128 = jwk.JWK(kty='oct', k=base64url_encode(b'A' * (128 // 8)))
         enc.add_recipient(key128, '{"alg":"A128KW","enc":"A128CBC-HS256"}')
         enc.add_recipient(key128, '{"alg":"A128KW","enc":"A128GCM"}')
 
     def test_aes_192(self):
         enc = jwe.JWE(plaintext='plain')
-        key192 = jwk.JWK(kty='oct', k=base64url_encode('B' * (192 // 8)))
+        key192 = jwk.JWK(kty='oct', k=base64url_encode(b'B' * (192 // 8)))
         enc.add_recipient(key192, '{"alg":"A192KW","enc":"A192CBC-HS384"}')
         enc.add_recipient(key192, '{"alg":"A192KW","enc":"A192GCM"}')
 
     def test_aes_256(self):
         enc = jwe.JWE(plaintext='plain')
-        key256 = jwk.JWK(kty='oct', k=base64url_encode('C' * (256 // 8)))
+        key256 = jwk.JWK(kty='oct', k=base64url_encode(b'C' * (256 // 8)))
         enc.add_recipient(key256, '{"alg":"A256KW","enc":"A256CBC-HS512"}')
         enc.add_recipient(key256, '{"alg":"A256KW","enc":"A256GCM"}')
 
     def test_jws_loopback(self):
         sign = jws.JWS(payload='message')
-        sign.add_signature(jwk.JWK(kty='oct', k=base64url_encode('A'*16)),
+        sign.add_signature(jwk.JWK(kty='oct', k=base64url_encode(b'A'*16)),
                            alg="HS512")
         o = sign.serialize()
         check = jws.JWS()
-        check.deserialize(o, jwk.JWK(kty='oct', k=base64url_encode('A'*16)),
+        check.deserialize(o, jwk.JWK(kty='oct', k=base64url_encode(b'A'*16)),
                           alg="HS512")
         self.assertTrue(check.objects['valid'])

@@ -184,7 +184,7 @@ class _aes_kw(_raw_key_mgmt):
         if A != Aiv:
             raise InvalidJWEData('Decryption Failed')
 
-        cek = ''.join(R)
+        cek = b''.join(R)
         return cek
 
 
@@ -205,7 +205,7 @@ class _direct(_raw_key_mgmt):
 
     def unwrap(self, key, ek):
         self.check_key(key)
-        if ek != '':
+        if ek != b'':
             raise InvalidJWEData('Invalid Encryption Key.')
         return base64url_decode(key.get_op_key('decrypt'))
 
@@ -357,7 +357,12 @@ class JWE(object):
         :param aad(bytes): Arbitrary additional authenticated data
         """
         self.objects = dict()
-        self.plaintext = plaintext
+        self.plaintext = None
+        if plaintext is not None:
+            if isinstance(plaintext, bytes):
+                self.plaintext = plaintext
+            else:
+                self.plaintext = plaintext.encode('utf-8')
         self.cek = None
         self.decryptlog = None
         if aad:
@@ -463,6 +468,8 @@ class JWE(object):
         """
         if self.plaintext is None:
             raise ValueError('Missing plaintext')
+        if not isinstance(self.plaintext, bytes):
+            raise ValueError("Plaintext must be 'bytes'")
         if not isinstance(key, JWK):
             raise ValueError('key is not a JWK object')
 
@@ -481,6 +488,7 @@ class JWE(object):
             aad = base64url_encode(self.objects.get('protected', ''))
             if 'aad' in self.objects:
                 aad += '.' + base64url_encode(self.objects['aad'])
+            aad = aad.encode('utf-8')
 
             compress = jh.get('zip', None)
             if compress == 'DEF':
@@ -581,8 +589,9 @@ class JWE(object):
         if 'aad' in self.objects:
             aad += '.' + base64url_encode(self.objects['aad'])
 
-        cek = alg.unwrap(key, ppe.get('encrypted_key', ''))
-        data = enc.decrypt(cek, aad, self.objects['iv'],
+        cek = alg.unwrap(key, ppe.get('encrypted_key', b''))
+        data = enc.decrypt(cek, aad.encode('utf-8'),
+                           self.objects['iv'],
                            self.objects['ciphertext'],
                            self.objects['tag'])
 
@@ -613,7 +622,8 @@ class JWE(object):
                 o['ciphertext'] = base64url_decode(str(djwe['ciphertext']))
                 o['tag'] = base64url_decode(str(djwe['tag']))
                 if 'protected' in djwe:
-                    o['protected'] = base64url_decode(str(djwe['protected']))
+                    p = base64url_decode(str(djwe['protected']))
+                    o['protected'] = p.decode('utf-8')
                 if 'unprotected' in djwe:
                     o['unprotected'] = json_encode(djwe['unprotected'])
                 if 'aad' in djwe:
@@ -639,7 +649,8 @@ class JWE(object):
                 c = raw_jwe.split('.')
                 if len(c) != 5:
                     raise InvalidJWEData()
-                o['protected'] = base64url_decode(str(c[0]))
+                p = base64url_decode(str(c[0]))
+                o['protected'] = p.decode('utf-8')
                 ekey = base64url_decode(str(c[1]))
                 if ekey != '':
                     o['encrypted_key'] = base64url_decode(str(c[1]))
