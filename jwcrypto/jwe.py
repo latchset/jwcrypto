@@ -73,7 +73,7 @@ class InvalidJWEOperation(Exception):
         else:
             msg = 'Unknown Operation Failure'
         if exception:
-            msg += ' {%s}' % str(exception)
+            msg += ' {%s}' % repr(exception)
         super(InvalidJWEOperation, self).__init__(msg)
 
 
@@ -649,7 +649,7 @@ class JWE(object):
             self.objects = o
 
         except Exception, e:  # pylint: disable=broad-except
-            raise InvalidJWEData('Invalid format', e)
+            raise InvalidJWEData('Invalid format', repr(e))
 
         if key:
             if not isinstance(key, JWK):
@@ -663,12 +663,13 @@ class JWE(object):
                     try:
                         self._decrypt(key, rec)
                     except Exception, e:  # pylint: disable=broad-except
-                        self.decryptlog.append('Failed: [%s]' % str(e))
+                        self.decryptlog.append('Failed: [%s]' % repr(e))
             else:
                 try:
                     self._decrypt(key, self.objects)
                 except Exception, e:  # pylint: disable=broad-except
-                    self.decryptlog.append('Failed: [%s]' % str(e))
+                    self.decryptlog.append('Failed: [%s]' % repr(e))
 
             if not self.plaintext:
-                raise InvalidJWEData('No recipient matches the provided key')
+                raise InvalidJWEData('No recipient matched the provided '
+                                     'key' + repr(self.decryptlog))
