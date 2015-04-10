@@ -128,7 +128,7 @@ class _aes_kw(_raw_key_mgmt):
 
     def __init__(self, keysize):
         self.backend = default_backend()
-        self.keysize = keysize / 8
+        self.keysize = keysize // 8
 
     def get_key(self, key, op):
         if key.key_type != 'oct':
@@ -224,7 +224,7 @@ class _aes_cbc_hmac_sha2(_raw_jwe):
     def __init__(self, hashfn, keybits):
         self.backend = default_backend()
         self.hashfn = hashfn
-        self.keysize = keybits / 8
+        self.keysize = keybits // 8
         self.blocksize = algorithms.AES.block_size
 
     @property
@@ -256,7 +256,7 @@ class _aes_cbc_hmac_sha2(_raw_jwe):
         ekey = k[self.keysize:]
 
         # encrypt
-        iv = os.urandom(self.blocksize / 8)
+        iv = os.urandom(self.blocksize // 8)
         cipher = Cipher(algorithms.AES(ekey), modes.CBC(iv),
                         backend=self.backend)
         encryptor = cipher.encryptor()
@@ -300,7 +300,7 @@ class _aes_gcm(_raw_jwe):
 
     def __init__(self, keybits):
         self.backend = default_backend()
-        self.keysize = keybits / 8
+        self.keysize = keybits // 8
 
     @property
     def key_size(self):
@@ -317,7 +317,7 @@ class _aes_gcm(_raw_jwe):
 
         Returns a dictionary with the computed data.
         """
-        iv = os.urandom(96 / 8)
+        iv = os.urandom(96 // 8)
         cipher = Cipher(algorithms.AES(k), modes.GCM(iv),
                         backend=self.backend)
         encryptor = cipher.encryptor()

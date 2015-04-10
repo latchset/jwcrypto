@@ -122,7 +122,7 @@ class _raw_ec(_raw_jws):
 
     def encode_int(self, n, l):
         e = hex(n).rstrip("L").lstrip("0x")
-        L = (l + 7) / 8  # number of bytes rounded up
+        L = (l + 7) // 8  # number of bytes rounded up
         e = '0' * (L * 2 - len(e)) + e  # pad as necessary
         return unhexlify(e)
 
@@ -137,8 +137,8 @@ class _raw_ec(_raw_jws):
 
     def verify(self, key, payload, signature):
         pkey = key.get_op_key('verify', self.curve)
-        r = signature[:len(signature)/2]
-        s = signature[len(signature)/2:]
+        r = signature[:len(signature)//2]
+        s = signature[len(signature)//2:]
         enc_signature = ec_utils.encode_rfc6979_signature(
             int(hexlify(r), 16), int(hexlify(s), 16))
         verifier = pkey.verifier(enc_signature, ec.ECDSA(self.hashfn))
