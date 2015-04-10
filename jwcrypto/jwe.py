@@ -422,7 +422,7 @@ class JWE(object):
             raise InvalidJWAAlgorithm()
 
     def merge_headers(self, h1, h2):
-        for k in h1.keys():
+        for k in list(h1.keys()):
             if k in h2:
                 raise InvalidJWEData('Duplicate header: "%s"' % k)
         h1.update(h2)

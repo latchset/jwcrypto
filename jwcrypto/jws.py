@@ -295,7 +295,7 @@ class JWS(object):
             h = json_decode(header)
             if not isinstance(h, dict):
                 raise InvalidJWSSignature('Invalid Unprotected header')
-            for k in p.keys():
+            for k in list(p.keys()):
                 if k in h:
                     raise InvalidJWSSignature('Duplicate header: "%s"' % k)
             p.update(h)
@@ -430,7 +430,7 @@ class JWS(object):
 
         if header:
             h = json_decode(header)
-            for k in p.keys():
+            for k in list(p.keys()):
                 if k in h:
                     raise ValueError('Duplicate header: "%s"' % k)
 

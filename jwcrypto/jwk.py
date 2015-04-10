@@ -70,7 +70,7 @@ class InvalidJWKType(Exception):
 
     def __str__(self):
         return 'Unknown type "%s", valid types are: %s' % (
-            self.value, JWKTypesRegistry.keys())
+            self.value, list(JWKTypesRegistry.keys()))
 
 
 class InvalidJWKUsage(Exception):
@@ -81,11 +81,11 @@ class InvalidJWKUsage(Exception):
         self.use = use
 
     def __str__(self):
-        if self.use in JWKUseRegistry.keys():
+        if self.use in list(JWKUseRegistry.keys()):
             usage = JWKUseRegistry[self.use]
         else:
             usage = 'Unknown(%s)' % self.use
-        if self.value in JWKUseRegistry.keys():
+        if self.value in list(JWKUseRegistry.keys()):
             valid = JWKUseRegistry[self.value]
         else:
             valid = 'Unknown(%s)' % self.value
@@ -101,13 +101,13 @@ class InvalidJWKOperation(Exception):
         self.values = values
 
     def __str__(self):
-        if self.op in JWKOperationsRegistry.keys():
+        if self.op in list(JWKOperationsRegistry.keys()):
             op = JWKOperationsRegistry[self.op]
         else:
             op = 'Unknown(%s)' % self.op
         valid = list()
         for v in self.values:
-            if v in JWKOperationsRegistry.keys():
+            if v in list(JWKOperationsRegistry.keys()):
                 valid.append(JWKOperationsRegistry[v])
             else:
                 valid.append('Unknown(%s)' % v)
@@ -123,10 +123,10 @@ class JWK(object):
 
     def __init__(self, **kwargs):
 
-        names = kwargs.keys()
+        names = list(kwargs.keys())
 
         self._params = dict()
-        for name in JWKParamsRegistry.keys():
+        for name in list(JWKParamsRegistry.keys()):
             if name in kwargs:
                 self._params[name] = kwargs[name]
                 while name in names:
@@ -137,7 +137,7 @@ class JWK(object):
             raise InvalidJWKType(kty)
 
         self._key = dict()
-        for name in JWKValuesRegistry[kty].keys():
+        for name in list(JWKValuesRegistry[kty].keys()):
             if name in kwargs:
                 self._key[name] = kwargs[name]
                 while name in names:
@@ -274,7 +274,8 @@ class JWK(object):
             raise NotImplementedError
 
     def get_op_key(self, operation=None, arg=None):
-        validops = self._params.get('key_ops', JWKOperationsRegistry.keys())
+        validops = self._params.get('key_ops',
+                                    list(JWKOperationsRegistry.keys()))
         if validops is not list:
             validops = [validops]
         if operation is None:
