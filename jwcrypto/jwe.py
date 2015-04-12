@@ -606,6 +606,29 @@ class JWE(object):
         else:
             raise ValueError('Unknown compression')
 
+    def decrypt(self, key):
+        if not isinstance(key, JWK):
+            raise ValueError('key is not a JWK object')
+        if 'ciphertext' not in self.objects:
+            raise InvalidJWEOperation("No available ciphertext")
+        self.decryptlog = list()
+
+        if 'recipients' in self.objects:
+            for rec in self.objects['recipients']:
+                try:
+                    self._decrypt(key, rec)
+                except Exception as e:  # pylint: disable=broad-except
+                    self.decryptlog.append('Failed: [%s]' % repr(e))
+        else:
+            try:
+                self._decrypt(key, self.objects)
+            except Exception as e:  # pylint: disable=broad-except
+                self.decryptlog.append('Failed: [%s]' % repr(e))
+
+        if not self.plaintext:
+            raise InvalidJWEData('No recipient matched the provided '
+                                 'key' + repr(self.decryptlog))
+
     def deserialize(self, raw_jwe, key=None):
         """ Destroys any current status and tries to import the raw
             JWS provided.
@@ -664,24 +687,4 @@ class JWE(object):
             raise InvalidJWEData('Invalid format', repr(e))
 
         if key:
-            if not isinstance(key, JWK):
-                raise ValueError('key is not a JWK object')
-            if 'ciphertext' not in self.objects:
-                raise InvalidJWEOperation("No available ciphertext")
-            self.decryptlog = list()
-
-            if 'recipients' in self.objects:
-                for rec in self.objects['recipients']:
-                    try:
-                        self._decrypt(key, rec)
-                    except Exception as e:  # pylint: disable=broad-except
-                        self.decryptlog.append('Failed: [%s]' % repr(e))
-            else:
-                try:
-                    self._decrypt(key, self.objects)
-                except Exception as e:  # pylint: disable=broad-except
-                    self.decryptlog.append('Failed: [%s]' % repr(e))
-
-            if not self.plaintext:
-                raise InvalidJWEData('No recipient matched the provided '
-                                     'key' + repr(self.decryptlog))
+            self.decrypt(key)
