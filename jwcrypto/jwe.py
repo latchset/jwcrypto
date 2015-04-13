@@ -694,3 +694,10 @@ class JWE(object):
         if not self.plaintext:
             raise InvalidJWEOperation("Plaintext not available")
         return self.plaintext
+
+    @property
+    def jose_header(self):
+        jh = self.get_jose_header()
+        if len(jh) == 0:
+            raise InvalidJWEOperation("JOSE Header not available")
+        return jh
