@@ -434,8 +434,9 @@ class TestJWS(unittest.TestCase):
 
     def test_E(self):
         S = jws.JWS(A6_example['payload'])
-        self.assertRaises(jws.InvalidJWSSignature,
-                          S.deserialize, E_negative)
+        with self.assertRaises(jws.InvalidJWSSignature):
+            jws.InvalidJWSSignature(S.deserialize, E_negative)
+            S.verify(None)
 
 
 E_A1_plaintext = \
