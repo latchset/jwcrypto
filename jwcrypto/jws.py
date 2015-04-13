@@ -519,3 +519,11 @@ class JWS(object):
             else:
                 raise InvalidJWSSignature("No available signature")
             return json_encode(sig)
+
+    @property
+    def payload(self):
+        if 'payload' not in self.objects:
+            raise InvalidJWSOperation("Payload not available")
+        if not self.is_valid:
+            raise InvalidJWSOperation("Payload not verified")
+        return self.objects['payload']

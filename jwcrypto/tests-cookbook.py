@@ -959,13 +959,13 @@ class Cookbook08JWETests(unittest.TestCase):
         E.add_recipient(rsa_key)
         e = E.serialize()
         E.deserialize(e, rsa_key)
-        self.assertEqual(E.plaintext, plaintext)
+        self.assertEqual(E.payload, plaintext)
         E.deserialize(JWE_compact_5_1_5, rsa_key)
-        self.assertEqual(E.plaintext, plaintext)
+        self.assertEqual(E.payload, plaintext)
         E.deserialize(json_encode(JWE_general_5_1_5), rsa_key)
-        self.assertEqual(E.plaintext, plaintext)
+        self.assertEqual(E.payload, plaintext)
         E.deserialize(json_encode(JWE_flattened_5_1_5), rsa_key)
-        self.assertEqual(E.plaintext, plaintext)
+        self.assertEqual(E.payload, plaintext)
 
     def test_5_2_encryption(self):
         plaintext = Payload_plaintext_5
@@ -975,13 +975,13 @@ class Cookbook08JWETests(unittest.TestCase):
         E.add_recipient(rsa_key)
         e = E.serialize()
         E.deserialize(e, rsa_key)
-        self.assertEqual(E.plaintext, plaintext)
+        self.assertEqual(E.payload, plaintext)
         E.deserialize(JWE_compact_5_2_5, rsa_key)
-        self.assertEqual(E.plaintext, plaintext)
+        self.assertEqual(E.payload, plaintext)
         E.deserialize(json_encode(JWE_general_5_2_5), rsa_key)
-        self.assertEqual(E.plaintext, plaintext)
+        self.assertEqual(E.payload, plaintext)
         E.deserialize(json_encode(JWE_flattened_5_2_5), rsa_key)
-        self.assertEqual(E.plaintext, plaintext)
+        self.assertEqual(E.payload, plaintext)
 
 # 5.3 - PBES2-* not implemented yet
 #     def test_5_3_encryption(self):
@@ -1000,11 +1000,11 @@ class Cookbook08JWETests(unittest.TestCase):
         E.add_recipient(aes_key)
         e = E.serialize()
         E.deserialize(e, aes_key)
-        self.assertEqual(E.plaintext, plaintext)
+        self.assertEqual(E.payload, plaintext)
         E.deserialize(JWE_compact_5_6_4, aes_key)
-        self.assertEqual(E.plaintext, plaintext)
+        self.assertEqual(E.payload, plaintext)
         E.deserialize(json_encode(JWE_general_5_6_4), aes_key)
-        self.assertEqual(E.plaintext, plaintext)
+        self.assertEqual(E.payload, plaintext)
 
 # 5.7 - AES-GCM key wrapping not implemented yet
 #     def test_5_7_encryption(self):
@@ -1017,13 +1017,13 @@ class Cookbook08JWETests(unittest.TestCase):
         E.add_recipient(aes_key)
         e = E.serialize()
         E.deserialize(e, aes_key)
-        self.assertEqual(E.plaintext, plaintext)
+        self.assertEqual(E.payload, plaintext)
         E.deserialize(JWE_compact_5_8_5, aes_key)
-        self.assertEqual(E.plaintext, plaintext)
+        self.assertEqual(E.payload, plaintext)
         E.deserialize(json_encode(JWE_general_5_8_5), aes_key)
-        self.assertEqual(E.plaintext, plaintext)
+        self.assertEqual(E.payload, plaintext)
         E.deserialize(json_encode(JWE_flattened_5_8_5), aes_key)
-        self.assertEqual(E.plaintext, plaintext)
+        self.assertEqual(E.payload, plaintext)
 
     def test_5_9_encryption(self):
         plaintext = Payload_plaintext_5
@@ -1033,13 +1033,13 @@ class Cookbook08JWETests(unittest.TestCase):
         E.add_recipient(aes_key)
         e = E.serialize()
         E.deserialize(e, aes_key)
-        self.assertEqual(E.plaintext, plaintext)
+        self.assertEqual(E.payload, plaintext)
         E.deserialize(JWE_compact_5_9_5, aes_key)
-        self.assertEqual(E.plaintext, plaintext)
+        self.assertEqual(E.payload, plaintext)
         E.deserialize(json_encode(JWE_general_5_9_5), aes_key)
-        self.assertEqual(E.plaintext, plaintext)
+        self.assertEqual(E.payload, plaintext)
         E.deserialize(json_encode(JWE_flattened_5_9_5), aes_key)
-        self.assertEqual(E.plaintext, plaintext)
+        self.assertEqual(E.payload, plaintext)
 
     def test_5_10_encryption(self):
         plaintext = Payload_plaintext_5
@@ -1050,11 +1050,11 @@ class Cookbook08JWETests(unittest.TestCase):
         E.add_recipient(aes_key)
         e = E.serialize()
         E.deserialize(e, aes_key)
-        self.assertEqual(E.plaintext, plaintext)
+        self.assertEqual(E.payload, plaintext)
         E.deserialize(json_encode(JWE_general_5_10_5), aes_key)
-        self.assertEqual(E.plaintext, plaintext)
+        self.assertEqual(E.payload, plaintext)
         E.deserialize(json_encode(JWE_flattened_5_10_5), aes_key)
-        self.assertEqual(E.plaintext, plaintext)
+        self.assertEqual(E.payload, plaintext)
 
     def test_5_11_encryption(self):
         plaintext = Payload_plaintext_5
@@ -1065,11 +1065,11 @@ class Cookbook08JWETests(unittest.TestCase):
         E.add_recipient(aes_key)
         e = E.serialize()
         E.deserialize(e, aes_key)
-        self.assertEqual(E.plaintext, plaintext)
+        self.assertEqual(E.payload, plaintext)
         E.deserialize(json_encode(JWE_general_5_11_5), aes_key)
-        self.assertEqual(E.plaintext, plaintext)
+        self.assertEqual(E.payload, plaintext)
         E.deserialize(json_encode(JWE_flattened_5_11_5), aes_key)
-        self.assertEqual(E.plaintext, plaintext)
+        self.assertEqual(E.payload, plaintext)
 
     def test_5_12_encryption(self):
         plaintext = Payload_plaintext_5
@@ -1079,11 +1079,11 @@ class Cookbook08JWETests(unittest.TestCase):
         E.add_recipient(aes_key)
         e = E.serialize()
         E.deserialize(e, aes_key)
-        self.assertEqual(E.plaintext, plaintext)
+        self.assertEqual(E.payload, plaintext)
         E.deserialize(json_encode(JWE_general_5_12_5), aes_key)
-        self.assertEqual(E.plaintext, plaintext)
+        self.assertEqual(E.payload, plaintext)
         E.deserialize(json_encode(JWE_flattened_5_12_5), aes_key)
-        self.assertEqual(E.plaintext, plaintext)
+        self.assertEqual(E.payload, plaintext)
 
 # 5.13 - AES-GCM key wrapping not implemented yet
 #     def test_5_13_encryption(self):

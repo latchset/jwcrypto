@@ -688,3 +688,9 @@ class JWE(object):
 
         if key:
             self.decrypt(key)
+
+    @property
+    def payload(self):
+        if not self.plaintext:
+            raise InvalidJWEOperation("Plaintext not available")
+        return self.plaintext
