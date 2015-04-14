@@ -528,9 +528,12 @@ class JWE(object):
             for invalid in 'aad', 'unprotected':
                 if invalid in self.objects:
                     raise InvalidJWEOperation("Can't use compact encoding")
-            if len(self.objects['recipients']) != 1:
-                raise InvalidJWEOperation("Invalid number of recipients")
-            rec = self.objects['recipients'][0]
+            if 'recipiens' in self.objects:
+                if len(self.objects['recipients']) != 1:
+                    raise InvalidJWEOperation("Invalid number of recipients")
+                rec = self.objects['recipients'][0]
+            else:
+                rec = self.objects
             return '.'.join([base64url_encode(self.objects['protected']),
                              base64url_encode(rec['encrypted_key']),
                              base64url_encode(self.objects['iv']),
