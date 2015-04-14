@@ -272,7 +272,7 @@ class JWS(object):
             self.objects['payload'] = payload
         self.verifylog = None
 
-    def check_crit(self, crit):
+    def _check_crit(self, crit):
         for k in crit:
             if k not in JWSHeaderRegistry:
                 raise InvalidJWSSignature('Unknown critical header: '
@@ -286,7 +286,7 @@ class JWS(object):
     def is_valid(self):
         return self.objects.get('valid', False)
 
-    def merge_headers(self, h1, h2):
+    def _merge_headers(self, h1, h2):
         for k in list(h1.keys()):
             if k in h2:
                 raise InvalidJWSObject('Duplicate header: "%s"' % k)
@@ -307,11 +307,11 @@ class JWS(object):
             h = json_decode(header)
             if not isinstance(h, dict):
                 raise InvalidJWSSignature('Invalid Unprotected header')
-            p = self.merge_headers(p, h)
+            p = self._merge_headers(p, h)
         # verify critical headers
         # TODO: allow caller to specify list of headers it understands
         if 'crit' in p:
-            self.check_crit(p['crit'])
+            self._check_crit(p['crit'])
         # check 'alg' is present
         if alg is None and 'alg' not in p:
             raise InvalidJWSSignature('No "alg" in headers')
@@ -419,11 +419,11 @@ class JWS(object):
             p = json_decode(protected)
             # TODO: allow caller to specify list of headers it understands
             if 'crit' in p:
-                self.check_crit(p['crit'])
+                self._check_crit(p['crit'])
 
         if header:
             h = json_decode(header)
-            p = self.merge_headers(p, h)
+            p = self._merge_headers(p, h)
 
         if 'alg' in p:
             if alg is None:
@@ -528,8 +528,8 @@ class JWS(object):
             jh = dict()
             if 'protected' in obj:
                 p = json_decode(obj['protected'])
-                jh = self.merge_headers(jh, p)
-            jh = self.merge_headers(jh, obj.get('header', dict()))
+                jh = self._merge_headers(jh, p)
+            jh = self._merge_headers(jh, obj.get('header', dict()))
             return jh
         elif 'signatures' in self.objects:
             jhl = list()
@@ -537,8 +537,8 @@ class JWS(object):
                 jh = dict()
                 if 'protected' in obj:
                     p = json_decode(o['protected'])
-                    jh = self.merge_headers(jh, p)
-                jh = self.merge_headers(jh, o.get('header', dict()))
+                    jh = self._merge_headers(jh, p)
+                jh = self._merge_headers(jh, o.get('header', dict()))
                 jhl.append(jh)
             return jhl
         else:
