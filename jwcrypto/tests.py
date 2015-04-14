@@ -6,6 +6,7 @@ from jwcrypto.common import json_decode, json_encode
 from jwcrypto import jwk
 from jwcrypto import jws
 from jwcrypto import jwe
+from jwcrypto import jwt
 import unittest
 
 # draft-ietf-jose-json-web-key-41 - A.1
@@ -636,6 +637,71 @@ class TestJWE(unittest.TestCase):
     def test_A5(self):
         E = jwe.JWE()
         E.deserialize(E_A5_ex)
+
+
+# draft-ietf-oauth-json-web-token-32
+A1_header = {
+    "alg": "RSA1_5",
+    "enc": "A128CBC-HS256"}
+
+A1_claims = {
+    "iss": "joe",
+    "exp": 1300819380,
+    "http://example.com/is_root": True}
+
+A1_token = \
+    "eyJhbGciOiJSU0ExXzUiLCJlbmMiOiJBMTI4Q0JDLUhTMjU2In0." + \
+    "QR1Owv2ug2WyPBnbQrRARTeEk9kDO2w8qDcjiHnSJflSdv1iNqhWXaKH4MqAkQtM" + \
+    "oNfABIPJaZm0HaA415sv3aeuBWnD8J-Ui7Ah6cWafs3ZwwFKDFUUsWHSK-IPKxLG" + \
+    "TkND09XyjORj_CHAgOPJ-Sd8ONQRnJvWn_hXV1BNMHzUjPyYwEsRhDhzjAD26ima" + \
+    "sOTsgruobpYGoQcXUwFDn7moXPRfDE8-NoQX7N7ZYMmpUDkR-Cx9obNGwJQ3nM52" + \
+    "YCitxoQVPzjbl7WBuB7AohdBoZOdZ24WlN1lVIeh8v1K4krB8xgKvRU8kgFrEn_a" + \
+    "1rZgN5TiysnmzTROF869lQ." + \
+    "AxY8DCtDaGlsbGljb3RoZQ." + \
+    "MKOle7UQrG6nSxTLX6Mqwt0orbHvAKeWnDYvpIAeZ72deHxz3roJDXQyhxx0wKaM" + \
+    "HDjUEOKIwrtkHthpqEanSBNYHZgmNOV7sln1Eu9g3J8." + \
+    "fiK51VwhsxJ-siBMR-YFiA"
+
+A2_token = \
+    "eyJhbGciOiJSU0ExXzUiLCJlbmMiOiJBMTI4Q0JDLUhTMjU2IiwiY3R5IjoiSldU" + \
+    "In0." + \
+    "g_hEwksO1Ax8Qn7HoN-BVeBoa8FXe0kpyk_XdcSmxvcM5_P296JXXtoHISr_DD_M" + \
+    "qewaQSH4dZOQHoUgKLeFly-9RI11TG-_Ge1bZFazBPwKC5lJ6OLANLMd0QSL4fYE" + \
+    "b9ERe-epKYE3xb2jfY1AltHqBO-PM6j23Guj2yDKnFv6WO72tteVzm_2n17SBFvh" + \
+    "DuR9a2nHTE67pe0XGBUS_TK7ecA-iVq5COeVdJR4U4VZGGlxRGPLRHvolVLEHx6D" + \
+    "YyLpw30Ay9R6d68YCLi9FYTq3hIXPK_-dmPlOUlKvPr1GgJzRoeC9G5qCvdcHWsq" + \
+    "JGTO_z3Wfo5zsqwkxruxwA." + \
+    "UmVkbW9uZCBXQSA5ODA1Mg." + \
+    "VwHERHPvCNcHHpTjkoigx3_ExK0Qc71RMEParpatm0X_qpg-w8kozSjfNIPPXiTB" + \
+    "BLXR65CIPkFqz4l1Ae9w_uowKiwyi9acgVztAi-pSL8GQSXnaamh9kX1mdh3M_TT" + \
+    "-FZGQFQsFhu0Z72gJKGdfGE-OE7hS1zuBD5oEUfk0Dmb0VzWEzpxxiSSBbBAzP10" + \
+    "l56pPfAtrjEYw-7ygeMkwBl6Z_mLS6w6xUgKlvW6ULmkV-uLC4FUiyKECK4e3WZY" + \
+    "Kw1bpgIqGYsw2v_grHjszJZ-_I5uM-9RA8ycX9KqPRp9gc6pXmoU_-27ATs9XCvr" + \
+    "ZXUtK2902AUzqpeEUJYjWWxSNsS-r1TJ1I-FMJ4XyAiGrfmo9hQPcNBYxPz3GQb2" + \
+    "8Y5CLSQfNgKSGt0A4isp1hBUXBHAndgtcslt7ZoQJaKe_nNJgNliWtWpJ_ebuOpE" + \
+    "l8jdhehdccnRMIwAmU1n7SPkmhIl1HlSOpvcvDfhUN5wuqU955vOBvfkBOh5A11U" + \
+    "zBuo2WlgZ6hYi9-e3w29bR0C2-pp3jbqxEDw3iWaf2dc5b-LnR0FEYXvI_tYk5rd" + \
+    "_J9N0mg0tQ6RbpxNEMNoA9QWk5lgdPvbh9BaO195abQ." + \
+    "AVO9iT5AV4CzvDJCdhSFlQ"
+
+
+class TestJWT(unittest.TestCase):
+
+    def test_A1(self):
+        key = jwk.JWK(**E_A2_key)  # pylint: disable=star-args
+        # first encode/decode ourselves
+        T = jwt.JWT(A1_header, A1_claims)
+        T.make_encrypted_token(key)
+        token = T.serialize()
+        T.deserialize(token)
+        # then try the test vector
+        T = jwt.JWT(jwt=A1_token, key=key)
+
+    def test_A2(self):
+        sigkey = jwk.JWK(**A2_example['key'])  # pylint: disable=star-args
+        Touter = jwt.JWT(jwt=A2_token, key=E_A2_ex['key'])
+        Tinner = jwt.JWT(jwt=Touter.claims, key=sigkey)
+        self.assertEqual(A1_claims, json_decode(Tinner.claims))
 
 
 class ConformanceTests(unittest.TestCase):
