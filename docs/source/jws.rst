@@ -6,13 +6,36 @@ version 41).
 A JSON Web Signature is represented by a JWS object, related utility
 classes and functions are availbale in this module too.
 
-JWS
----
+.. _JSON Web Signature: http://tools.ietf.org/html/draft-ietf-jose-json-web-signature-41
 
-.. automodule:: jwcrypto.jws
+Classes
+-------
+
+.. autoclass:: jwcrypto.jws.JWS
    :members:
-   :undoc-members:
    :show-inheritance:
 
+.. autoclass:: jwcrypto.jws.JWSCore
+   :members:
+   :show-inheritance:
 
-.. _JSON Web Signature: http://tools.ietf.org/html/draft-ietf-jose-json-web-signature-41
+Exceptions
+----------
+
+.. autoclass:: jwcrypto.jws.InvalidJWSSignature
+   :members:
+   :show-inheritance:
+
+.. autoclass:: jwcrypto.jws.InvalidJWSObject
+   :members:
+   :show-inheritance:
+
+.. autoclass:: jwcrypto.jws.InvalidJWSOperation
+   :members:
+   :show-inheritance:
+
+Registries
+----------
+
+.. autodata:: jwcrypto.jws.JWSHeaderRegistry
+   :annotation:

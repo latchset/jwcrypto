@@ -27,9 +27,15 @@ JWSHeaderRegistry = {'alg': ('Algorithm', True),
                      'typ': ('Type', True),
                      'cty': ('Content Type', True),
                      'crit': ('Critical', True)}
+"""Registry of valid header parameters"""
 
 
 class InvalidJWSSignature(Exception):
+    """Invalid JWS Signature.
+
+    This exception is raised when a signature cannot be validated.
+    """
+
     def __init__(self, message=None, exception=None):
         msg = None
         if message:
@@ -42,6 +48,12 @@ class InvalidJWSSignature(Exception):
 
 
 class InvalidJWSObject(Exception):
+    """Invalid JWS Object.
+
+    This exception is raised when the JWS Object is invalid and/or
+    improperly formatted.
+    """
+
     def __init__(self, message=None, exception=None):
         msg = 'Invalid JWS Object'
         if message:
@@ -52,6 +64,12 @@ class InvalidJWSObject(Exception):
 
 
 class InvalidJWSOperation(Exception):
+    """Invalid JWS Object.
+
+    This exception is raised when a requested operation cannot
+    be execute due to unsatisfied conditions.
+    """
+
     def __init__(self, message=None, exception=None):
         msg = None
         if message:
@@ -158,27 +176,27 @@ class _raw_none(_raw_jws):
 
 
 class JWSCore(object):
+    """The inner JWS Core object.
+
+    This object SHOULD NOT be used directly, the JWS object should be
+    used instead as JWS perform necessary checks on the validity of
+    the object and requested operations.
+
+    """
 
     def __init__(self, alg, key, header, payload):
-        """ Core JWS token handling.
-            See draft-ietf-jose-json-web-signature-41
-
-            NOTE: Users should normally use JWS, not JWSCore,
-            as JWS perform necessary checks not performed by JWSCore.
+        """Core JWS token handling.
 
         :param alg: The algorithm used to produce the signature.
-                    See draft-ietf-jose-json-web-algorithms-24
-
-
-        :param key: A JWK key of appropriate type for the "alg"
-                    provided in the 'protected' json string.
-                    See draft-ietf-jose-json-web-key-41
-
+         See draft-ietf-jose-json-web-algorithms-24
+        :param key: A (:class:`jwcrypto.jwk.JWK`) key of appropriate
+         type for the "alg" provided in the 'protected' json string.
         :param header: A JSON string representing the protected header.
-
         :param payload(bytes): An arbitrary value
 
-        :raises: InvalidJWAAlgorithm
+        :raises ValueError: if the key is not a :class:`JWK` object
+        :raises InvalidJWAAlgorithm: if the algorithm is not valid, is
+         unknown or otherwise not yet implemented.
         """
         self.alg = alg
         self.engine = self._jwa(alg)
@@ -245,6 +263,7 @@ class JWSCore(object):
             raise InvalidJWAAlgorithm()
 
     def sign(self):
+        """Generates a signature"""
         sigin = ('.'.join([self.protected, self.payload])).encode('utf-8')
         signature = self.engine.sign(self.key, sigin)
         return {'protected': self.protected,
@@ -252,6 +271,10 @@ class JWSCore(object):
                 'signature': base64url_encode(signature)}
 
     def verify(self, signature):
+        """Verifies a signature
+
+        :raises InvalidJWSSignature: if the verification fails.
+        """
         try:
             sigin = ('.'.join([self.protected, self.payload])).encode('utf-8')
             self.engine.verify(self.key, sigin, signature)
@@ -261,11 +284,15 @@ class JWSCore(object):
 
 
 class JWS(object):
-    def __init__(self, payload=None):
-        """ Generates or verifies Generic JWS tokens.
-            See draft-ietf-jose-json-web-signature-41
+    """JSON Web Signature object
 
-        :param payload(bytes): An arbitrary value
+    This object represent a JWS token.
+    """
+
+    def __init__(self, payload=None):
+        """Creates a JWS object.
+
+        :param payload(bytes): An arbitrary value (optional).
         """
         self.objects = dict()
         if payload:
@@ -330,6 +357,15 @@ class JWS(object):
         S.verify(signature)
 
     def verify(self, key, alg=None):
+        """Verifies a JWS token.
+
+        :param key: The (:class:`jwcrypto.jwk.JWK`) verification key.
+        :param alg: The signing algorithm (optional). usually the algorithm
+        is known as it is provided with the JOSE Headers of the token.
+
+        :raises InvalidJWSSignature: if the verification fails.
+        """
+
         self.verifylog = list()
         self.objects['valid'] = False
         obj = self.objects
@@ -364,8 +400,21 @@ class JWS(object):
                                       'signatures' + repr(self.verifylog))
 
     def deserialize(self, raw_jws, key=None, alg=None):
-        """ Destroys any current status and tries to import the raw
-            JWS provided.
+        """Deserialize a JWS token.
+
+        NOTE: Destroys any current status and tries to import the raw
+        JWS provided.
+
+        :param raw_jws: a 'raw' JWS token (JSON Encoded or Compact
+         notation) string.
+        :param key: A (:class:`jwcrypto.jwk.JWK`) verification key (optional).
+         If a key is provided a verification step will be attempted after
+         the object is successfully deserialized.
+        :param alg: The signing algorithm (optional). usually the algorithm
+         is known as it is provided with the JOSE Headers of the token.
+
+        :raises InvalidJWSObject: if the raw object is an invaid JWS token.
+        :raises InvalidJWSSignature: if the verification fails.
         """
         self.objects = dict()
         o = dict()
@@ -411,6 +460,24 @@ class JWS(object):
             self.verify(key, alg)
 
     def add_signature(self, key, alg=None, protected=None, header=None):
+        """Adds a new signature to the object.
+
+        :param key: A (:class:`jwcrypto.jwk.JWK`) key of appropriate for
+         the "alg" provided.
+        :param alg: An optional algorithm name. If already provided as an
+         element of the protected or unprotected header it can be safely
+         omitted.
+        :param potected: The Protected Header (optional)
+        :param header: The Unprotected Header (optional)
+
+        :raises InvalidJWSObject: if no payload has been set on the object.
+        :raises ValueError: if the key is not a :class:`JWK` object.
+        :raises ValueError: if the algorithm is missing or is not provided
+         by one of the headers.
+        :raises InvalidJWAAlgorithm: if the algorithm is not valid, is
+         unknown or otherwise not yet implemented.
+        """
+
         if not self.objects.get('payload', None):
             raise InvalidJWSObject('Missing Payload')
 
@@ -468,6 +535,16 @@ class JWS(object):
             self.objects.update(o)
 
     def serialize(self, compact=False):
+        """Serializes the object into a JWS token.
+
+        :param compact(boolean): if True generates the compact
+         representation, otherwise generates a standard JSON format.
+
+        :raises InvalidJWSOperation: if the object cannot serialized
+         with the compact representation and `compat` is True.
+        :raises InvalidJWSSignature: if no signature has been added
+         to the object, or no valid signature can be found.
+        """
 
         if compact:
             if 'signatures' in self.objects:
