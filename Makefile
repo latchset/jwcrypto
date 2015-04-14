@@ -1,4 +1,4 @@
-all: lint pep8 test
+all: lint pep8 docs test
 	echo "All tests passed"
 
 lint:
@@ -24,3 +24,9 @@ cscope:
 test:
 	rm -f .coverage
 	nosetests -s
+
+DOCS_DIR = docs
+.PHONY: docs
+
+docs:
+	$(MAKE) -C $(DOCS_DIR) html
