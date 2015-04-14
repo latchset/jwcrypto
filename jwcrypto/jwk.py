@@ -11,6 +11,7 @@ from jwcrypto.common import json_decode, json_encode
 JWKTypesRegistry = {'EC': 'Elliptic Curve',
                     'RSA': 'RSA',
                     'oct': 'Octet sequence'}
+"""Registry of valid Key Types"""
 
 # draft-ietf-jose-json-web-algorithms-24 - 7.5
 # It is part of the JWK Parameters Registry, but we want a more
@@ -28,6 +29,7 @@ JWKValuesRegistry = {'EC': {'crv': ('Curve', 'Public'),
                              'dq': ('Second Factor CRT Exponent', 'Private'),
                              'qi': ('First CRT Coefficient', 'Private')},
                      'oct': {'k': ('Key Value', 'Private')}}
+"""Registry of valid key values"""
 
 JWKParamsRegistry = {'kty': ('Key Type', 'Public', ),
                      'use': ('Public Key Use', 'Public'),
@@ -39,15 +41,18 @@ JWKParamsRegistry = {'kty': ('Key Type', 'Public', ),
                      'x5t': ('X.509 Certificate SHA-1 Thumbprint', 'Public'),
                      'x5t#S256': ('X.509 Certificate SHA-256 Thumbprint',
                                   'Public')}
+"""Regstry of valid key parameters"""
 
 # draft-ietf-jose-json-web-algorithms-24 - 7.6
 JWKEllipticCurveRegistry = {'P-256': 'P-256 curve',
                             'P-384': 'P-384 curve',
                             'P-521': 'P-521 curve'}
+"""Registry of allowed Elliptic Curves"""
 
 # draft-ietf-jose-json-web-key-41 - 8.2
 JWKUseRegistry = {'sig': 'Digital Signature or MAC',
                   'enc': 'Encryption'}
+"""Registry of allowed uses"""
 
 # draft-ietf-jose-json-web-key-41 - 8.2
 JWKOperationsRegistry = {'sign': 'Compute digital Signature or MAC',
@@ -60,9 +65,14 @@ JWKOperationsRegistry = {'sign': 'Compute digital Signature or MAC',
                                     ' decryption, if applicable',
                          'deriveKey': 'Derive key',
                          'deriveBits': 'Derive bits not to be used as a key'}
+"""Registry of allowed operations"""
 
 
 class InvalidJWKType(Exception):
+    """Invalid JWK Type Exception.
+
+    This exception is raised when an invalid parameter type is used.
+    """
 
     def __init__(self, value=None):
         super(InvalidJWKType, self).__init__()
@@ -74,6 +84,11 @@ class InvalidJWKType(Exception):
 
 
 class InvalidJWKUsage(Exception):
+    """Invalid JWK usage Exception.
+
+    This exception is raised when an invalid key usage is requested,
+    based on the key type and declared usage constraints.
+    """
 
     def __init__(self, use, value):
         super(InvalidJWKUsage, self).__init__()
@@ -94,6 +109,11 @@ class InvalidJWKUsage(Exception):
 
 
 class InvalidJWKOperation(Exception):
+    """Invalid JWK Operation Exception.
+
+    This exception is raised when an invalid key operation is requested,
+    based on the key type and declared usage constraints.
+    """
 
     def __init__(self, operation, values):
         super(InvalidJWKOperation, self).__init__()
@@ -116,12 +136,39 @@ class InvalidJWKOperation(Exception):
 
 
 class InvalidJWKValue(Exception):
+    """Invalid JWK Value Exception.
+
+    This exception is raised when an invalid/unknown value is used in the
+    context of an operation that requires specific values to be used based
+    on the key type or other constraints.
+    """
+
     pass
 
 
 class JWK(object):
+    """JSON Web Key object
+
+    This object represent a Key.
+    It must be instantiated by using the standard defined key/value pairs
+    as arguents of the initialization function.
+    """
 
     def __init__(self, **kwargs):
+        """Creates a new JWK object.
+
+        The function arguments must be valid parameters as defined in the
+        'IANA JSON Web Key Set Parameters registry' and specified in
+        the :data:`JWKParamsRegistry` variable. The 'kty' parameter must
+        always be provided and its value must be a valid one as defined
+        by the 'IANA JSON Web Key Types registry' and specified in the
+        :data:`JWKTypesRegistry` variable. The valid key parameters per
+        key type are defined in the :data:`JWKValuesregistry` variable.
+
+        :raises InvalidJWKType: if the key type is invalid
+        :raises InvalidJWKValue: if incorrect or inconsistent parameters
+        are provided.
+        """
 
         names = list(kwargs.keys())
 
@@ -186,6 +233,7 @@ class JWK(object):
                                               ' the same time')
 
     def export(self):
+        """Exports the key in the standard JSON format"""
         d = dict()
         d.update(self._params)
         d.update(self._key)
@@ -201,6 +249,13 @@ class JWK(object):
         return self._params.get('kid', None)
 
     def get_curve(self, arg):
+        """Gets the Elliptic Curve associated with the key.
+
+        :param arg: an optional curve name
+
+        :raises InvalidJWKType: the key is not an EC key.
+        :raises InvalidJWKValue: if the curve names is invalid.
+        """
         k = self._key
         if self._params['kty'] != 'EC':
             raise InvalidJWKType('Not an EC key')
@@ -274,6 +329,21 @@ class JWK(object):
             raise NotImplementedError
 
     def get_op_key(self, operation=None, arg=None):
+        """Get the key object associated to the requested opration.
+        For example the public RSA key for the 'verify' operation or
+        the private EC key for the 'decrypt' operation.
+
+        :param operation: The requested operation.
+         The valid set of operations is availble in the
+         :data:`JWKOperationsRegistry` registry.
+        :param arg: an optional, context specific, argument
+         For example a curve name.
+
+        :raises InvalidJWKOperation: if the operation is unknown or
+         not permitted with this key.
+        :raises InvalidJWKUsage: if the use constraints do not permit
+         the operation.
+        """
         validops = self._params.get('key_ops',
                                     list(JWKOperationsRegistry.keys()))
         if validops is not list:
@@ -299,19 +369,33 @@ class JWK(object):
 
 
 class JWKSet(set):
+    """A set of JWK objects.
+
+    Inherits for the standard 'set' bultin type.
+    """
 
     def add(self, elem):
+        """Adds a JWK object to the set
+
+        :param elem: the JWK object to add.
+
+        :raises TypeError: if the object is not a JWK.
+        """
         if not isinstance(elem, JWK):
             raise TypeError('Only JWK objects are valid elements')
         set.add(self, elem)
 
     def export(self):
+        """Exports the set using the standard JSON format"""
         keys = list()
         for jwk in self:
             keys.append(json_decode(jwk.export()))
         return json_encode({'keys': keys})
 
     def get_key(self, kid):
+        """Gets a key from the set.
+        :param kid: the 'kid' key identifier.
+        """
         for jwk in self:
             if jwk.key_id == kid:
                 return jwk
