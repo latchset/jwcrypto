@@ -6,8 +6,25 @@ from jwcrypto.jwe import JWE
 
 
 class JWT(object):
+    """JSON Web token object
+
+    This object represent a generic token.
+    """
 
     def __init__(self, header=None, claims=None, jwt=None, key=None):
+        """Creates a JWT object.
+
+        :param header: A dict or a JSON string with the JWT Header data.
+        :param claims: A dict or a string withthe JWT Claims data.
+        :param jwt: a 'raw' JWT token
+        :param key: A (:class:`jwcrypto.jwk.JWK`) key to deserialize
+         the token.
+
+        Note: either the header,claims or jwt,key parameters should be
+        provided as a deserialization operation (which occurs if the jwt
+        is provided will wipe any header os claim provided by setting
+        those obtained from the deserialization of the jwt token.
+        """
 
         self._header = None
         self._claims = None
@@ -60,16 +77,43 @@ class JWT(object):
             raise TypeError("Invalid token type, must be one of JWS,JWE,JWT")
 
     def make_signed_token(self, key):
+        """Signs the payload.
+
+        Creates a JWS token with the header as the JWS protected header and
+        the claims as the payload. See (:class:`jwcrypto.jws.JWS`) for
+        details on the exceptions that may be reaised.
+
+        :param key: A (:class:`jwcrypto.jwk.JWK`) key.
+        """
+
         t = JWS(self.claims)
         t.add_signature(key, protected=self.header)
         self.token = t
 
     def make_encrypted_token(self, key):
+        """Encrypts the payload.
+
+        Creates a JWE token with the header as the JWE protected header and
+        the claims as the plaintext. See (:class:`jwcrypto.jwe.JWE`) for
+        details on the exceptions that may be reaised.
+
+        :param key: A (:class:`jwcrypto.jwk.JWK`) key.
+        """
+
         t = JWE(self.claims, self.header)
         t.add_recipient(key)
         self.token = t
 
     def deserialize(self, jwt, key=None):
+        """Deserialize a JWT token.
+
+        NOTE: Destroys any current status and tries to import the raw
+        token provided.
+
+        :param jwt: a 'raw' JWT token.
+        :param key: A (:class:`jwcrypto.jwk.JWK`) verification or
+         decryption key.
+        """
         c = jwt.count('.')
         if c == 2:
             self.token = JWS()
@@ -87,4 +131,14 @@ class JWT(object):
             self.claims = self.token.payload.decode('utf-8')
 
     def serialize(self, compact=True):
+        """Serializes the object into a JWS token.
+
+        :param compact(boolean): must be True.
+
+        Note: the compact parameter is provided for general compatibility
+        with the serialize() functions of :class:`jwcrypto.jws.JWS` and
+        :class:`jwcrypto.jwe.JWE` so that these objects can all be used
+        interchangeably. However the only valid JWT representtion is the
+        compact representation.
+        """
         return self.token.serialize(compact)

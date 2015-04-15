@@ -6,13 +6,12 @@ The jwt Module implements the `JSON Web Token`_ draft (currently version
 A JSON Web Token is represented by a JWT object, related utility classes and
 functions are availbale in this module too.
 
-JWT
----
+.. _JSON Web Token: http://tools.ietf.org/html/draft-ietf-oauth-json-web-token-32
 
-.. automodule:: jwcrypto.jwt
+Classes
+-------
+
+.. autoclass:: jwcrypto.jwt.JWT
    :members:
-   :undoc-members:
    :show-inheritance:
 
-
-.. _JSON Web Token: http://tools.ietf.org/html/draft-ietf-oauth-json-web-token-32
