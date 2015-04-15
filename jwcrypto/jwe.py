@@ -30,6 +30,7 @@ JWEHeaderRegistry = {'alg': ('Algorithm', True),
                      'typ': ('Type', True),
                      'cty': ('Content Type', True),
                      'crit': ('Critical', True)}
+"""Registry of valid header parameters"""
 
 
 # Note: l is the number of bits, which should be a multiple of 16
@@ -49,6 +50,12 @@ def _decode_int(n):
 
 
 class InvalidJWEData(Exception):
+    """Invalid JWE Object.
+
+    This exception is raised when the JWE Object is invalid and/or
+    improperly formatted.
+    """
+
     def __init__(self, message=None, exception=None):
         msg = None
         if message:
@@ -61,12 +68,24 @@ class InvalidJWEData(Exception):
 
 
 class InvalidCEKeyLength(Exception):
+    """Invalid CEK Key Length.
+
+    This exception is raised when a Content Encryption Key does not match
+    the required lenght.
+    """
+
     def __init__(self, expected, obtained):
         msg = 'Expected key of length %d, got %d' % (expected, obtained)
         super(InvalidCEKeyLength, self).__init__(msg)
 
 
 class InvalidJWEOperation(Exception):
+    """Invalid JWS Object.
+
+    This exception is raised when a requested operation cannot
+    be execute due to unsatisfied conditions.
+    """
+
     def __init__(self, message=None, exception=None):
         msg = None
         if message:
@@ -79,12 +98,24 @@ class InvalidJWEOperation(Exception):
 
 
 class InvalidJWEKeyType(Exception):
+    """Invalid JWE Key Type.
+
+    This exception is raised when the provided JWK Key does not match
+    the type required by the sepcified algorithm.
+    """
+
     def __init__(self, expected, obtained):
         msg = 'Expected key type %s, got %s' % (expected, obtained)
         super(InvalidJWEKeyType, self).__init__(msg)
 
 
 class InvalidJWEKeyLength(Exception):
+    """Invalid JWE Key Length.
+
+    This exception is raised when the provided JWK Key does not match
+    the lenght required by the sepcified algorithm.
+    """
+
     def __init__(self, expected, obtained):
         msg = 'Expected key of lenght %d, got %d' % (expected, obtained)
         super(InvalidJWEKeyLength, self).__init__(msg)
@@ -345,15 +376,18 @@ class _aes_gcm(_raw_jwe):
 
 
 class JWE(object):
+    """JSON Web Encryption object
+
+    This object represent a JWE token.
+    """
 
     def __init__(self, plaintext=None, protected=None, unprotected=None,
                  aad=None):
-        """ Generates or verifies Generic JWE tokens.
-            See draft-ietf-jose-json-web-signature-41
+        """Creates a JWE token.
 
-        :param plaintext(bytes): An arbitrary plaintext to be encrypted
-        :param protected(json): The shared protected header
-        :param unprotected(json): The shared unprotected header
+        :param plaintext(bytes): An arbitrary plaintext to be encrypted.
+        :param protected: A JSON string with the protected header.
+        :param unprotected: A JSON string with the shared unprotected header.
         :param aad(bytes): Arbitrary additional authenticated data
         """
         self.objects = dict()
@@ -458,13 +492,17 @@ class JWE(object):
         return alg, enc
 
     def add_recipient(self, key, header=None):
-        """ Encrypt the provided payload with the given key.
+        """Encrypt the plaintext with the given key.
 
-        :param key: A JWK key of appropriate type for the "alg"
-                    provided in the JOSE Headers.
-                    See draft-ietf-jose-json-web-key-41
-
+        :param key: A JWK key of appropriate type for the 'alg' provided
+         in the JOSE Headers.
         :param header: A JSON string representing the per-recipient header.
+
+        :raises ValueError: if the plaintext is missing or not of type bytes.
+        :raises ValueError: if the key is not a JWK object.
+        :raises ValueError: if the compression type is unknown.
+        :raises InvalidJWAAlgorithm: if the 'alg' provided in the JOSE
+         headers is missing or unknown, or otherwise not implemented.
         """
         if self.plaintext is None:
             raise ValueError('Missing plaintext')
@@ -520,6 +558,16 @@ class JWE(object):
             self.objects.update(rec)
 
     def serialize(self, compact=False):
+        """Serializes the object into a JWE token.
+
+        :param compact(boolean): if True generates the compact
+         representation, otherwise generates a standard JSON format.
+
+        :raises InvalidJWEOperation: if the object cannot serialized
+         with the compact representation and `compat` is True.
+        :raises InvalidJWEOperation: if no recipients have been added
+         to the object.
+        """
 
         if 'ciphertext' not in self.objects:
             raise InvalidJWEOperation("No available ciphertext")
@@ -610,6 +658,15 @@ class JWE(object):
             raise ValueError('Unknown compression')
 
     def decrypt(self, key):
+        """Decrypt a JWE token.
+
+        :param key: The (:class:`jwcrypto.jwk.JWK`) decryption key.
+
+        :raises InvalidJWEOperation: if the key is not a JWK object.
+        :raises InvalidJWEData: if the ciphertext can't be decrypted or
+         the object is otherwise malformed.
+        """
+
         if not isinstance(key, JWK):
             raise ValueError('key is not a JWK object')
         if 'ciphertext' not in self.objects:
@@ -633,9 +690,21 @@ class JWE(object):
                                  'key' + repr(self.decryptlog))
 
     def deserialize(self, raw_jwe, key=None):
-        """ Destroys any current status and tries to import the raw
-            JWS provided.
+        """Deserialize a JWE token.
+
+        NOTE: Destroys any current status and tries to import the raw
+        JWE provided.
+
+        :param raw_jwe: a 'raw' JWE token (JSON Encoded or Compact
+         notation) string.
+        :param key: A (:class:`jwcrypto.jwk.JWK`) decryption key (optional).
+         If a key is provided a idecryption step will be attempted after
+         the object is successfully deserialized.
+
+        :raises InvalidJWEData: if the raw object is an invaid JWE token.
+        :raises InvalidJWEOperation: if the decryption fails.
         """
+
         self.objects = dict()
         self.plaintext = None
         self.cek = None
