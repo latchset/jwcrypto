@@ -583,7 +583,7 @@ class JWE(object):
             else:
                 rec = self.objects
             return '.'.join([base64url_encode(self.objects['protected']),
-                             base64url_encode(rec['encrypted_key']),
+                             base64url_encode(rec.get('encrypted_key', '')),
                              base64url_encode(self.objects['iv']),
                              base64url_encode(self.objects['ciphertext']),
                              base64url_encode(self.objects['tag'])])

@@ -998,6 +998,7 @@ class Cookbook08JWETests(unittest.TestCase):
         aes_key = jwk.JWK(**AES_key_5_6_1)  # pylint: disable=star-args
         E = jwe.JWE(plaintext, protected)
         E.add_recipient(aes_key)
+        _ = E.serialize(compact=True)
         e = E.serialize()
         E.deserialize(e, aes_key)
         self.assertEqual(E.payload, plaintext)
