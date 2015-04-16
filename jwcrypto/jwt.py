@@ -11,7 +11,8 @@ class JWT(object):
     This object represent a generic token.
     """
 
-    def __init__(self, header=None, claims=None, jwt=None, key=None):
+    def __init__(self, header=None, claims=None, jwt=None, key=None,
+                 algs=None):
         """Creates a JWT object.
 
         :param header: A dict or a JSON string with the JWT Header data.
@@ -19,6 +20,7 @@ class JWT(object):
         :param jwt: a 'raw' JWT token
         :param key: A (:class:`jwcrypto.jwk.JWK`) key to deserialize
          the token.
+        :param algs: An optional list of allowed algorithms
 
         Note: either the header,claims or jwt,key parameters should be
         provided as a deserialization operation (which occurs if the jwt
@@ -29,6 +31,7 @@ class JWT(object):
         self._header = None
         self._claims = None
         self._token = None
+        self._algs = algs
 
         if header:
             self.header = header
@@ -121,6 +124,10 @@ class JWT(object):
             self.token = JWE()
         else:
             raise ValueError("Token format unrecognized")
+
+        # Apply algs restrictions if any, before performing any operation
+        if self._algs:
+            self.token.allowed_algs = self._algs
 
         # now deserialize and also decrypt/verify (or raise) if we
         # have a key

@@ -711,6 +711,10 @@ class TestJWT(unittest.TestCase):
         Tinner = jwt.JWT(jwt=Touter.claims, key=sigkey)
         self.assertEqual(A1_claims, json_decode(Tinner.claims))
 
+        with self.assertRaises(jwe.InvalidJWEData):
+            jwt.JWT(jwt=A2_token, key=E_A2_ex['key'],
+                    algs=['RSA_1_5', 'AES256GCM'])
+
 
 class ConformanceTests(unittest.TestCase):
 
