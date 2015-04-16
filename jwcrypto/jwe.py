@@ -32,6 +32,19 @@ JWEHeaderRegistry = {'alg': ('Algorithm', True),
                      'crit': ('Critical', True)}
 """Registry of valid header parameters"""
 
+default_allowed_algs = [
+    # Key Management Algorithms
+    'RSA1_5', 'RSA-OAEP', 'RSA-OAEP-256',
+    'A128KW', 'A192KW', 'A256KW',
+    'dir',
+    'ECDH-ES', 'ECDH-ES+A128KW', 'ECDH-ES+A192KW', 'ECDH-ES+A256KW',
+    'A128GCMKW', 'A192GCMKW', 'A256GCMKW',
+    'PBES2-HS256+A128KW', 'PBES2-HS384+A192KW', 'PBES2-HS512+A256KW',
+    # Content Encryption Algoritms
+    'A128CBC-HS256', 'A192CBC-HS384', 'A256CBC-HS512',
+    'A128GCM', 'A192GCM', 'A256GCM']
+"""Default allowed algorithms"""
+
 
 # Note: l is the number of bits, which should be a multiple of 16
 def _encode_int(n, l):
@@ -382,14 +395,16 @@ class JWE(object):
     """
 
     def __init__(self, plaintext=None, protected=None, unprotected=None,
-                 aad=None):
+                 aad=None, algs=None):
         """Creates a JWE token.
 
         :param plaintext(bytes): An arbitrary plaintext to be encrypted.
         :param protected: A JSON string with the protected header.
         :param unprotected: A JSON string with the shared unprotected header.
         :param aad(bytes): Arbitrary additional authenticated data
+        :param algs: An optional list of allowed algorithms
         """
+        self._allowed_algs = None
         self.objects = dict()
         self.plaintext = None
         if plaintext is not None:
@@ -407,6 +422,8 @@ class JWE(object):
         if unprotected:
             _ = json_decode(unprotected)  # check header encoding
             self.objects['unprotected'] = unprotected
+        if algs:
+            self.allowed_algs = algs
 
     # key wrapping mechanisms
     def _jwa_RSA1_5(self):
@@ -456,9 +473,32 @@ class JWE(object):
     def _jwa(self, name):
         try:
             attr = '_jwa_%s' % name.replace('-', '_').replace('+', '_')
-            return getattr(self, attr)()
+            fn = getattr(self, attr)
         except (KeyError, AttributeError):
             raise InvalidJWAAlgorithm()
+        allowed = self._allowed_algs or default_allowed_algs
+        if name not in allowed:
+            raise InvalidJWEOperation('Algorithm not allowed')
+        return fn()
+
+    @property
+    def allowed_algs(self):
+        """Allowed algorithms.
+
+        The list of allowed algorithms.
+        Can be changed by setting a list of algorithm names.
+        """
+
+        if self._allowed_algs:
+            return self._allowed_algs
+        else:
+            return default_allowed_algs
+
+    @allowed_algs.setter
+    def allowed_algs(self, algs):
+        if not isinstance(algs, list):
+            raise TypeError('Allowed Algs must be a list')
+        self._allowed_algs = algs
 
     def _merge_headers(self, h1, h2):
         for k in list(h1.keys()):

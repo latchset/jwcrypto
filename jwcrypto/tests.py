@@ -641,7 +641,10 @@ class TestJWE(unittest.TestCase):
 
     def test_A5(self):
         E = jwe.JWE()
-        E.deserialize(E_A5_ex)
+        E.deserialize(E_A5_ex, E_A4_ex['key2'])
+        with self.assertRaises(jwe.InvalidJWEData):
+            E = jwe.JWE(algs=['A256KW'])
+            E.deserialize(E_A5_ex, E_A4_ex['key2'])
 
 
 # draft-ietf-oauth-json-web-token-32
