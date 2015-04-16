@@ -29,6 +29,13 @@ JWSHeaderRegistry = {'alg': ('Algorithm', True),
                      'crit': ('Critical', True)}
 """Registry of valid header parameters"""
 
+default_allowed_algs = [
+    'HS256', 'HS384', 'HS512',
+    'RS256', 'RS384', 'RS512',
+    'ES256', 'ES384', 'ES512',
+    'PS256', 'PS384', 'PS512']
+"""Default allowed algorithms"""
+
 
 class InvalidJWSSignature(Exception):
     """Invalid JWS Signature.
@@ -184,7 +191,7 @@ class JWSCore(object):
 
     """
 
-    def __init__(self, alg, key, header, payload):
+    def __init__(self, alg, key, header, payload, algs=None):
         """Core JWS token handling.
 
         :param alg: The algorithm used to produce the signature.
@@ -193,13 +200,14 @@ class JWSCore(object):
          type for the "alg" provided in the 'protected' json string.
         :param header: A JSON string representing the protected header.
         :param payload(bytes): An arbitrary value
+        :param algs: An optional list of allowed algorithms
 
         :raises ValueError: if the key is not a :class:`JWK` object
         :raises InvalidJWAAlgorithm: if the algorithm is not valid, is
          unknown or otherwise not yet implemented.
         """
         self.alg = alg
-        self.engine = self._jwa(alg)
+        self.engine = self._jwa(alg, algs)
         if not isinstance(key, JWK):
             raise ValueError('key is not a JWK object')
         self.key = key
@@ -255,12 +263,17 @@ class JWSCore(object):
     def _jwa_none(self):
         return _raw_none()
 
-    def _jwa(self, name):
+    def _jwa(self, name, allowed):
+        if allowed is None:
+            allowed = default_allowed_algs
         attr = '_jwa_%s' % name
         try:
-            return getattr(self, attr)()
+            fn = getattr(self, attr)
         except (KeyError, AttributeError):
             raise InvalidJWAAlgorithm()
+        if name not in allowed:
+            raise InvalidJWSOperation('Algorithm not allowed')
+        return fn()
 
     def sign(self):
         """Generates a signature"""
@@ -298,6 +311,7 @@ class JWS(object):
         if payload:
             self.objects['payload'] = payload
         self.verifylog = None
+        self._allowed_algs = None
 
     def _check_crit(self, crit):
         for k in crit:
@@ -308,6 +322,25 @@ class JWS(object):
                 if not JWSHeaderRegistry[k][1]:
                     raise InvalidJWSSignature('Unsupported critical '
                                               'header: "%s"' % k)
+
+    @property
+    def allowed_algs(self):
+        """Allowed algorithms.
+
+        The list of allowed algorithms.
+        Can be changed by setting a list of algorithm names.
+        """
+
+        if self._allowed_algs:
+            return self._allowed_algs
+        else:
+            return default_allowed_algs
+
+    @allowed_algs.setter
+    def allowed_algs(self, algs):
+        if not isinstance(algs, list):
+            raise TypeError('Allowed Algs must be a list')
+        self._allowed_algs = algs
 
     @property
     def is_valid(self):
@@ -351,9 +384,9 @@ class JWS(object):
         else:
             a = p['alg']
 
-        # the following will verify the "alg" is upported and the signature
+        # the following will verify the "alg" is supported and the signature
         # verifies
-        S = JWSCore(a, key, protected, payload)
+        S = JWSCore(a, key, protected, payload, self._allowed_algs)
         S.verify(signature)
 
     def verify(self, key, alg=None):

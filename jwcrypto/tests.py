@@ -388,7 +388,8 @@ class TestJWS(unittest.TestCase):
         S = jws.JWSCore(test['alg'],
                         jwk.JWK(**test['key']),
                         test['protected'],
-                        test['payload'])
+                        test['payload'],
+                        test.get('allowed_algs', None))
         sig = S.sign()
         decsig = base64url_decode(sig['signature'])
         S.verify(decsig)
@@ -415,7 +416,11 @@ class TestJWS(unittest.TestCase):
         self.check_sign(A4_example)
 
     def test_A5(self):
-        self.check_sign(A5_example)
+        self.assertRaises(jws.InvalidJWSOperation,
+                          self.check_sign, A5_example)
+        A5_bis = {'allowed_algs': ['none']}
+        A5_bis.update(A5_example)
+        self.check_sign(A5_bis)
 
     def test_A6(self):
         S = jws.JWS(A6_example['payload'])

@@ -19,6 +19,11 @@ Classes
    :members:
    :show-inheritance:
 
+Variables
+---------
+
+.. autodata:: jwcrypto.jws.default_allowed_algs
+
 Exceptions
 ----------
 
