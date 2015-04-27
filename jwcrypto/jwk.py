@@ -1,11 +1,12 @@
 # Copyright (C) 2015  JWCrypto Project Contributors - see LICENSE file
 
-from binascii import hexlify
+from binascii import hexlify, unhexlify
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives.asymmetric import ec
-from jwcrypto.common import base64url_decode
+from jwcrypto.common import base64url_decode, base64url_encode
 from jwcrypto.common import json_decode, json_encode
+import os
 
 # draft-ietf-jose-json-web-algorithms-24 - 7.4
 JWKTypesRegistry = {'EC': 'Elliptic Curve',
@@ -165,14 +166,102 @@ class JWK(object):
         :data:`JWKTypesRegistry` variable. The valid key parameters per
         key type are defined in the :data:`JWKValuesregistry` variable.
 
+        Alternatively if the 'generate' parameter is provided, with a
+        valid key type as value then a new key will be generated according
+        to the defaults or provided key strenght options (type specific).
+
+        Valid options per type, when generating new keys:
+         * oct: size(int)
+         * RSA: public_exponent(int), size(int)
+         * EC: curve(str) (one of P-256, P-384, P-521)
+
         :raises InvalidJWKType: if the key type is invalid
         :raises InvalidJWKValue: if incorrect or inconsistent parameters
         are provided.
         """
+        self._params = dict()
+        self._key = dict()
+        self._unknown = dict()
 
+        if 'generate' in kwargs:
+            self.generate_key(**kwargs)
+        else:
+            self.import_key(**kwargs)
+
+    def generate_key(self, **kwargs):
+        params = kwargs.copy()
+        try:
+            kty = params['generate']
+            del params['generate']
+            gen = getattr(self, '_generate_%s' % kty)
+        except (KeyError, AttributeError):
+            raise InvalidJWKType(kty)
+
+        gen(params)
+
+    def _generate_oct(self, params):
+        size = 128
+        if 'size' in params:
+            size = params['size']
+            del params['size']
+        key = os.urandom(size // 8)
+        params['kty'] = 'oct'
+        params['k'] = key
+        self.import_key(**params)  # pylint: disable=star-args
+
+    def _encode_int(self, i):
+        I = hex(i).rstrip("L").lstrip("0x")
+        return base64url_encode(unhexlify((len(I) % 2) * '0' + I))
+
+    def _generate_RSA(self, params):
+        pubexp = 65537
+        size = 2048
+        if 'public_exponent' in params:
+            pubexp = params['public_exponent']
+            del params['public_exponent']
+        if 'size' in params:
+            size = params['size']
+            del params['size']
+        key = rsa.generate_private_key(pubexp, size, default_backend())
+        pn = key.private_numbers()
+        params['kty'] = 'RSA'
+        params['n'] = self._encode_int(pn.public_numbers.n)
+        params['e'] = self._encode_int(pn.public_numbers.e)
+        params['d'] = self._encode_int(pn.d)
+        params['p'] = self._encode_int(pn.p)
+        params['q'] = self._encode_int(pn.q)
+        params['dp'] = self._encode_int(pn.dmp1)
+        params['dq'] = self._encode_int(pn.dmq1)
+        params['qi'] = self._encode_int(pn.iqmp)
+        self.import_key(**params)  # pylint: disable=star-args
+
+    def _get_curve_by_name(self, name):
+        if name == 'P-256':
+            return ec.SECP256R1()
+        elif name == 'P-384':
+            return ec.SECP384R1()
+        elif name == 'P-521':
+            return ec.SECP521R1()
+        else:
+            raise InvalidJWKValue('Unknown Elliptic Curve Type')
+
+    def _generate_EC(self, params):
+        curve = 'P-256'
+        if 'curve' in params:
+            curve = params['curve']
+            del params['curve']
+        key = ec.generate_private_key(self._get_curve_by_name(curve),
+                                      default_backend())
+        pn = key.private_numbers()
+        params['kty'] = 'EC'
+        params['x'] = self._encode_int(pn.public_numbers.x)
+        params['y'] = self._encode_int(pn.public_numbers.y)
+        params['d'] = self._encode_int(pn.private_value)
+        self.import_key(**params)  # pylint: disable=star-args
+
+    def import_key(self, **kwargs):
         names = list(kwargs.keys())
 
-        self._params = dict()
         for name in list(JWKParamsRegistry.keys()):
             if name in kwargs:
                 self._params[name] = kwargs[name]
@@ -183,7 +272,6 @@ class JWK(object):
         if kty not in JWKTypesRegistry:
             raise InvalidJWKType(kty)
 
-        self._key = dict()
         for name in list(JWKValuesRegistry[kty].keys()):
             if name in kwargs:
                 self._key[name] = kwargs[name]
@@ -192,7 +280,6 @@ class JWK(object):
 
         # Unknown key parameters are allowed
         # Let's just store them out of the way
-        self._unknown = dict()
         for name in names:
             self._unknown[name] = kwargs[name]
             while name in names:
@@ -262,14 +349,8 @@ class JWK(object):
         if arg and k['crv'] != arg:
             raise InvalidJWKValue('Curve requested is "%s", but '
                                   'key curve is "%s"' % (arg, k['crv']))
-        if k['crv'] == 'P-256':
-            return ec.SECP256R1()
-        elif k['crv'] == 'P-384':
-            return ec.SECP384R1()
-        elif k['crv'] == 'P-521':
-            return ec.SECP521R1()
-        else:
-            raise InvalidJWKValue('Unknown Elliptic Curve Type')
+
+        return self._get_curve_by_name(k['crv'])
 
     def _check_constraints(self, usage, operation):
         use = self._params.get('use', None)

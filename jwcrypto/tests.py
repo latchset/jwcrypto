@@ -184,6 +184,10 @@ class TestJWK(unittest.TestCase):
         _ = jwk.JWK(**Useofx5c)  # pylint: disable=star-args
         _ = jwk.JWK(**RSAPrivateKey)  # pylint: disable=star-args
 
+    def test_generate_keys(self):
+        jwk.JWK(generate='oct', size=256)
+        jwk.JWK(generate='RSA', size=4096)
+        jwk.JWK(generate='EC', curve='P-521')
 
 # draft-ietf-jose-json-web-signature-41 - A.1
 A1_protected = \
