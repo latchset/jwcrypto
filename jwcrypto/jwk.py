@@ -327,6 +327,15 @@ class JWK(object):
         d.update(self._unknown)
         return json_encode(d)
 
+    def export_public(self):
+        """Exports the public key in the standard JSON format"""
+        pub = {'kty': self._params['kty']}
+        reg = JWKValuesRegistry[self._params['kty']]
+        for param in reg:
+            if reg[param][1] == 'Public':
+                pub[param] = self._key[param]
+        return json_encode(pub)
+
     @property
     def key_type(self):
         return self._params.get('kty', None)
