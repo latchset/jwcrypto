@@ -1,12 +1,11 @@
 JSON Web Encryption (JWE)
 =========================
 
-The jwe Module implements the `JSON Web Encryption`_ draft (currently
-version 40).
+The jwe Module implements the `JSON Web Encryption`_ standard.
 A JSON Web Encryption is represented by a JWE object, related utility
 classes and functions are availbale in this module too.
 
-.. _JSON Web Encryption: http://tools.ietf.org/html/draft-ietf-jose-json-web-encryption-40
+.. _JSON Web Encryption: https://tools.ietf.org/html/rfc7516
 
 Classes
 -------

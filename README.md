@@ -2,12 +2,13 @@ JWCrypto
 ========
 
 An implementation of the JOSE Working Group documents:
-draft-ietf-jose-json-web-algorithms-40
-draft-ietf-jose-json-web-encryption-40
-draft-ietf-jose-json-web-key-41
-draft-ietf-jose-json-web-signature-41
-draft-ietf-oauth-json-web-token-32
-draft-ietf-jose-cookbook-08
+RFC 7515 - JSON Web Signature (JWS)
+RFC 7516 - JSON Web Encryption (JWE)
+RFC 7517 - JSON Web Key (JWK)
+RFC 7518 - JSON Web Algorithms (JWA)
+RFC 7519 - JSON Web Token (JWT)
+RFC 7520 - Examples of Protecting Content Using JSON Object Signing and
+Encryption (JOSE)
 
 Documentation
 =============

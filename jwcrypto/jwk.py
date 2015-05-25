@@ -8,13 +8,13 @@ from jwcrypto.common import base64url_decode, base64url_encode
 from jwcrypto.common import json_decode, json_encode
 import os
 
-# draft-ietf-jose-json-web-algorithms-24 - 7.4
+# RFC 7518 - 7.4
 JWKTypesRegistry = {'EC': 'Elliptic Curve',
                     'RSA': 'RSA',
                     'oct': 'Octet sequence'}
 """Registry of valid Key Types"""
 
-# draft-ietf-jose-json-web-algorithms-24 - 7.5
+# RFC 7518 - 7.5
 # It is part of the JWK Parameters Registry, but we want a more
 # specific map for internal usage
 JWKValuesRegistry = {'EC': {'crv': ('Curve', 'Public'),
@@ -44,18 +44,18 @@ JWKParamsRegistry = {'kty': ('Key Type', 'Public', ),
                                   'Public')}
 """Regstry of valid key parameters"""
 
-# draft-ietf-jose-json-web-algorithms-24 - 7.6
+# RFC 7518 - 7.6
 JWKEllipticCurveRegistry = {'P-256': 'P-256 curve',
                             'P-384': 'P-384 curve',
                             'P-521': 'P-521 curve'}
 """Registry of allowed Elliptic Curves"""
 
-# draft-ietf-jose-json-web-key-41 - 8.2
+# RFC 7517 - 8.2
 JWKUseRegistry = {'sig': 'Digital Signature or MAC',
                   'enc': 'Encryption'}
 """Registry of allowed uses"""
 
-# draft-ietf-jose-json-web-key-41 - 8.2
+# RFC 7517 - 8.3
 JWKOperationsRegistry = {'sign': 'Compute digital Signature or MAC',
                          'verify': 'Verify digital signature or MAC',
                          'encrypt': 'Encrypt content',

@@ -1,12 +1,11 @@
 JSON Web Signature (JWS)
 ========================
 
-The jws Module implements the `JSON Web Signature`_ draft (currently
-version 41).
+The jws Module implements the `JSON Web Signature`_ standard.
 A JSON Web Signature is represented by a JWS object, related utility
 classes and functions are available in this module too.
 
-.. _JSON Web Signature: http://tools.ietf.org/html/draft-ietf-jose-json-web-signature-41
+.. _JSON Web Signature: http://tools.ietf.org/html/rfc7515
 
 Classes
 -------

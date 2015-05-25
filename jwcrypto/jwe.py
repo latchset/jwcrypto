@@ -14,7 +14,7 @@ import os
 import zlib
 
 
-# draft-ietf-jose-json-web-encryption-40 - 4.1
+# RFC 7516 - 4.1
 # name: (description, supported?)
 JWEHeaderRegistry = {'alg': ('Algorithm', True),
                      'enc': ('Encryption Algorithm', True),
@@ -285,7 +285,7 @@ class _aes_cbc_hmac_sha2(_raw_jwe):
         m = h.finalize()
         return m[:self.keysize]
 
-    # draft-ietf-jose-json-web-algorithms-40 - 5.2.2
+    # RFC 7518 - 5.2.2
     def encrypt(self, k, a, m):
         """ Encrypt accoriding to the selected encryption and hashing
         functions.
@@ -350,7 +350,7 @@ class _aes_gcm(_raw_jwe):
     def key_size(self):
         return self.keysize
 
-    # draft-ietf-jose-json-web-algorithms-40 - 5.2.2
+    # RFC 7518 - 5.3
     def encrypt(self, k, a, m):
         """ Encrypt accoriding to the selected encryption and hashing
         functions.

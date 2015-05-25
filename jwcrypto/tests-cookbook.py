@@ -7,7 +7,7 @@ from jwcrypto import jws
 from jwcrypto import jwe
 import unittest
 
-# Based on: draft-ietf-jose-cookbook-08
+# Based on: RFC 7520
 
 EC_Public_Key_3_1 = {
     "kty": "EC",

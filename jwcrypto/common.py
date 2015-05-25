@@ -5,7 +5,7 @@ import json
 
 
 # Padding stripping versions as described in
-# draft-ietf-jose-json-web-signature-41 appendix C
+# RFC 7515 Appendix C
 
 
 def base64url_encode(payload):

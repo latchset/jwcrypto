@@ -9,7 +9,7 @@ from jwcrypto import jwe
 from jwcrypto import jwt
 import unittest
 
-# draft-ietf-jose-json-web-key-41 - A.1
+# RFC 7517 - A.1
 PublicKeys = {"keys": [
               {"kty": "EC",
                "crv": "P-256",
@@ -29,7 +29,7 @@ PublicKeys = {"keys": [
                "alg": "RS256",
                "kid": "2011-04-29"}]}
 
-# draft-ietf-jose-json-web-key-41 - A.2
+# RFC 7517 - A.2
 PrivateKeys = {"keys": [
                {"kty": "EC",
                 "crv": "P-256",
@@ -77,7 +77,7 @@ PrivateKeys = {"keys": [
                 "alg": "RS256",
                 "kid": "2011-04-29"}]}
 
-# draft-ietf-jose-json-web-key-41 - A.3
+# RFC 7517 - A.3
 SymmetricKeys = {"keys": [
                  {"kty": "oct",
                   "alg": "A128KW",
@@ -87,7 +87,7 @@ SymmetricKeys = {"keys": [
                        "5aKtMN3Yj0iPS4hcgUuTwjAzZr1Z9CAow",
                   "kid": "HMAC key used in JWS A.1 example"}]}
 
-# draft-ietf-jose-json-web-key-41 - B
+# RFC 7517 - B
 Useofx5c = {"kty": "RSA",
             "use": "sig",
             "kid": "1b94c",
@@ -120,7 +120,7 @@ Useofx5c = {"kty": "RSA",
                     "+N5MDtdPTEQ0XfIBc2cJEUyMTY5MPvACWpkA6SdS4xSvdXK3IVfOWA=="
                     ]}
 
-# draft-ietf-jose-json-web-key-41 - C.1
+# RFC 7517 - C.1
 RSAPrivateKey = {"kty": "RSA",
                  "kid": "juliet@capulet.lit",
                  "use": "enc",
@@ -189,7 +189,7 @@ class TestJWK(unittest.TestCase):
         jwk.JWK(generate='RSA', size=4096)
         jwk.JWK(generate='EC', curve='P-521')
 
-# draft-ietf-jose-json-web-signature-41 - A.1
+# RFC 7515 - A.1
 A1_protected = \
     [123, 34, 116, 121, 112, 34, 58, 34, 74, 87, 84, 34, 44, 13, 10, 32,
      34, 97, 108, 103, 34, 58, 34, 72, 83, 50, 53, 54, 34, 125]
@@ -209,7 +209,7 @@ A1_example = {'key': SymmetricKeys['keys'][1],
               'payload': bytes(bytearray(A1_payload)),
               'signature': bytes(bytearray(A1_signature))}
 
-# draft-ietf-jose-json-web-signature-41 - A.2
+# RFC 7515 - A.2
 A2_protected = \
     [123, 34, 97, 108, 103, 34, 58, 34, 82, 83, 50, 53, 54, 34, 125]
 A2_payload = A1_payload
@@ -268,7 +268,7 @@ A2_example = {'key': A2_key,
               'payload': bytes(bytearray(A2_payload)),
               'signature': bytes(bytearray(A2_signature))}
 
-# draft-ietf-jose-json-web-signature-41 - A.3
+# RFC 7515 - A.3
 A3_protected = \
     [123, 34, 97, 108, 103, 34, 58, 34, 69, 83, 50, 53, 54, 34, 125]
 A3_payload = A2_payload
@@ -292,7 +292,7 @@ A3_example = {'key': A3_key,
               'signature': bytes(bytearray(A3_signature))}
 
 
-# draft-ietf-jose-json-web-signature-41 - A.4
+# RFC 7515 - A.4
 A4_protected = \
     [123, 34, 97, 108, 103, 34, 58, 34, 69, 83, 53, 49, 50, 34, 125]
 A4_payload = [80, 97, 121, 108, 111, 97, 100]
@@ -323,7 +323,7 @@ A4_example = {'key': A4_key,
               'signature': bytes(bytearray(A4_signature))}
 
 
-# draft-ietf-jose-json-web-signature-41 - A.4
+# RFC 7515 - A.4
 A5_protected = 'eyJhbGciOiJub25lIn0'
 A5_payload = A2_payload
 A5_key = \
@@ -651,7 +651,7 @@ class TestJWE(unittest.TestCase):
             E.deserialize(E_A5_ex, E_A4_ex['key2'])
 
 
-# draft-ietf-oauth-json-web-token-32
+# RFC 7519
 A1_header = {
     "alg": "RSA1_5",
     "enc": "A128CBC-HS256"}

@@ -13,7 +13,7 @@ from jwcrypto.common import json_decode, json_encode
 from jwcrypto.jwk import JWK
 
 
-# draft-ietf-jose-json-web-signature-41 - 9.1
+# RFC 7515 - 9.1
 # name: (description, supported?)
 JWSHeaderRegistry = {'alg': ('Algorithm', True),
                      'jku': ('JWK Set URL', False),
@@ -195,7 +195,7 @@ class JWSCore(object):
         """Core JWS token handling.
 
         :param alg: The algorithm used to produce the signature.
-         See draft-ietf-jose-json-web-algorithms-24
+         See RFC 7518
         :param key: A (:class:`jwcrypto.jwk.JWK`) key of appropriate
          type for the "alg" provided in the 'protected' json string.
         :param header: A JSON string representing the protected header.
