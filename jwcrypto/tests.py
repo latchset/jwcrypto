@@ -165,24 +165,24 @@ class TestJWK(unittest.TestCase):
     def test_create_pubKeys(self):
         keylist = PublicKeys['keys']
         for key in keylist:
-            _ = jwk.JWK(**key)  # pylint: disable=star-args
+            _ = jwk.JWK(**key)
 
     def test_create_priKeys(self):
         keylist = PrivateKeys['keys']
         for key in keylist:
-            _ = jwk.JWK(**key)  # pylint: disable=star-args
+            _ = jwk.JWK(**key)
 
     def test_create_symKeys(self):
         keylist = SymmetricKeys['keys']
         for key in keylist:
-            jwkey = jwk.JWK(**key)  # pylint: disable=star-args
+            jwkey = jwk.JWK(**key)
             _ = jwkey.get_op_key('sign')
             _ = jwkey.get_op_key('verify')
             e = jwkey.export()
             self.assertEqual(json_decode(e), key)
 
-        _ = jwk.JWK(**Useofx5c)  # pylint: disable=star-args
-        _ = jwk.JWK(**RSAPrivateKey)  # pylint: disable=star-args
+        _ = jwk.JWK(**Useofx5c)
+        _ = jwk.JWK(**RSAPrivateKey)
 
     def test_generate_keys(self):
         jwk.JWK(generate='oct', size=256)
@@ -360,10 +360,10 @@ A6_serialized = \
     '}'
 A6_example = {
     'payload': bytes(bytearray(A2_payload)),
-    'key1': jwk.JWK(**A2_key),  # pylint: disable=star-args
+    'key1': jwk.JWK(**A2_key),
     'protected1': bytes(bytearray(A2_protected)).decode('utf-8'),
     'header1': json_encode({"kid": "2010-12-29"}),
-    'key2': jwk.JWK(**A3_key),  # pylint: disable=star-args
+    'key2': jwk.JWK(**A3_key),
     'protected2': bytes(bytearray(A3_protected)).decode('utf-8'),
     'header2': json_encode({"kid": "e9bc097a-ce51-4036-9562-d2ade882db0d"}),
     'serialized': A6_serialized}
@@ -499,7 +499,7 @@ E_A1_vector = \
     "SdiwkIr3ajwQzaBtQD_A." \
     "XFBoMYUZodetZdvTiFvSkQ"
 
-E_A1_ex = {'key': jwk.JWK(**E_A1_key),  # pylint: disable=star-args
+E_A1_ex = {'key': jwk.JWK(**E_A1_key),
            'protected': base64url_decode(E_A1_protected),
            'plaintext': bytes(bytearray(E_A1_plaintext)),
            'vector': E_A1_vector}
@@ -548,7 +548,7 @@ E_A2_vector = \
     "KDlTtXchhZTGufMYmOYGS4HffxPSUrfmqCHXaI9wOGY." \
     "9hH0vgRfYgPnAHOd8stkvw"
 
-E_A2_ex = {'key': jwk.JWK(**E_A2_key),  # pylint: disable=star-args
+E_A2_ex = {'key': jwk.JWK(**E_A2_key),
            'protected': base64url_decode(E_A2_protected),
            'plaintext': E_A2_plaintext,
            'vector': E_A2_vector}
@@ -563,7 +563,7 @@ E_A3_vector = \
     "KDlTtXchhZTGufMYmOYGS4HffxPSUrfmqCHXaI9wOGY." \
     "U0m_YmjN04DJvceFICbCVQ"
 
-E_A3_ex = {'key': jwk.JWK(**E_A3_key),  # pylint: disable=star-args
+E_A3_ex = {'key': jwk.JWK(**E_A3_key),
            'protected': base64url_decode(E_A3_protected).decode('utf-8'),
            'plaintext': E_A3_plaintext,
            'vector': E_A3_vector}
@@ -589,9 +589,9 @@ E_A4_vector = \
     '"ciphertext":"KDlTtXchhZTGufMYmOYGS4HffxPSUrfmqCHXaI9wOGY",' \
     '"tag":"Mz-VPPyU4RlcuYv1IwIvzw"}'
 
-E_A4_ex = {'key1': jwk.JWK(**E_A2_key),  # pylint: disable=star-args
+E_A4_ex = {'key1': jwk.JWK(**E_A2_key),
            'header1': '{"alg":"RSA1_5","kid":"2011-04-29"}',
-           'key2': jwk.JWK(**E_A3_key),  # pylint: disable=star-args
+           'key2': jwk.JWK(**E_A3_key),
            'header2': '{"alg":"A128KW","kid":"7"}',
            'protected': base64url_decode(E_A4_protected),
            'unprotected': json_encode(E_A4_unprotected),
@@ -700,7 +700,7 @@ A2_token = \
 class TestJWT(unittest.TestCase):
 
     def test_A1(self):
-        key = jwk.JWK(**E_A2_key)  # pylint: disable=star-args
+        key = jwk.JWK(**E_A2_key)
         # first encode/decode ourselves
         T = jwt.JWT(A1_header, A1_claims)
         T.make_encrypted_token(key)
@@ -710,7 +710,7 @@ class TestJWT(unittest.TestCase):
         T = jwt.JWT(jwt=A1_token, key=key)
 
     def test_A2(self):
-        sigkey = jwk.JWK(**A2_example['key'])  # pylint: disable=star-args
+        sigkey = jwk.JWK(**A2_example['key'])
         Touter = jwt.JWT(jwt=A2_token, key=E_A2_ex['key'])
         Tinner = jwt.JWT(jwt=Touter.claims, key=sigkey)
         self.assertEqual(A1_claims, json_decode(Tinner.claims))

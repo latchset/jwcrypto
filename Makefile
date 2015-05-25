@@ -8,6 +8,7 @@ lint:
 	# Ignore cherrypy class members as they are dynamically added
 	pylint -d c,r,i,W0613 -r n -f colorized \
 		   --notes= \
+		   --disable=star-args \
 		   ./jwcrypto
 
 pep8:

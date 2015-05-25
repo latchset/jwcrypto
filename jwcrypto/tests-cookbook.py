@@ -295,8 +295,8 @@ class Cookbook08JWSTests(unittest.TestCase):
         plaintext = base64url_decode(Payload_plaintext_b64_4)
         protected = \
             base64url_decode(JWS_Protected_Header_4_1_2).decode('utf-8')
-        pub_key = jwk.JWK(**RSA_Public_Key_3_3)  # pylint: disable=star-args
-        pri_key = jwk.JWK(**RSA_Private_Key_3_4)  # pylint: disable=star-args
+        pub_key = jwk.JWK(**RSA_Public_Key_3_3)
+        pri_key = jwk.JWK(**RSA_Private_Key_3_4)
         S = jws.JWS(payload=plaintext)
         S.add_signature(pri_key, None, protected)
         self.assertEqual(JWS_compact_4_1_3, S.serialize(compact=True))
@@ -307,8 +307,8 @@ class Cookbook08JWSTests(unittest.TestCase):
         plaintext = base64url_decode(Payload_plaintext_b64_4)
         protected = \
             base64url_decode(JWS_Protected_Header_4_2_2).decode('utf-8')
-        pub_key = jwk.JWK(**RSA_Public_Key_3_3)  # pylint: disable=star-args
-        pri_key = jwk.JWK(**RSA_Private_Key_3_4)  # pylint: disable=star-args
+        pub_key = jwk.JWK(**RSA_Public_Key_3_3)
+        pri_key = jwk.JWK(**RSA_Private_Key_3_4)
         S = jws.JWS(payload=plaintext)
         S.add_signature(pri_key, None, protected)
         # Can't compare signature with reference because RSASSA-PSS uses
@@ -324,8 +324,8 @@ class Cookbook08JWSTests(unittest.TestCase):
         plaintext = base64url_decode(Payload_plaintext_b64_4)
         protected = \
             base64url_decode(JWS_Protected_Header_4_3_2).decode('utf-8')
-        pub_key = jwk.JWK(**EC_Public_Key_3_1)  # pylint: disable=star-args
-        pri_key = jwk.JWK(**EC_Private_Key_3_2)  # pylint: disable=star-args
+        pub_key = jwk.JWK(**EC_Public_Key_3_1)
+        pri_key = jwk.JWK(**EC_Private_Key_3_2)
         S = jws.JWS(payload=plaintext)
         S.add_signature(pri_key, None, protected)
         # Can't compare signature with reference because ECDSA uses
@@ -341,7 +341,7 @@ class Cookbook08JWSTests(unittest.TestCase):
         plaintext = base64url_decode(Payload_plaintext_b64_4)
         protected = \
             base64url_decode(JWS_Protected_Header_4_4_2).decode('utf-8')
-        key = jwk.JWK(**Symmetric_Key_MAC_3_5)  # pylint: disable=star-args
+        key = jwk.JWK(**Symmetric_Key_MAC_3_5)
         S = jws.JWS(payload=plaintext)
         S.add_signature(key, None, protected)
         sig = S.serialize(compact=True)
@@ -357,7 +357,7 @@ class Cookbook08JWSTests(unittest.TestCase):
         protected = \
             base64url_decode(JWS_Protected_Header_4_6_2).decode('utf-8')
         header = json_encode(JWS_Unprotected_Header_4_6_2)
-        key = jwk.JWK(**Symmetric_Key_MAC_3_5)  # pylint: disable=star-args
+        key = jwk.JWK(**Symmetric_Key_MAC_3_5)
         S = jws.JWS(payload=plaintext)
         S.add_signature(key, None, protected, header)
         sig = S.serialize()
@@ -370,7 +370,7 @@ class Cookbook08JWSTests(unittest.TestCase):
     def test_4_7_signing(self):
         plaintext = base64url_decode(Payload_plaintext_b64_4)
         header = json_encode(JWS_Unprotected_Header_4_7_2)
-        key = jwk.JWK(**Symmetric_Key_MAC_3_5)  # pylint: disable=star-args
+        key = jwk.JWK(**Symmetric_Key_MAC_3_5)
         S = jws.JWS(payload=plaintext)
         S.add_signature(key, None, None, header)
         sig = S.serialize()
@@ -387,22 +387,22 @@ class Cookbook08JWSTests(unittest.TestCase):
         protected = \
             base64url_decode(JWS_Protected_Header_4_8_2).decode('utf-8')
         header = json_encode(JWS_Unprotected_Header_4_8_2)
-        pri_key = jwk.JWK(**RSA_Private_Key_3_4)  # pylint: disable=star-args
+        pri_key = jwk.JWK(**RSA_Private_Key_3_4)
         S.add_signature(pri_key, None, protected, header)
         # 4_8_3
         header = json_encode(JWS_Unprotected_Header_4_8_3)
-        pri_key = jwk.JWK(**EC_Private_Key_3_2)  # pylint: disable=star-args
+        pri_key = jwk.JWK(**EC_Private_Key_3_2)
         S.add_signature(pri_key, None, None, header)
         # 4_8_4
         protected = \
             base64url_decode(JWS_Protected_Header_4_8_4).decode('utf-8')
-        sym_key = jwk.JWK(**Symmetric_Key_MAC_3_5)  # pylint: disable=star-args
+        sym_key = jwk.JWK(**Symmetric_Key_MAC_3_5)
         S.add_signature(sym_key, None, protected)
         sig = S.serialize()
         # Can't compare signature with reference because ECDSA uses
         # random nonces every time a signature is generated.
-        rsa_key = jwk.JWK(**RSA_Public_Key_3_3)  # pylint: disable=star-args
-        ec_key = jwk.JWK(**EC_Public_Key_3_1)  # pylint: disable=star-args
+        rsa_key = jwk.JWK(**RSA_Public_Key_3_3)
+        ec_key = jwk.JWK(**EC_Public_Key_3_1)
         S.deserialize(sig, rsa_key)
         S.deserialize(sig, ec_key)
         S.deserialize(sig, sym_key)
@@ -954,7 +954,7 @@ class Cookbook08JWETests(unittest.TestCase):
     def test_5_1_encryption(self):
         plaintext = Payload_plaintext_5
         protected = base64url_decode(JWE_Protected_Header_5_1_4)
-        rsa_key = jwk.JWK(**RSA_key_5_1_1)  # pylint: disable=star-args
+        rsa_key = jwk.JWK(**RSA_key_5_1_1)
         E = jwe.JWE(plaintext, protected)
         E.add_recipient(rsa_key)
         e = E.serialize()
@@ -970,7 +970,7 @@ class Cookbook08JWETests(unittest.TestCase):
     def test_5_2_encryption(self):
         plaintext = Payload_plaintext_5
         protected = base64url_decode(JWE_Protected_Header_5_2_4)
-        rsa_key = jwk.JWK(**RSA_key_5_2_1)  # pylint: disable=star-args
+        rsa_key = jwk.JWK(**RSA_key_5_2_1)
         E = jwe.JWE(plaintext, protected)
         E.add_recipient(rsa_key)
         e = E.serialize()
@@ -995,7 +995,7 @@ class Cookbook08JWETests(unittest.TestCase):
     def test_5_6_encryption(self):
         plaintext = Payload_plaintext_5
         protected = base64url_decode(JWE_Protected_Header_5_6_3)
-        aes_key = jwk.JWK(**AES_key_5_6_1)  # pylint: disable=star-args
+        aes_key = jwk.JWK(**AES_key_5_6_1)
         E = jwe.JWE(plaintext, protected)
         E.add_recipient(aes_key)
         _ = E.serialize(compact=True)
@@ -1013,7 +1013,7 @@ class Cookbook08JWETests(unittest.TestCase):
     def test_5_8_encryption(self):
         plaintext = Payload_plaintext_5
         protected = base64url_decode(JWE_Protected_Header_5_8_4)
-        aes_key = jwk.JWK(**AES_key_5_8_1)  # pylint: disable=star-args
+        aes_key = jwk.JWK(**AES_key_5_8_1)
         E = jwe.JWE(plaintext, protected)
         E.add_recipient(aes_key)
         e = E.serialize()
@@ -1029,7 +1029,7 @@ class Cookbook08JWETests(unittest.TestCase):
     def test_5_9_encryption(self):
         plaintext = Payload_plaintext_5
         protected = base64url_decode(JWE_Protected_Header_5_9_4)
-        aes_key = jwk.JWK(**AES_key_5_8_1)  # pylint: disable=star-args
+        aes_key = jwk.JWK(**AES_key_5_8_1)
         E = jwe.JWE(plaintext, protected)
         E.add_recipient(aes_key)
         e = E.serialize()
@@ -1046,7 +1046,7 @@ class Cookbook08JWETests(unittest.TestCase):
         plaintext = Payload_plaintext_5
         protected = base64url_decode(JWE_Protected_Header_5_10_4)
         aad = base64url_decode(AAD_5_10_1)
-        aes_key = jwk.JWK(**AES_key_5_8_1)  # pylint: disable=star-args
+        aes_key = jwk.JWK(**AES_key_5_8_1)
         E = jwe.JWE(plaintext, protected, aad=aad)
         E.add_recipient(aes_key)
         e = E.serialize()
@@ -1061,7 +1061,7 @@ class Cookbook08JWETests(unittest.TestCase):
         plaintext = Payload_plaintext_5
         protected = base64url_decode(JWE_Protected_Header_5_11_4)
         unprotected = json_encode(JWE_Unprotected_Header_5_11_5)
-        aes_key = jwk.JWK(**AES_key_5_8_1)  # pylint: disable=star-args
+        aes_key = jwk.JWK(**AES_key_5_8_1)
         E = jwe.JWE(plaintext, protected, unprotected)
         E.add_recipient(aes_key)
         e = E.serialize()
@@ -1075,7 +1075,7 @@ class Cookbook08JWETests(unittest.TestCase):
     def test_5_12_encryption(self):
         plaintext = Payload_plaintext_5
         unprotected = json_encode(JWE_Unprotected_Header_5_12_5)
-        aes_key = jwk.JWK(**AES_key_5_8_1)  # pylint: disable=star-args
+        aes_key = jwk.JWK(**AES_key_5_8_1)
         E = jwe.JWE(plaintext, None, unprotected)
         E.add_recipient(aes_key)
         e = E.serialize()

@@ -207,7 +207,7 @@ class JWK(object):
         key = os.urandom(size // 8)
         params['kty'] = 'oct'
         params['k'] = key
-        self.import_key(**params)  # pylint: disable=star-args
+        self.import_key(**params)
 
     def _encode_int(self, i):
         I = hex(i).rstrip("L").lstrip("0x")
@@ -233,7 +233,7 @@ class JWK(object):
         params['dp'] = self._encode_int(pn.dmp1)
         params['dq'] = self._encode_int(pn.dmq1)
         params['qi'] = self._encode_int(pn.iqmp)
-        self.import_key(**params)  # pylint: disable=star-args
+        self.import_key(**params)
 
     def _get_curve_by_name(self, name):
         if name == 'P-256':
@@ -257,7 +257,7 @@ class JWK(object):
         params['x'] = self._encode_int(pn.public_numbers.x)
         params['y'] = self._encode_int(pn.public_numbers.y)
         params['d'] = self._encode_int(pn.private_value)
-        self.import_key(**params)  # pylint: disable=star-args
+        self.import_key(**params)
 
     def import_key(self, **kwargs):
         names = list(kwargs.keys())
