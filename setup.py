@@ -2,7 +2,7 @@
 #
 # Copyright (C) 2015  JWCrypto Project Contributors, see  LICENSE file
 
-from distutils.core import setup
+from setuptools import setup
 
 setup(
     name = 'jwcrypto',
