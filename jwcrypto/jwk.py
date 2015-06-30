@@ -338,10 +338,14 @@ class JWK(object):
 
     @property
     def key_type(self):
+        """The Key type"""
         return self._params.get('kty', None)
 
     @property
     def key_id(self):
+        """The Key ID.
+        Provided by the kid parameter if present, otherwise returns None.
+        """
         return self._params.get('kid', None)
 
     def get_curve(self, arg):
