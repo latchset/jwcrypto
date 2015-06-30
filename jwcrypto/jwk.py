@@ -329,7 +329,12 @@ class JWK(object):
 
     def export_public(self):
         """Exports the public key in the standard JSON format"""
-        pub = {'kty': self._params['kty']}
+        pub = {}
+        preg = JWKParamsRegistry
+        for name in preg:
+            if preg[name][1] == 'Public':
+                if name in self._params:
+                    pub[name] = self._params[name]
         reg = JWKValuesRegistry[self._params['kty']]
         for param in reg:
             if reg[param][1] == 'Public':

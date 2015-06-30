@@ -189,6 +189,13 @@ class TestJWK(unittest.TestCase):
         jwk.JWK(generate='RSA', size=4096)
         jwk.JWK(generate='EC', curve='P-521')
 
+    def test_export_public_keys(self):
+        k = jwk.JWK(**RSAPrivateKey)
+        jk = k.export_public()
+        self.assertFalse('d' in json_decode(jk))
+        k2 = jwk.JWK(**json_decode(jk))
+        self.assertEqual(k.key_id, k2.key_id)
+
 # RFC 7515 - A.1
 A1_protected = \
     [123, 34, 116, 121, 112, 34, 58, 34, 74, 87, 84, 34, 44, 13, 10, 32,
