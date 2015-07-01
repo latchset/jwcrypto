@@ -206,7 +206,7 @@ class JWK(object):
             del params['size']
         key = os.urandom(size // 8)
         params['kty'] = 'oct'
-        params['k'] = key
+        params['k'] = base64url_encode(key)
         self.import_key(**params)
 
     def _encode_int(self, i):

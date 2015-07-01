@@ -196,6 +196,14 @@ class TestJWK(unittest.TestCase):
         k2 = jwk.JWK(**json_decode(jk))
         self.assertEqual(k.key_id, k2.key_id)
 
+    def test_generate_oct_key(self):
+        key = jwk.JWK(generate='oct', size=128)
+        E = jwe.JWE('test', '{"alg":"A128KW","enc":"A128GCM"}')
+        E.add_recipient(key)
+        e = E.serialize()
+        E.deserialize(e, key)
+        self.assertEqual(E.payload, 'test')
+
 # RFC 7515 - A.1
 A1_protected = \
     [123, 34, 116, 121, 112, 34, 58, 34, 74, 87, 84, 34, 44, 13, 10, 32,
