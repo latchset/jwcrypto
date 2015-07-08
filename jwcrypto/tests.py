@@ -202,7 +202,7 @@ class TestJWK(unittest.TestCase):
         E.add_recipient(key)
         e = E.serialize()
         E.deserialize(e, key)
-        self.assertEqual(E.payload, 'test')
+        self.assertEqual(E.payload.decode('utf-8'), 'test')
 
 # RFC 7515 - A.1
 A1_protected = \
