@@ -195,16 +195,16 @@ class JWSCore(object):
         """Core JWS token handling.
 
         :param alg: The algorithm used to produce the signature.
-         See RFC 7518
+            See RFC 7518
         :param key: A (:class:`jwcrypto.jwk.JWK`) key of appropriate
-         type for the "alg" provided in the 'protected' json string.
+            type for the "alg" provided in the 'protected' json string.
         :param header: A JSON string representing the protected header.
         :param payload(bytes): An arbitrary value
         :param algs: An optional list of allowed algorithms
 
         :raises ValueError: if the key is not a :class:`JWK` object
         :raises InvalidJWAAlgorithm: if the algorithm is not valid, is
-         unknown or otherwise not yet implemented.
+            unknown or otherwise not yet implemented.
         """
         self.alg = alg
         self.engine = self._jwa(alg, algs)
@@ -394,7 +394,7 @@ class JWS(object):
 
         :param key: The (:class:`jwcrypto.jwk.JWK`) verification key.
         :param alg: The signing algorithm (optional). usually the algorithm
-        is known as it is provided with the JOSE Headers of the token.
+            is known as it is provided with the JOSE Headers of the token.
 
         :raises InvalidJWSSignature: if the verification fails.
         """
