@@ -177,7 +177,7 @@ class JWK(object):
 
         :raises InvalidJWKType: if the key type is invalid
         :raises InvalidJWKValue: if incorrect or inconsistent parameters
-        are provided.
+            are provided.
         """
         self._params = dict()
         self._key = dict()
