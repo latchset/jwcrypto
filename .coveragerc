@@ -1,0 +1,23 @@
+[run]
+branch = True
+source =
+    jwcrypto
+    tests
+
+[paths]
+source =
+   jwcrypto
+   .tox/*/lib/python*/site-packages/jwcrypto
+
+[report]
+ignore_errors = False
+precision = 1
+exclude_lines =
+    pragma: no cover
+    raise AssertionError
+    raise NotImplementedError
+    if 0:
+    if False:
+    if __name__ == .__main__.:
+    if PY3
+    if not PY3
