@@ -250,10 +250,16 @@ class JWK(object):
         if 'curve' in params:
             curve = params['curve']
             del params['curve']
-        key = ec.generate_private_key(self._get_curve_by_name(curve),
-                                      default_backend())
+        # 'curve' is for backwards compat, if 'crv' is defined it takes
+        # precedence
+        if 'crv' in params:
+            curve = params['crv']
+            del params['crv']
+        curve_name = self._get_curve_by_name(curve)
+        key = ec.generate_private_key(curve_name, default_backend())
         pn = key.private_numbers()
         params['kty'] = 'EC'
+        params['crv'] = curve
         params['x'] = self._encode_int(pn.public_numbers.x)
         params['y'] = self._encode_int(pn.public_numbers.y)
         params['d'] = self._encode_int(pn.private_value)

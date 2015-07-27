@@ -204,6 +204,18 @@ class TestJWK(unittest.TestCase):
         E.deserialize(e, key)
         self.assertEqual(E.payload.decode('utf-8'), 'test')
 
+    def test_generate_EC_key(self):
+        # Backwards compat curve
+        key = jwk.JWK(generate='EC', curve='P-256')
+        key.get_curve('P-256')
+        # New param
+        key = jwk.JWK(generate='EC', crv='P-521')
+        key.get_curve('P-521')
+        # New param prevails
+        key = jwk.JWK(generate='EC', curve='P-256', crv='P-521')
+        key.get_curve('P-521')
+
+
 # RFC 7515 - A.1
 A1_protected = \
     [123, 34, 116, 121, 112, 34, 58, 34, 74, 87, 84, 34, 44, 13, 10, 32,
