@@ -616,7 +616,7 @@ class JWE(object):
             for invalid in 'aad', 'unprotected':
                 if invalid in self.objects:
                     raise InvalidJWEOperation("Can't use compact encoding")
-            if 'recipiens' in self.objects:
+            if 'recipients' in self.objects:
                 if len(self.objects['recipients']) != 1:
                     raise InvalidJWEOperation("Invalid number of recipients")
                 rec = self.objects['recipients'][0]
