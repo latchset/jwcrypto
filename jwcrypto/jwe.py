@@ -287,7 +287,7 @@ class _aes_cbc_hmac_sha2(_raw_jwe):
 
     # RFC 7518 - 5.2.2
     def encrypt(self, k, a, m):
-        """ Encrypt accoriding to the selected encryption and hashing
+        """ Encrypt according to the selected encryption and hashing
         functions.
 
         :param k: Encryption key (optional)
@@ -314,7 +314,7 @@ class _aes_cbc_hmac_sha2(_raw_jwe):
         return (iv, e, t)
 
     def decrypt(self, k, a, iv, e, t):
-        """ Decrypt accoriding to the selected encryption and hashing
+        """ Decrypt according to the selected encryption and hashing
         functions.
         :param k: Encryption key (optional)
         :param a: Additional Authenticated Data
