@@ -734,12 +734,16 @@ class TestJWT(unittest.TestCase):
         token = T.serialize()
         T.deserialize(token)
         # then try the test vector
-        T = jwt.JWT(jwt=A1_token, key=key)
+        T = jwt.JWT(jwt=A1_token, key=key, check_claims=False)
+        # then try the test vector with explicit expiration date
+        T = jwt.JWT(jwt=A1_token, key=key, check_claims={'exp': 1300819380})
+        # Finally check it raises for expired tokens
+        self.assertRaises(jwt.JWTExpired, jwt.JWT, jwt=A1_token, key=key)
 
     def test_A2(self):
         sigkey = jwk.JWK(**A2_example['key'])
         Touter = jwt.JWT(jwt=A2_token, key=E_A2_ex['key'])
-        Tinner = jwt.JWT(jwt=Touter.claims, key=sigkey)
+        Tinner = jwt.JWT(jwt=Touter.claims, key=sigkey, check_claims=False)
         self.assertEqual(A1_claims, json_decode(Tinner.claims))
 
         with self.assertRaises(jwe.InvalidJWEData):
