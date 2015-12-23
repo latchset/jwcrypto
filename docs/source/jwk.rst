@@ -57,3 +57,31 @@ Registries
 
 .. autodata:: jwcrypto.jwk.JWKOperationsRegistry
    :annotation:
+
+Examples
+--------
+
+Create a 256bit symmetric key::
+    >>> from jwcrypto import jwk
+    >>> key = jwk.JWK(generate='oct', size=256)
+
+Export the key with::
+    >>> key.export()
+    '{"k":"X6TBlwY2so8EwKZ2TFXM7XHSgWBKQJhcspzYydp5Y-o","kty":"oct"}'
+
+Create a 2048bit RSA keypair::
+    >>> jwk.JWK(generate='RSA', size=2048)
+
+Create a P-256 EC keypair and export the public key::
+    >>> key = jwk.JWK(generate='EC', crv='P-256')
+    >>> key.export_public()
+    '{"y":"VYlYwBfOTIICojCPfdUjnmkpN-g-lzZKxzjAoFmDRm8",
+      "x":"3mdE0rODWRju6qqU01Kw5oPYdNxBOMisFvJFH1vEu9Q",
+      "crv":"P-256","kty":"EC"}'
+
+Import a P-256 Public Key::
+    >>> expkey = {"y":"VYlYwBfOTIICojCPfdUjnmkpN-g-lzZKxzjAoFmDRm8",
+                  "x":"3mdE0rODWRju6qqU01Kw5oPYdNxBOMisFvJFH1vEu9Q",
+                  "crv":"P-256","kty":"EC"}
+    >>> key = jwk.JWK(**expkey)
+
