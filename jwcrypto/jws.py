@@ -364,10 +364,9 @@ class JWS(object):
             raise InvalidJWSSignature('Invalid Protected header')
         # merge heders, and verify there are no duplicates
         if header:
-            h = json_decode(header)
-            if not isinstance(h, dict):
+            if not isinstance(header, dict):
                 raise InvalidJWSSignature('Invalid Unprotected header')
-            p = self._merge_headers(p, h)
+            p = self._merge_headers(p, header)
         # verify critical headers
         # TODO: allow caller to specify list of headers it understands
         if 'crit' in p:
@@ -464,7 +463,7 @@ class JWS(object):
                             p = base64url_decode(str(s['protected']))
                             os['protected'] = p.decode('utf-8')
                         if 'header' in s:
-                            os['header'] = json_encode(s['header'])
+                            os['header'] = s['header']
                         o['signatures'].append(os)
                 else:
                     o['signature'] = base64url_decode(str(djws['signature']))
@@ -472,7 +471,7 @@ class JWS(object):
                         p = base64url_decode(str(djws['protected']))
                         o['protected'] = p.decode('utf-8')
                     if 'header' in djws:
-                        o['header'] = json_encode(djws['header'])
+                        o['header'] = djws['header']
 
             except ValueError:
                 c = raw_jws.split('.')
