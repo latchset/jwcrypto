@@ -461,6 +461,8 @@ class TestJWS(unittest.TestCase):
         S.add_signature(A6_example['key2'], None,
                         A6_example['protected2'],
                         A6_example['header2'])
+        S.verify(A6_example['key1'])
+        S.verify(A6_example['key2'])
         sig = S.serialize()
         S.deserialize(sig, A6_example['key1'])
         S.deserialize(A6_serialized, A6_example['key2'])
