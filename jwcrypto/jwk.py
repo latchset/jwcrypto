@@ -288,11 +288,6 @@ class JWK(object):
         # Let's just store them out of the way
         for name in names:
             self._unknown[name] = kwargs[name]
-            while name in names:
-                names.remove(name)
-
-        if len(names) != 0:
-            raise InvalidJWKValue('Unknown key parameters: %s' % names)
 
         if len(self._key) == 0:
             raise InvalidJWKValue('No Key Values found')
