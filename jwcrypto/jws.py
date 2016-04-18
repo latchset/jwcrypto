@@ -554,7 +554,7 @@ class JWS(object):
             del self.objects['signature']
             if 'protected' in self.objects:
                 n['protected'] = self.objects['protected']
-            del self.objects['protected']
+                del self.objects['protected']
             if 'header' in self.objects:
                 n['header'] = self.objects['header']
                 del self.objects['header']
