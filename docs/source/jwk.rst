@@ -74,7 +74,7 @@ Create a 2048bit RSA keypair::
 
 Create a P-256 EC keypair and export the public key::
     >>> key = jwk.JWK(generate='EC', crv='P-256')
-    >>> key.export_public()
+    >>> key.export(private_key=False)
     '{"y":"VYlYwBfOTIICojCPfdUjnmkpN-g-lzZKxzjAoFmDRm8",
       "x":"3mdE0rODWRju6qqU01Kw5oPYdNxBOMisFvJFH1vEu9Q",
       "crv":"P-256","kty":"EC"}'

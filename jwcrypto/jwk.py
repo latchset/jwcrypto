@@ -320,8 +320,14 @@ class JWK(object):
                                               ' "key_ops" values specified at'
                                               ' the same time')
 
-    def export(self):
-        """Exports the key in the standard JSON format"""
+    def export(self, private_key=True):
+        """Exports the key in the standard JSON format.
+
+        :param private_key(bool): Whether to export the private key.
+                                  Defaults to True.
+        """
+        if private_key is not True:
+            return self.export_public()
         d = dict()
         d.update(self._params)
         d.update(self._key)
@@ -329,7 +335,10 @@ class JWK(object):
         return json_encode(d)
 
     def export_public(self):
-        """Exports the public key in the standard JSON format"""
+        """Exports the public key in the standard JSON format.
+           This function is deprecated and maintained only for
+           backwards compatibility, use export(private_key=False)
+           instead."""
         pub = {}
         preg = JWKParamsRegistry
         for name in preg:
@@ -485,11 +494,15 @@ class JWKSet(set):
             raise TypeError('Only JWK objects are valid elements')
         set.add(self, elem)
 
-    def export(self):
-        """Exports the set using the standard JSON format"""
+    def export(self, private_keys=True):
+        """Exports the set using the standard JSON format
+
+        :param private_key(bool): Whether to export private keys.
+                                  Defaults to True.
+        """
         keys = list()
         for jwk in self:
-            keys.append(json_decode(jwk.export()))
+            keys.append(json_decode(jwk.export(private_keys)))
         return json_encode({'keys': keys})
 
     def get_key(self, kid):
