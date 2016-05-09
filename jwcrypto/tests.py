@@ -1,6 +1,7 @@
 # Copyright (C) 2015  JWCrypto Project Contributors - see LICENSE file
 
 from __future__ import unicode_literals
+import copy
 from jwcrypto.common import base64url_decode, base64url_encode
 from jwcrypto.common import json_decode, json_encode
 from jwcrypto import jwk
@@ -751,6 +752,27 @@ class TestJWT(unittest.TestCase):
         with self.assertRaises(jwe.InvalidJWEData):
             jwt.JWT(jwt=A2_token, key=E_A2_ex['key'],
                     algs=['RSA_1_5', 'AES256GCM'])
+
+    def test_decrypt_keyset(self):
+        key = jwk.JWK(kid='testkey', **E_A2_key)
+        keyset = jwk.JWKSet()
+        # decrypt without keyid
+        T = jwt.JWT(A1_header, A1_claims)
+        T.make_encrypted_token(key)
+        token = T.serialize()
+        self.assertRaises(jwt.JWTMissingKeyID, jwt.JWT, jwt=token,
+                          key=keyset)
+        # encrypt a new JWT
+        header = copy.copy(A1_header)
+        header['kid'] = 'testkey'
+        T = jwt.JWT(header, A1_claims)
+        T.make_encrypted_token(key)
+        token = T.serialize()
+        # try to decrypt without key
+        self.assertRaises(jwt.JWTMissingKey, jwt.JWT, jwt=token, key=keyset)
+        # now decrypt with key
+        keyset.add(key)
+        jwt.JWT(jwt=token, key=keyset, check_claims={'exp': 1300819380})
 
 
 class ConformanceTests(unittest.TestCase):

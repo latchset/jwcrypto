@@ -8,6 +8,7 @@ from six import string_types
 from jwcrypto.common import json_encode, json_decode
 from jwcrypto.jws import JWS
 from jwcrypto.jwe import JWE
+from jwcrypto.jwk import JWK, JWKSet
 
 
 # RFC 7519 - 4.1
@@ -107,6 +108,42 @@ class JWTInvalidClaimFormat(Exception):
         super(JWTInvalidClaimFormat, self).__init__(msg)
 
 
+class JWTMissingKeyID(Exception):
+    """Json Web Token is missing key id.
+
+    This exception is raised when trying to decode a JWT with a key set
+    that does not have a kid value in its header.
+    """
+
+    def __init__(self, message=None, exception=None):
+        msg = None
+        if message:
+            msg = str(message)
+        else:
+            msg = 'Missing Key ID'
+        if exception:
+            msg += ' {%s}' % str(exception)
+        super(JWTMissingKeyID, self).__init__(msg)
+
+
+class JWTMissingKey(Exception):
+    """Json Web Token is using a key not in the key set.
+
+    This exception is raised if the key that was used is not available
+    in the passed key set.
+    """
+
+    def __init__(self, message=None, exception=None):
+        msg = None
+        if message:
+            msg = str(message)
+        else:
+            msg = 'Missing Key'
+        if exception:
+            msg += ' {%s}' % str(exception)
+        super(JWTMissingKey, self).__init__(msg)
+
+
 class JWT(object):
     """JSON Web token object
 
@@ -121,7 +158,7 @@ class JWT(object):
         :param claims: A dict or a string withthe JWT Claims data.
         :param jwt: a 'raw' JWT token
         :param key: A (:class:`jwcrypto.jwk.JWK`) key to deserialize
-         the token.
+         the token. A (:class:`jwcrypt.jwk.JWKSet`) can also be used.
         :param algs: An optional list of allowed algorithms
         :param default_claims: An optional dict with default values for
          registred claims. A None value for NumericDate type claims
@@ -400,7 +437,8 @@ class JWT(object):
 
         :param jwt: a 'raw' JWT token.
         :param key: A (:class:`jwcrypto.jwk.JWK`) verification or
-         decryption key.
+         decryption key, or a (:class:`jwcrypt.jwk.JWKSet`) that
+         contains a key indexed by the 'kid' header.
         """
         c = jwt.count('.')
         if c == 2:
@@ -416,7 +454,28 @@ class JWT(object):
 
         # now deserialize and also decrypt/verify (or raise) if we
         # have a key
-        self.token.deserialize(jwt, key)
+        if key is None:
+            self.token.deserialize(jwt, None)
+        elif isinstance(key, JWK):
+            self.token.deserialize(jwt, key)
+        elif isinstance(key, JWKSet):
+            self.token.deserialize(jwt, None)
+            if 'kid' not in self.token.jose_header:
+                raise JWTMissingKeyID('No key ID in JWT header')
+
+            token_key = key.get_key(self.token.jose_header['kid'])
+            if not token_key:
+                raise JWTMissingKey('Key ID %s not in key set'
+                                    % self.token.jose_header['kid'])
+
+            if isinstance(self.token, JWE):
+                self.token.decrypt(token_key)
+            elif isinstance(self.token, JWS):
+                self.token.verify(token_key)
+            else:
+                raise RuntimeError("Unknown Token Type")
+        else:
+            raise ValueError("Unrecognized Key Type")
 
         if key is not None:
             self.header = self.token.jose_header
