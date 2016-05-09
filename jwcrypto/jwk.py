@@ -505,6 +505,20 @@ class JWKSet(set):
             keys.append(json_decode(jwk.export(private_keys)))
         return json_encode({'keys': keys})
 
+    def import_keyset(self, keyset):
+        try:
+            jwkset = json_decode(keyset)
+        except:
+            raise InvalidJWKValue()
+
+        if 'keys' not in jwkset:
+            raise InvalidJWKValue()
+
+        for jwk in jwkset['keys']:
+            self.add(JWK(**jwk))
+
+        return self
+
     def get_key(self, kid):
         """Gets a key from the set.
         :param kid: the 'kid' key identifier.

@@ -216,6 +216,20 @@ class TestJWK(unittest.TestCase):
         key = jwk.JWK(generate='EC', curve='P-256', crv='P-521')
         key.get_curve('P-521')
 
+    def test_jwkset(self):
+        k = jwk.JWK(**RSAPrivateKey)
+        ks = jwk.JWKSet()
+        ks.add(k)
+        ks2 = jwk.JWKSet().import_keyset(ks.export())
+        self.assertEqual(len(ks), len(ks2))
+        self.assertEqual(len(ks), 1)
+        k1 = ks.get_key(RSAPrivateKey['kid'])
+        k2 = ks2.get_key(RSAPrivateKey['kid'])
+        # pylint: disable=protected-access
+        self.assertEqual(k1._key, k2._key)
+        # pylint: disable=protected-access
+        self.assertEqual(k1._key['d'], RSAPrivateKey['d'])
+
 
 # RFC 7515 - A.1
 A1_protected = \
