@@ -8,6 +8,7 @@ from six import string_types
 from jwcrypto.common import json_encode, json_decode
 from jwcrypto.jws import JWS
 from jwcrypto.jwe import JWE
+from jwcrypto.jwk import JWKSet
 
 
 # RFC 7519 - 4.1
@@ -107,6 +108,42 @@ class JWTInvalidClaimFormat(Exception):
         super(JWTInvalidClaimFormat, self).__init__(msg)
 
 
+class JWTMissingKeyID(Exception):
+    """Json Web Token is missing key id.
+
+    This exception is raised when trying to decode a JWT with a keyset
+    that does not have a kid value in its header.
+    """
+
+    def __init__(self, message=None, exception=None):
+        msg = None
+        if message:
+            msg = str(message)
+        else:
+            msg = 'Missing Key ID'
+        if exception:
+            msg += ' {%s}' % str(exception)
+        super(JWTMissingKeyID, self).__init__(msg)
+
+
+class JWTMissingKey(Exception):
+    """Json Web Token is using a key not in the keyset.
+
+    This exception is raised if the key that was used is not available
+    in the passed keyset.
+    """
+
+    def __init__(self, message=None, exception=None):
+        msg = None
+        if message:
+            msg = str(message)
+        else:
+            msg = 'Missing Key'
+        if exception:
+            msg += ' {%s}' % str(exception)
+        super(JWTMissingKey, self).__init__(msg)
+
+
 class JWT(object):
     """JSON Web token object
 
@@ -114,14 +151,15 @@ class JWT(object):
     """
 
     def __init__(self, header=None, claims=None, jwt=None, key=None,
-                 algs=None, default_claims=None, check_claims=None):
+                 algs=None, default_claims=None, check_claims=None,
+                 keyset=None):
         """Creates a JWT object.
 
         :param header: A dict or a JSON string with the JWT Header data.
         :param claims: A dict or a string withthe JWT Claims data.
         :param jwt: a 'raw' JWT token
         :param key: A (:class:`jwcrypto.jwk.JWK`) key to deserialize
-         the token.
+         the token. This option is mutually exclusive with `keyset`.
         :param algs: An optional list of allowed algorithms
         :param default_claims: An optional dict with default values for
          registred claims. A None value for NumericDate type claims
@@ -130,10 +168,13 @@ class JWT(object):
         :param check_claims: An optional dict of claims that must be
          present in the token, if the value is not None the claim must
          match exactly.
+        :param keyset: A (:class:`jwcrypt.jwk.JWTSet`) keyset containing
+         the key to deserialize the token. This option is mutually exclusive
+         with `key`.
 
-        Note: either the header,claims or jwt,key parameters should be
-        provided as a deserialization operation (which occurs if the jwt
-        is provided will wipe any header os claim provided by setting
+        Note: either the header,claims or jwt,key or jwt,keyset parameters
+        should be provided as a deserialization operation (which occurs if
+        the jwt is provided will wipe any header os claim provided by setting
         those obtained from the deserialization of the jwt token.
 
         Note: if check_claims is not provided the 'exp' and 'nbf' claims
@@ -141,6 +182,9 @@ class JWT(object):
         set. Any other RFC 7519 registered claims are checked only for
         format conformance.
         """
+
+        if key and keyset:
+            raise ValueError('key and keyset arguments are mutually exclusive')
 
         self._header = None
         self._claims = None
@@ -164,7 +208,7 @@ class JWT(object):
             self._check_claims = check_claims
 
         if jwt is not None:
-            self.deserialize(jwt, key)
+            self.deserialize(jwt, key, keyset)
 
     @property
     def header(self):
@@ -392,7 +436,7 @@ class JWT(object):
         t.add_recipient(key)
         self.token = t
 
-    def deserialize(self, jwt, key=None):
+    def deserialize(self, jwt, key=None, keyset=None):
         """Deserialize a JWT token.
 
         NOTE: Destroys any current status and tries to import the raw
@@ -417,6 +461,19 @@ class JWT(object):
         # now deserialize and also decrypt/verify (or raise) if we
         # have a key
         self.token.deserialize(jwt, key)
+
+        if keyset is not None:
+            if not isinstance(keyset, JWKSet):
+                raise ValueError('Provided keyset is not a JWKSet')
+
+            if 'kid' not in self.token.jose_header:
+                raise JWTMissingKeyID('No key ID in JWT header')
+            key = keyset.get_key(self.token.jose_header['kid'])
+            if not key:
+                raise JWTMissingKey('Key ID %s not in keyset'
+                                    % self.token.jose_header['kid'])
+            # Deserialize again with the newly parsed key
+            self.token.deserialize(jwt, key)
 
         if key is not None:
             self.header = self.token.jose_header
