@@ -738,7 +738,7 @@ class JWE(object):
         :param raw_jwe: a 'raw' JWE token (JSON Encoded or Compact
          notation) string.
         :param key: A (:class:`jwcrypto.jwk.JWK`) decryption key (optional).
-         If a key is provided a idecryption step will be attempted after
+         If a key is provided a decryption step will be attempted after
          the object is successfully deserialized.
 
         :raises InvalidJWEData: if the raw object is an invaid JWE token.
