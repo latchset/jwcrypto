@@ -72,6 +72,10 @@ JWKOperationsRegistry = {'sign': 'Compute digital Signature or MAC',
                          'deriveBits': 'Derive bits not to be used as a key'}
 """Registry of allowed operations"""
 
+JWKpycaCurveMap = {'secp256r1': 'P-256',
+                   'secp384r1': 'P-384',
+                   'secp521r1': 'P-521'}
+
 
 class InvalidJWKType(Exception):
     """Invalid JWK Type Exception.
@@ -243,8 +247,11 @@ class JWK(object):
             size = params['size']
             del params['size']
         key = rsa.generate_private_key(pubexp, size, default_backend())
+        self._import_pyca_pri_rsa(key)
+
+    def _import_pyca_pri_rsa(self, key):
         pn = key.private_numbers()
-        params['kty'] = 'RSA'
+        params = {'kty': 'RSA'}
         params['n'] = self._encode_int(pn.public_numbers.n)
         params['e'] = self._encode_int(pn.public_numbers.e)
         params['d'] = self._encode_int(pn.d)
@@ -253,6 +260,13 @@ class JWK(object):
         params['dp'] = self._encode_int(pn.dmp1)
         params['dq'] = self._encode_int(pn.dmq1)
         params['qi'] = self._encode_int(pn.iqmp)
+        self.import_key(**params)
+
+    def _import_pyca_pub_rsa(self, key):
+        pn = key.public_numbers()
+        params = {'kty': 'RSA'}
+        params['n'] = self._encode_int(pn.n)
+        params['e'] = self._encode_int(pn.e)
         self.import_key(**params)
 
     def _get_curve_by_name(self, name):
@@ -277,12 +291,23 @@ class JWK(object):
             del params['crv']
         curve_name = self._get_curve_by_name(curve)
         key = ec.generate_private_key(curve_name, default_backend())
+        self._import_pyca_pri_ec(key)
+
+    def _import_pyca_pri_ec(self, key):
         pn = key.private_numbers()
-        params['kty'] = 'EC'
-        params['crv'] = curve
+        params = {'kty': 'EC'}
+        params['crv'] = JWKpycaCurveMap[key.curve.name]
         params['x'] = self._encode_int(pn.public_numbers.x)
         params['y'] = self._encode_int(pn.public_numbers.y)
         params['d'] = self._encode_int(pn.private_value)
+        self.import_key(**params)
+
+    def _import_pyca_pub_ec(self, key):
+        pn = key.public_numbers()
+        params = {'kty': 'EC'}
+        params['crv'] = JWKpycaCurveMap[key.curve.name]
+        params['x'] = self._encode_int(pn.x)
+        params['y'] = self._encode_int(pn.y)
         self.import_key(**params)
 
     def import_key(self, **kwargs):
@@ -495,6 +520,24 @@ class JWK(object):
             return self._get_private_key(arg)
         else:
             raise NotImplementedError
+
+    def import_from_pyca(self, key):
+        if isinstance(key, rsa.RSAPrivateKey):
+            self._import_pyca_pri_rsa(key)
+        elif isinstance(key, rsa.RSAPublicKey):
+            self._import_pyca_pub_rsa(key)
+        elif isinstance(key, ec.EllipticCurvePrivateKey):
+            self._import_pyca_pri_ec(key)
+        elif isinstance(key, ec.EllipticCurvePublicKey):
+            self._import_pyca_pub_ec(key)
+        else:
+            raise InvalidJWKValue('Unknown key object %r' % key)
+
+    @classmethod
+    def from_pyca(cls, key):
+        obj = cls()
+        obj.import_from_pyca(key)
+        return obj
 
 
 class _jwkset(set):

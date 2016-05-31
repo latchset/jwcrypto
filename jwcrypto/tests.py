@@ -2,6 +2,9 @@
 
 from __future__ import unicode_literals
 import copy
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives.asymmetric import rsa
+from cryptography.hazmat.primitives.asymmetric import ec
 from jwcrypto.common import base64url_decode, base64url_encode
 from jwcrypto.common import json_decode, json_encode
 from jwcrypto import jwk
@@ -215,6 +218,22 @@ class TestJWK(unittest.TestCase):
         # New param prevails
         key = jwk.JWK.generate(kty='EC', curve='P-256', crv='P-521')
         key.get_curve('P-521')
+
+    def test_import_pyca_keys(self):
+        rsa1 = rsa.generate_private_key(65537, 1024, default_backend())
+        krsa1 = jwk.JWK.from_pyca(rsa1)
+        self.assertEqual(krsa1.key_type, 'RSA')
+        krsa2 = jwk.JWK.from_pyca(rsa1.public_key())
+        self.assertEqual(krsa1.get_op_key('verify').public_numbers().n,
+                         krsa2.get_op_key('verify').public_numbers().n)
+        ec1 = ec.generate_private_key(ec.SECP256R1(), default_backend())
+        kec1 = jwk.JWK.from_pyca(ec1)
+        self.assertEqual(kec1.key_type, 'EC')
+        kec2 = jwk.JWK.from_pyca(ec1.public_key())
+        self.assertEqual(kec1.get_op_key('verify').public_numbers().x,
+                         kec2.get_op_key('verify').public_numbers().x)
+        self.assertRaises(jwk.InvalidJWKValue,
+                          jwk.JWK.from_pyca, dict())
 
     def test_jwkset(self):
         k = jwk.JWK(**RSAPrivateKey)
