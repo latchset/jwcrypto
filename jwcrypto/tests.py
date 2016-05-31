@@ -186,9 +186,9 @@ class TestJWK(unittest.TestCase):
         _ = jwk.JWK(**RSAPrivateKey)
 
     def test_generate_keys(self):
-        jwk.JWK(generate='oct', size=256)
-        jwk.JWK(generate='RSA', size=4096)
-        jwk.JWK(generate='EC', curve='P-521')
+        jwk.JWK.generate(kty='oct', size=256)
+        jwk.JWK.generate(kty='RSA', size=4096)
+        jwk.JWK.generate(kty='EC', curve='P-521')
 
     def test_export_public_keys(self):
         k = jwk.JWK(**RSAPrivateKey)
@@ -198,7 +198,7 @@ class TestJWK(unittest.TestCase):
         self.assertEqual(k.key_id, k2.key_id)
 
     def test_generate_oct_key(self):
-        key = jwk.JWK(generate='oct', size=128)
+        key = jwk.JWK.generate(kty='oct', size=128)
         E = jwe.JWE('test', '{"alg":"A128KW","enc":"A128GCM"}')
         E.add_recipient(key)
         e = E.serialize()
@@ -207,13 +207,13 @@ class TestJWK(unittest.TestCase):
 
     def test_generate_EC_key(self):
         # Backwards compat curve
-        key = jwk.JWK(generate='EC', curve='P-256')
+        key = jwk.JWK.generate(kty='EC', curve='P-256')
         key.get_curve('P-256')
         # New param
-        key = jwk.JWK(generate='EC', crv='P-521')
+        key = jwk.JWK.generate(kty='EC', crv='P-521')
         key.get_curve('P-521')
         # New param prevails
-        key = jwk.JWK(generate='EC', curve='P-256', crv='P-521')
+        key = jwk.JWK.generate(kty='EC', curve='P-256', crv='P-521')
         key.get_curve('P-521')
 
     def test_jwkset(self):
