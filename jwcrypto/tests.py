@@ -229,6 +229,9 @@ class TestJWK(unittest.TestCase):
         self.assertEqual(k1._key, k2._key)
         # pylint: disable=protected-access
         self.assertEqual(k1._key['d'], RSAPrivateKey['d'])
+        # test class method import too
+        ks3 = jwk.JWKSet.from_json(ks.export())
+        self.assertEqual(len(ks), len(ks3))
 
 
 # RFC 7515 - A.1
