@@ -166,14 +166,19 @@ class JWK(object):
         :data:`JWKTypesRegistry` variable. The valid key parameters per
         key type are defined in the :data:`JWKValuesregistry` variable.
 
-        Alternatively if the 'generate' parameter is provided, with a
-        valid key type as value then a new key will be generated according
-        to the defaults or provided key strenght options (type specific).
+        To generate a new random key call the class method generate() with
+        the appropriate 'kty' parameter, and other parameters as needed (key
+        size, public exponents, curve types, etc..)
 
         Valid options per type, when generating new keys:
          * oct: size(int)
          * RSA: public_exponent(int), size(int)
          * EC: curve(str) (one of P-256, P-384, P-521)
+
+        Deprecated:
+        Alternatively if the 'generate' parameter is provided, with a
+        valid key type as value then a new key will be generated according
+        to the defaults or provided key strenght options (type specific).
 
         :raises InvalidJWKType: if the key type is invalid
         :raises InvalidJWKValue: if incorrect or inconsistent parameters
@@ -185,8 +190,19 @@ class JWK(object):
 
         if 'generate' in kwargs:
             self.generate_key(**kwargs)
-        else:
+        elif kwargs:
             self.import_key(**kwargs)
+
+    @classmethod
+    def generate(cls, **kwargs):
+        obj = cls()
+        try:
+            kty = kwargs['kty']
+            gen = getattr(obj, '_generate_%s' % kty)
+        except (KeyError, AttributeError):
+            raise InvalidJWKType(kty)
+        gen(kwargs)
+        return obj
 
     def generate_key(self, **kwargs):
         params = kwargs.copy()
