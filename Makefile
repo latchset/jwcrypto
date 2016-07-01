@@ -2,18 +2,12 @@ all: lint pep8 docs test
 	echo "All tests passed"
 
 lint:
-	# Analyze code
-	# don't show recommendations, info, comments, report
-	# W0613 - unused argument
-	# Ignore cherrypy class members as they are dynamically added
-	pylint -d c,r,i,W0613 -r n -f colorized \
-		   --notes= \
-		   --disable=star-args \
-		   ./jwcrypto
+	# Pylint checks
+	tox -e lint
 
 pep8:
 	# Check style consistency
-	pep8 jwcrypto
+	tox -e pep8
 
 clean:
 	rm -fr build dist *.egg-info
@@ -24,7 +18,8 @@ cscope:
 
 test:
 	rm -f .coverage
-	nosetests -s
+	tox -e py27
+	tox -e py34
 
 DOCS_DIR = docs
 .PHONY: docs
