@@ -1,17 +1,20 @@
 # Copyright (C) 2015 JWCrypto Project Contributors - see LICENSE file
 
-from binascii import hexlify, unhexlify
-from cryptography.hazmat.backends import default_backend
-from cryptography.hazmat.primitives import constant_time, hashes, hmac
-from cryptography.hazmat.primitives.padding import PKCS7
-from cryptography.hazmat.primitives.asymmetric import padding
-from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
-from jwcrypto.common import base64url_encode, base64url_decode
-from jwcrypto.common import InvalidJWAAlgorithm
-from jwcrypto.common import json_decode, json_encode
-from jwcrypto.jwk import JWK
 import os
 import zlib
+
+from binascii import hexlify, unhexlify
+
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives import constant_time, hashes, hmac
+from cryptography.hazmat.primitives.asymmetric import padding
+from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+from cryptography.hazmat.primitives.padding import PKCS7
+
+from jwcrypto.common import InvalidJWAAlgorithm
+from jwcrypto.common import base64url_decode, base64url_encode
+from jwcrypto.common import json_decode, json_encode
+from jwcrypto.jwk import JWK
 
 
 # RFC 7516 - 4.1
@@ -49,12 +52,12 @@ default_allowed_algs = [
 # Note: l is the number of bits, which should be a multiple of 16
 def _encode_int(n, l):
     e = hex(n).rstrip("L").lstrip("0x")
-    el = len(e)
-    L = ((l + 7) // 8) * 2  # number of bytes rounded up times 2 chars/bytes
-    if el > L:
-        e = e[:L]
+    elen = len(e)
+    ilen = ((l + 7) // 8) * 2  # number of bytes rounded up times 2 chars/bytes
+    if elen > ilen:
+        e = e[:ilen]
     else:
-        e = '0' * (L - el) + e  # pad as necessary
+        e = '0' * (ilen - elen) + e  # pad as necessary
     return unhexlify(e)
 
 
@@ -134,7 +137,7 @@ class InvalidJWEKeyLength(Exception):
         super(InvalidJWEKeyLength, self).__init__(msg)
 
 
-class _raw_key_mgmt(object):
+class _RawKeyMgmt(object):
 
     def wrap(self, key, keylen, cek):
         raise NotImplementedError
@@ -143,7 +146,7 @@ class _raw_key_mgmt(object):
         raise NotImplementedError
 
 
-class _rsa(_raw_key_mgmt):
+class _RSA(_RawKeyMgmt):
 
     def __init__(self, padfn):
         self.padfn = padfn
@@ -168,7 +171,7 @@ class _rsa(_raw_key_mgmt):
         return cek
 
 
-class _aes_kw(_raw_key_mgmt):
+class _AesKw(_RawKeyMgmt):
 
     def __init__(self, keysize):
         self.backend = default_backend()
@@ -190,19 +193,19 @@ class _aes_kw(_raw_key_mgmt):
         # Implement RFC 3394 Key Unwrap - 2.2.2
         # TODO: Use cryptography once issue #1733 is resolved
         iv = 'a6a6a6a6a6a6a6a6'
-        A = unhexlify(iv)
-        R = [cek[i:i+8] for i in range(0, len(cek), 8)]
-        n = len(R)
+        a = unhexlify(iv)
+        r = [cek[i:i + 8] for i in range(0, len(cek), 8)]
+        n = len(r)
         for j in range(0, 6):
             for i in range(0, n):
                 e = Cipher(algorithms.AES(rk), modes.ECB(),
                            backend=self.backend).encryptor()
-                B = e.update(A + R[i]) + e.finalize()
-                A = _encode_int(_decode_int(B[:8]) ^ ((n*j)+i+1), 64)
-                R[i] = B[-8:]
-        ek = A
+                b = e.update(a + r[i]) + e.finalize()
+                a = _encode_int(_decode_int(b[:8]) ^ ((n * j) + i + 1), 64)
+                r[i] = b[-8:]
+        ek = a
         for i in range(0, n):
-            ek += R[i]
+            ek += r[i]
         return (cek, ek)
 
     def unwrap(self, key, ek):
@@ -211,28 +214,29 @@ class _aes_kw(_raw_key_mgmt):
         # Implement RFC 3394 Key Unwrap - 2.2.3
         # TODO: Use cryptography once issue #1733 is resolved
         iv = 'a6a6a6a6a6a6a6a6'
-        Aiv = unhexlify(iv)
+        aiv = unhexlify(iv)
 
-        R = [ek[i:i+8] for i in range(0, len(ek), 8)]
-        A = R.pop(0)
-        n = len(R)
+        r = [ek[i:i + 8] for i in range(0, len(ek), 8)]
+        a = r.pop(0)
+        n = len(r)
         for j in range(5, -1, -1):
             for i in range(n - 1, -1, -1):
-                AtR = _encode_int((_decode_int(A) ^ ((n*j)+i+1)), 64) + R[i]
+                da = _decode_int(a)
+                atr = _encode_int((da ^ ((n * j) + i + 1)), 64) + r[i]
                 d = Cipher(algorithms.AES(rk), modes.ECB(),
                            backend=self.backend).decryptor()
-                B = d.update(AtR) + d.finalize()
-                A = B[:8]
-                R[i] = B[-8:]
+                b = d.update(atr) + d.finalize()
+                a = b[:8]
+                r[i] = b[-8:]
 
-        if A != Aiv:
+        if a != aiv:
             raise InvalidJWEData('Decryption Failed')
 
-        cek = b''.join(R)
+        cek = b''.join(r)
         return cek
 
 
-class _direct(_raw_key_mgmt):
+class _Direct(_RawKeyMgmt):
 
     def check_key(self, key):
         if key.key_type != 'oct':
@@ -254,7 +258,7 @@ class _direct(_raw_key_mgmt):
         return base64url_decode(key.get_op_key('decrypt'))
 
 
-class _raw_jwe(object):
+class _RawJWE(object):
 
     def encrypt(self, k, a, m):
         raise NotImplementedError
@@ -263,7 +267,7 @@ class _raw_jwe(object):
         raise NotImplementedError
 
 
-class _aes_cbc_hmac_sha2(_raw_jwe):
+class _AesCbcHmacSha2(_RawJWE):
 
     def __init__(self, hashfn, keybits):
         self.backend = default_backend()
@@ -340,7 +344,7 @@ class _aes_cbc_hmac_sha2(_raw_jwe):
         return unpadder.update(d) + unpadder.finalize()
 
 
-class _aes_gcm(_raw_jwe):
+class _AesGcm(_RawJWE):
 
     def __init__(self, keybits):
         self.backend = default_backend()
@@ -417,58 +421,58 @@ class JWE(object):
         if aad:
             self.objects['aad'] = aad
         if protected:
-            _ = json_decode(protected)  # check header encoding
+            json_decode(protected)  # check header encoding
             self.objects['protected'] = protected
         if unprotected:
-            _ = json_decode(unprotected)  # check header encoding
+            json_decode(unprotected)  # check header encoding
             self.objects['unprotected'] = unprotected
         if algs:
             self.allowed_algs = algs
 
     # key wrapping mechanisms
     def _jwa_RSA1_5(self):
-        return _rsa(padding.PKCS1v15())
+        return _RSA(padding.PKCS1v15())
 
     def _jwa_RSA_OAEP(self):
-        return _rsa(padding.OAEP(padding.MGF1(hashes.SHA1()),
+        return _RSA(padding.OAEP(padding.MGF1(hashes.SHA1()),
                                  hashes.SHA1(),
                                  None))
 
     def _jwa_RSA_OAEP_256(self):
-        return _rsa(padding.OAEP(padding.MGF1(hashes.SHA256()),
+        return _RSA(padding.OAEP(padding.MGF1(hashes.SHA256()),
                                  hashes.SHA256(),
                                  None))
 
     def _jwa_A128KW(self):
-        return _aes_kw(128)
+        return _AesKw(128)
 
     def _jwa_A192KW(self):
-        return _aes_kw(192)
+        return _AesKw(192)
 
     def _jwa_A256KW(self):
-        return _aes_kw(256)
+        return _AesKw(256)
 
     def _jwa_dir(self):
-        return _direct()
+        return _Direct()
 
     # content encryption mechanisms
     def _jwa_A128CBC_HS256(self):
-        return _aes_cbc_hmac_sha2(hashes.SHA256(), 128)
+        return _AesCbcHmacSha2(hashes.SHA256(), 128)
 
     def _jwa_A192CBC_HS384(self):
-        return _aes_cbc_hmac_sha2(hashes.SHA384(), 192)
+        return _AesCbcHmacSha2(hashes.SHA384(), 192)
 
     def _jwa_A256CBC_HS512(self):
-        return _aes_cbc_hmac_sha2(hashes.SHA512(), 256)
+        return _AesCbcHmacSha2(hashes.SHA512(), 256)
 
     def _jwa_A128GCM(self):
-        return _aes_gcm(128)
+        return _AesGcm(128)
 
     def _jwa_A192GCM(self):
-        return _aes_gcm(192)
+        return _AesGcm(192)
 
     def _jwa_A256GCM(self):
-        return _aes_gcm(256)
+        return _AesGcm(256)
 
     def _jwa(self, name):
         try:

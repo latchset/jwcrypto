@@ -1,15 +1,17 @@
 # Copyright (C) 2015  JWCrypto Project Contributors - see LICENSE file
 
+import os
+
 from binascii import hexlify, unhexlify
+
 from cryptography.hazmat.backends import default_backend
-from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives.asymmetric import ec
-from jwcrypto.common import base64url_decode, base64url_encode
-from jwcrypto.common import json_decode, json_encode
+from cryptography.hazmat.primitives.asymmetric import rsa
 
 from six import iteritems
 
-import os
+from jwcrypto.common import base64url_decode, base64url_encode
+from jwcrypto.common import json_decode, json_encode
 
 
 # RFC 7518 - 7.4
@@ -234,8 +236,8 @@ class JWK(object):
         self.import_key(**params)
 
     def _encode_int(self, i):
-        I = hex(i).rstrip("L").lstrip("0x")
-        return base64url_encode(unhexlify((len(I) % 2) * '0' + I))
+        intg = hex(i).rstrip("L").lstrip("0x")
+        return base64url_encode(unhexlify((len(intg) % 2) * '0' + intg))
 
     def _generate_RSA(self, params):
         pubexp = 65537
@@ -540,7 +542,7 @@ class JWK(object):
         return obj
 
 
-class _jwkset(set):
+class _JWKkeys(set):
 
     def add(self, elem):
         """Adds a JWK object to the set
@@ -563,7 +565,7 @@ class JWKSet(dict):
     """
     def __init__(self, *args, **kwargs):
         super(JWKSet, self).__init__()
-        super(JWKSet, self).__setitem__('keys', _jwkset())
+        super(JWKSet, self).__setitem__('keys', _JWKkeys())
         self.update(*args, **kwargs)
 
     def __setitem__(self, key, val):
