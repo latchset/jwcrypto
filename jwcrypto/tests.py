@@ -1,17 +1,21 @@
 # Copyright (C) 2015  JWCrypto Project Contributors - see LICENSE file
 
 from __future__ import unicode_literals
+
 import copy
+
+import unittest
+
 from cryptography.hazmat.backends import default_backend
-from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives.asymmetric import ec
-from jwcrypto.common import base64url_decode, base64url_encode
-from jwcrypto.common import json_decode, json_encode
+from cryptography.hazmat.primitives.asymmetric import rsa
+
+from jwcrypto import jwe
 from jwcrypto import jwk
 from jwcrypto import jws
-from jwcrypto import jwe
 from jwcrypto import jwt
-import unittest
+from jwcrypto.common import base64url_decode, base64url_encode
+from jwcrypto.common import json_decode, json_encode
 
 # RFC 7517 - A.1
 PublicKeys = {"keys": [
@@ -169,24 +173,24 @@ class TestJWK(unittest.TestCase):
     def test_create_pubKeys(self):
         keylist = PublicKeys['keys']
         for key in keylist:
-            _ = jwk.JWK(**key)
+            jwk.JWK(**key)
 
     def test_create_priKeys(self):
         keylist = PrivateKeys['keys']
         for key in keylist:
-            _ = jwk.JWK(**key)
+            jwk.JWK(**key)
 
     def test_create_symKeys(self):
         keylist = SymmetricKeys['keys']
         for key in keylist:
             jwkey = jwk.JWK(**key)
-            _ = jwkey.get_op_key('sign')
-            _ = jwkey.get_op_key('verify')
+            jwkey.get_op_key('sign')
+            jwkey.get_op_key('verify')
             e = jwkey.export()
             self.assertEqual(json_decode(e), key)
 
-        _ = jwk.JWK(**Useofx5c)
-        _ = jwk.JWK(**RSAPrivateKey)
+        jwk.JWK(**Useofx5c)
+        jwk.JWK(**RSAPrivateKey)
 
     def test_generate_keys(self):
         jwk.JWK.generate(kty='oct', size=256)
@@ -202,11 +206,11 @@ class TestJWK(unittest.TestCase):
 
     def test_generate_oct_key(self):
         key = jwk.JWK.generate(kty='oct', size=128)
-        E = jwe.JWE('test', '{"alg":"A128KW","enc":"A128GCM"}')
-        E.add_recipient(key)
-        e = E.serialize()
-        E.deserialize(e, key)
-        self.assertEqual(E.payload.decode('utf-8'), 'test')
+        e = jwe.JWE('test', '{"alg":"A128KW","enc":"A128GCM"}')
+        e.add_recipient(key)
+        enc = e.serialize()
+        e.deserialize(enc, key)
+        self.assertEqual(e.payload.decode('utf-8'), 'test')
 
     def test_generate_EC_key(self):
         # Backwards compat curve
@@ -453,14 +457,14 @@ E_negative = \
 
 class TestJWS(unittest.TestCase):
     def check_sign(self, test):
-        S = jws.JWSCore(test['alg'],
+        s = jws.JWSCore(test['alg'],
                         jwk.JWK(**test['key']),
                         test['protected'],
                         test['payload'],
                         test.get('allowed_algs', None))
-        sig = S.sign()
+        sig = s.sign()
         decsig = base64url_decode(sig['signature'])
-        S.verify(decsig)
+        s.verify(decsig)
         # ECDSA signatures are always different every time
         # they are generated unlike RSA or symmetric ones
         if test['key']['kty'] != 'EC':
@@ -469,7 +473,7 @@ class TestJWS(unittest.TestCase):
             # Check we can verify the test signature independently
             # this is so taht we can test the ECDSA agaist a known
             # good signature
-            S.verify(test['signature'])
+            s.verify(test['signature'])
 
     def test_A1(self):
         self.check_sign(A1_example)
@@ -486,33 +490,33 @@ class TestJWS(unittest.TestCase):
     def test_A5(self):
         self.assertRaises(jws.InvalidJWSOperation,
                           self.check_sign, A5_example)
-        A5_bis = {'allowed_algs': ['none']}
-        A5_bis.update(A5_example)
-        self.check_sign(A5_bis)
+        a5_bis = {'allowed_algs': ['none']}
+        a5_bis.update(A5_example)
+        self.check_sign(a5_bis)
 
     def test_A6(self):
-        S = jws.JWS(A6_example['payload'])
-        S.add_signature(A6_example['key1'], None,
+        s = jws.JWS(A6_example['payload'])
+        s.add_signature(A6_example['key1'], None,
                         A6_example['protected1'],
                         A6_example['header1'])
-        S.add_signature(A6_example['key2'], None,
+        s.add_signature(A6_example['key2'], None,
                         A6_example['protected2'],
                         A6_example['header2'])
-        S.verify(A6_example['key1'])
-        S.verify(A6_example['key2'])
-        sig = S.serialize()
-        S.deserialize(sig, A6_example['key1'])
-        S.deserialize(A6_serialized, A6_example['key2'])
+        s.verify(A6_example['key1'])
+        s.verify(A6_example['key2'])
+        sig = s.serialize()
+        s.deserialize(sig, A6_example['key1'])
+        s.deserialize(A6_serialized, A6_example['key2'])
 
     def test_A7(self):
-        S = jws.JWS(A6_example['payload'])
-        S.deserialize(A7_example, A6_example['key2'])
+        s = jws.JWS(A6_example['payload'])
+        s.deserialize(A7_example, A6_example['key2'])
 
     def test_E(self):
-        S = jws.JWS(A6_example['payload'])
+        s = jws.JWS(A6_example['payload'])
         with self.assertRaises(jws.InvalidJWSSignature):
-            jws.InvalidJWSSignature(S.deserialize, E_negative)
-            S.verify(None)
+            jws.InvalidJWSSignature(s.deserialize, E_negative)
+            s.verify(None)
 
 
 E_A1_plaintext = \
@@ -677,14 +681,14 @@ E_A5_ex = \
 
 class TestJWE(unittest.TestCase):
     def check_enc(self, plaintext, protected, key, vector):
-        E = jwe.JWE(plaintext, protected)
-        E.add_recipient(key)
+        e = jwe.JWE(plaintext, protected)
+        e.add_recipient(key)
         # Encrypt and serialize using compact
-        e = E.serialize()
+        enc = e.serialize()
         # And test that we can decrypt our own
-        E.deserialize(e, key)
+        e.deserialize(enc, key)
         # Now test the Spec Test Vector
-        E.deserialize(vector, key)
+        e.deserialize(vector, key)
 
     def test_A1(self):
         self.check_enc(E_A1_ex['plaintext'], E_A1_ex['protected'],
@@ -699,22 +703,22 @@ class TestJWE(unittest.TestCase):
                        E_A3_ex['key'], E_A3_ex['vector'])
 
     def test_A4(self):
-        E = jwe.JWE(E_A4_ex['plaintext'], E_A4_ex['protected'])
-        E.add_recipient(E_A4_ex['key1'], E_A4_ex['header1'])
-        E.add_recipient(E_A4_ex['key2'], E_A4_ex['header2'])
-        e = E.serialize()
-        E.deserialize(e, E_A4_ex['key1'])
-        E.deserialize(e, E_A4_ex['key2'])
+        e = jwe.JWE(E_A4_ex['plaintext'], E_A4_ex['protected'])
+        e.add_recipient(E_A4_ex['key1'], E_A4_ex['header1'])
+        e.add_recipient(E_A4_ex['key2'], E_A4_ex['header2'])
+        enc = e.serialize()
+        e.deserialize(enc, E_A4_ex['key1'])
+        e.deserialize(enc, E_A4_ex['key2'])
         # Now test the Spec Test Vector
-        E.deserialize(E_A4_ex['vector'], E_A4_ex['key1'])
-        E.deserialize(E_A4_ex['vector'], E_A4_ex['key2'])
+        e.deserialize(E_A4_ex['vector'], E_A4_ex['key1'])
+        e.deserialize(E_A4_ex['vector'], E_A4_ex['key2'])
 
     def test_A5(self):
-        E = jwe.JWE()
-        E.deserialize(E_A5_ex, E_A4_ex['key2'])
+        e = jwe.JWE()
+        e.deserialize(E_A5_ex, E_A4_ex['key2'])
         with self.assertRaises(jwe.InvalidJWEData):
-            E = jwe.JWE(algs=['A256KW'])
-            E.deserialize(E_A5_ex, E_A4_ex['key2'])
+            e = jwe.JWE(algs=['A256KW'])
+            e.deserialize(E_A5_ex, E_A4_ex['key2'])
 
 
 # RFC 7519
@@ -768,22 +772,22 @@ class TestJWT(unittest.TestCase):
     def test_A1(self):
         key = jwk.JWK(**E_A2_key)
         # first encode/decode ourselves
-        T = jwt.JWT(A1_header, A1_claims)
-        T.make_encrypted_token(key)
-        token = T.serialize()
-        T.deserialize(token)
+        t = jwt.JWT(A1_header, A1_claims)
+        t.make_encrypted_token(key)
+        token = t.serialize()
+        t.deserialize(token)
         # then try the test vector
-        T = jwt.JWT(jwt=A1_token, key=key, check_claims=False)
+        t = jwt.JWT(jwt=A1_token, key=key, check_claims=False)
         # then try the test vector with explicit expiration date
-        T = jwt.JWT(jwt=A1_token, key=key, check_claims={'exp': 1300819380})
+        t = jwt.JWT(jwt=A1_token, key=key, check_claims={'exp': 1300819380})
         # Finally check it raises for expired tokens
         self.assertRaises(jwt.JWTExpired, jwt.JWT, jwt=A1_token, key=key)
 
     def test_A2(self):
         sigkey = jwk.JWK(**A2_example['key'])
-        Touter = jwt.JWT(jwt=A2_token, key=E_A2_ex['key'])
-        Tinner = jwt.JWT(jwt=Touter.claims, key=sigkey, check_claims=False)
-        self.assertEqual(A1_claims, json_decode(Tinner.claims))
+        touter = jwt.JWT(jwt=A2_token, key=E_A2_ex['key'])
+        tinner = jwt.JWT(jwt=touter.claims, key=sigkey, check_claims=False)
+        self.assertEqual(A1_claims, json_decode(tinner.claims))
 
         with self.assertRaises(jwe.InvalidJWEData):
             jwt.JWT(jwt=A2_token, key=E_A2_ex['key'],
@@ -793,17 +797,17 @@ class TestJWT(unittest.TestCase):
         key = jwk.JWK(kid='testkey', **E_A2_key)
         keyset = jwk.JWKSet()
         # decrypt without keyid
-        T = jwt.JWT(A1_header, A1_claims)
-        T.make_encrypted_token(key)
-        token = T.serialize()
+        t = jwt.JWT(A1_header, A1_claims)
+        t.make_encrypted_token(key)
+        token = t.serialize()
         self.assertRaises(jwt.JWTMissingKeyID, jwt.JWT, jwt=token,
                           key=keyset)
         # encrypt a new JWT
         header = copy.copy(A1_header)
         header['kid'] = 'testkey'
-        T = jwt.JWT(header, A1_claims)
-        T.make_encrypted_token(key)
-        token = T.serialize()
+        t = jwt.JWT(header, A1_claims)
+        t.make_encrypted_token(key)
+        token = t.serialize()
         # try to decrypt without key
         self.assertRaises(jwt.JWTMissingKey, jwt.JWT, jwt=token, key=keyset)
         # now decrypt with key
@@ -826,19 +830,19 @@ class ConformanceTests(unittest.TestCase):
 
     def test_jwe_no_protected_header(self):
         enc = jwe.JWE(plaintext='plain')
-        enc.add_recipient(jwk.JWK(kty='oct', k=base64url_encode(b'A'*16)),
+        enc.add_recipient(jwk.JWK(kty='oct', k=base64url_encode(b'A' * 16)),
                           '{"alg":"A128KW","enc":"A128GCM"}')
 
     def test_jwe_no_alg_in_jose_headers(self):
         enc = jwe.JWE(plaintext='plain')
         self.assertRaises(jwe.InvalidJWEData, enc.add_recipient,
-                          jwk.JWK(kty='oct', k=base64url_encode(b'A'*16)),
+                          jwk.JWK(kty='oct', k=base64url_encode(b'A' * 16)),
                           '{"enc":"A128GCM"}')
 
     def test_jwe_no_enc_in_jose_headers(self):
         enc = jwe.JWE(plaintext='plain')
         self.assertRaises(jwe.InvalidJWEData, enc.add_recipient,
-                          jwk.JWK(kty='oct', k=base64url_encode(b'A'*16)),
+                          jwk.JWK(kty='oct', k=base64url_encode(b'A' * 16)),
                           '{"alg":"A128KW"}')
 
     def test_aes_128(self):
@@ -861,10 +865,10 @@ class ConformanceTests(unittest.TestCase):
 
     def test_jws_loopback(self):
         sign = jws.JWS(payload='message')
-        sign.add_signature(jwk.JWK(kty='oct', k=base64url_encode(b'A'*16)),
+        sign.add_signature(jwk.JWK(kty='oct', k=base64url_encode(b'A' * 16)),
                            alg="HS512")
         o = sign.serialize()
         check = jws.JWS()
-        check.deserialize(o, jwk.JWK(kty='oct', k=base64url_encode(b'A'*16)),
+        check.deserialize(o, jwk.JWK(kty='oct', k=base64url_encode(b'A' * 16)),
                           alg="HS512")
         self.assertTrue(check.objects['valid'])

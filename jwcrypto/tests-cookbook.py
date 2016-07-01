@@ -1,11 +1,12 @@
 # Copyright (C) 2015  JWCrypto Project Contributors - see LICENSE file
 
-from jwcrypto.common import base64url_decode, base64url_encode
-from jwcrypto.common import json_decode, json_encode
+import unittest
+
+from jwcrypto import jwe
 from jwcrypto import jwk
 from jwcrypto import jws
-from jwcrypto import jwe
-import unittest
+from jwcrypto.common import base64url_decode, base64url_encode
+from jwcrypto.common import json_decode, json_encode
 
 # Based on: RFC 7520
 
@@ -297,11 +298,11 @@ class Cookbook08JWSTests(unittest.TestCase):
             base64url_decode(JWS_Protected_Header_4_1_2).decode('utf-8')
         pub_key = jwk.JWK(**RSA_Public_Key_3_3)
         pri_key = jwk.JWK(**RSA_Private_Key_3_4)
-        S = jws.JWS(payload=plaintext)
-        S.add_signature(pri_key, None, protected)
-        self.assertEqual(JWS_compact_4_1_3, S.serialize(compact=True))
-        S.deserialize(json_encode(JWS_general_4_1_3), pub_key)
-        S.deserialize(json_encode(JWS_flattened_4_1_3), pub_key)
+        s = jws.JWS(payload=plaintext)
+        s.add_signature(pri_key, None, protected)
+        self.assertEqual(JWS_compact_4_1_3, s.serialize(compact=True))
+        s.deserialize(json_encode(JWS_general_4_1_3), pub_key)
+        s.deserialize(json_encode(JWS_flattened_4_1_3), pub_key)
 
     def test_4_2_signing(self):
         plaintext = base64url_decode(Payload_plaintext_b64_4)
@@ -309,16 +310,16 @@ class Cookbook08JWSTests(unittest.TestCase):
             base64url_decode(JWS_Protected_Header_4_2_2).decode('utf-8')
         pub_key = jwk.JWK(**RSA_Public_Key_3_3)
         pri_key = jwk.JWK(**RSA_Private_Key_3_4)
-        S = jws.JWS(payload=plaintext)
-        S.add_signature(pri_key, None, protected)
+        s = jws.JWS(payload=plaintext)
+        s.add_signature(pri_key, None, protected)
         # Can't compare signature with reference because RSASSA-PSS uses
         # random nonces every time a signature is generated.
-        sig = S.serialize()
-        S.deserialize(sig, pub_key)
+        sig = s.serialize()
+        s.deserialize(sig, pub_key)
         # Just deserialize each example form
-        S.deserialize(JWS_compact_4_2_3, pub_key)
-        S.deserialize(json_encode(JWS_general_4_2_3), pub_key)
-        S.deserialize(json_encode(JWS_flattened_4_2_3), pub_key)
+        s.deserialize(JWS_compact_4_2_3, pub_key)
+        s.deserialize(json_encode(JWS_general_4_2_3), pub_key)
+        s.deserialize(json_encode(JWS_flattened_4_2_3), pub_key)
 
     def test_4_3_signing(self):
         plaintext = base64url_decode(Payload_plaintext_b64_4)
@@ -326,31 +327,31 @@ class Cookbook08JWSTests(unittest.TestCase):
             base64url_decode(JWS_Protected_Header_4_3_2).decode('utf-8')
         pub_key = jwk.JWK(**EC_Public_Key_3_1)
         pri_key = jwk.JWK(**EC_Private_Key_3_2)
-        S = jws.JWS(payload=plaintext)
-        S.add_signature(pri_key, None, protected)
+        s = jws.JWS(payload=plaintext)
+        s.add_signature(pri_key, None, protected)
         # Can't compare signature with reference because ECDSA uses
         # random nonces every time a signature is generated.
-        sig = S.serialize()
-        S.deserialize(sig, pub_key)
+        sig = s.serialize()
+        s.deserialize(sig, pub_key)
         # Just deserialize each example form
-        S.deserialize(JWS_compact_4_3_3, pub_key)
-        S.deserialize(json_encode(JWS_general_4_3_3), pub_key)
-        S.deserialize(json_encode(JWS_flattened_4_3_3), pub_key)
+        s.deserialize(JWS_compact_4_3_3, pub_key)
+        s.deserialize(json_encode(JWS_general_4_3_3), pub_key)
+        s.deserialize(json_encode(JWS_flattened_4_3_3), pub_key)
 
     def test_4_4_signing(self):
         plaintext = base64url_decode(Payload_plaintext_b64_4)
         protected = \
             base64url_decode(JWS_Protected_Header_4_4_2).decode('utf-8')
         key = jwk.JWK(**Symmetric_Key_MAC_3_5)
-        S = jws.JWS(payload=plaintext)
-        S.add_signature(key, None, protected)
-        sig = S.serialize(compact=True)
-        S.deserialize(sig, key)
+        s = jws.JWS(payload=plaintext)
+        s.add_signature(key, None, protected)
+        sig = s.serialize(compact=True)
+        s.deserialize(sig, key)
         self.assertEqual(sig, JWS_compact_4_4_3)
         # Just deserialize each example form
-        S.deserialize(JWS_compact_4_4_3, key)
-        S.deserialize(json_encode(JWS_general_4_4_3), key)
-        S.deserialize(json_encode(JWS_flattened_4_4_3), key)
+        s.deserialize(JWS_compact_4_4_3, key)
+        s.deserialize(json_encode(JWS_general_4_4_3), key)
+        s.deserialize(json_encode(JWS_flattened_4_4_3), key)
 
     def test_4_6_signing(self):
         plaintext = base64url_decode(Payload_plaintext_b64_4)
@@ -358,58 +359,58 @@ class Cookbook08JWSTests(unittest.TestCase):
             base64url_decode(JWS_Protected_Header_4_6_2).decode('utf-8')
         header = json_encode(JWS_Unprotected_Header_4_6_2)
         key = jwk.JWK(**Symmetric_Key_MAC_3_5)
-        S = jws.JWS(payload=plaintext)
-        S.add_signature(key, None, protected, header)
-        sig = S.serialize()
-        S.deserialize(sig, key)
+        s = jws.JWS(payload=plaintext)
+        s.add_signature(key, None, protected, header)
+        sig = s.serialize()
+        s.deserialize(sig, key)
         self.assertEqual(json_decode(sig), JWS_flattened_4_6_3)
         # Just deserialize each example form
-        S.deserialize(json_encode(JWS_general_4_6_3), key)
-        S.deserialize(json_encode(JWS_flattened_4_6_3), key)
+        s.deserialize(json_encode(JWS_general_4_6_3), key)
+        s.deserialize(json_encode(JWS_flattened_4_6_3), key)
 
     def test_4_7_signing(self):
         plaintext = base64url_decode(Payload_plaintext_b64_4)
         header = json_encode(JWS_Unprotected_Header_4_7_2)
         key = jwk.JWK(**Symmetric_Key_MAC_3_5)
-        S = jws.JWS(payload=plaintext)
-        S.add_signature(key, None, None, header)
-        sig = S.serialize()
-        S.deserialize(sig, key)
+        s = jws.JWS(payload=plaintext)
+        s.add_signature(key, None, None, header)
+        sig = s.serialize()
+        s.deserialize(sig, key)
         self.assertEqual(json_decode(sig), JWS_flattened_4_7_3)
         # Just deserialize each example form
-        S.deserialize(json_encode(JWS_general_4_7_3), key)
-        S.deserialize(json_encode(JWS_flattened_4_7_3), key)
+        s.deserialize(json_encode(JWS_general_4_7_3), key)
+        s.deserialize(json_encode(JWS_flattened_4_7_3), key)
 
     def test_4_8_signing(self):
         plaintext = base64url_decode(Payload_plaintext_b64_4)
-        S = jws.JWS(payload=plaintext)
+        s = jws.JWS(payload=plaintext)
         # 4_8_2
         protected = \
             base64url_decode(JWS_Protected_Header_4_8_2).decode('utf-8')
         header = json_encode(JWS_Unprotected_Header_4_8_2)
         pri_key = jwk.JWK(**RSA_Private_Key_3_4)
-        S.add_signature(pri_key, None, protected, header)
+        s.add_signature(pri_key, None, protected, header)
         # 4_8_3
         header = json_encode(JWS_Unprotected_Header_4_8_3)
         pri_key = jwk.JWK(**EC_Private_Key_3_2)
-        S.add_signature(pri_key, None, None, header)
+        s.add_signature(pri_key, None, None, header)
         # 4_8_4
         protected = \
             base64url_decode(JWS_Protected_Header_4_8_4).decode('utf-8')
         sym_key = jwk.JWK(**Symmetric_Key_MAC_3_5)
-        S.add_signature(sym_key, None, protected)
-        sig = S.serialize()
+        s.add_signature(sym_key, None, protected)
+        sig = s.serialize()
         # Can't compare signature with reference because ECDSA uses
         # random nonces every time a signature is generated.
         rsa_key = jwk.JWK(**RSA_Public_Key_3_3)
         ec_key = jwk.JWK(**EC_Public_Key_3_1)
-        S.deserialize(sig, rsa_key)
-        S.deserialize(sig, ec_key)
-        S.deserialize(sig, sym_key)
+        s.deserialize(sig, rsa_key)
+        s.deserialize(sig, ec_key)
+        s.deserialize(sig, sym_key)
         # Just deserialize each example form
-        S.deserialize(json_encode(JWS_general_4_8_5), rsa_key)
-        S.deserialize(json_encode(JWS_general_4_8_5), ec_key)
-        S.deserialize(json_encode(JWS_general_4_8_5), sym_key)
+        s.deserialize(json_encode(JWS_general_4_8_5), rsa_key)
+        s.deserialize(json_encode(JWS_general_4_8_5), ec_key)
+        s.deserialize(json_encode(JWS_general_4_8_5), sym_key)
 
 
 # 5.0
@@ -946,7 +947,7 @@ JWE_flattened_5_12_5 = {
 
 # In general we can't compare ciphertexts with the reference because
 # either the algorithms use random nonces to authenticate the ciphertext
-# or we randomly genrate the nonce when we create the JWE.
+# or we randomly genrate the nonce when we create the JWe.
 # To double check implementation we encrypt/decrypt our own input and then
 # decrypt the reference and check it against the given plaintext
 class Cookbook08JWETests(unittest.TestCase):
@@ -955,33 +956,33 @@ class Cookbook08JWETests(unittest.TestCase):
         plaintext = Payload_plaintext_5
         protected = base64url_decode(JWE_Protected_Header_5_1_4)
         rsa_key = jwk.JWK(**RSA_key_5_1_1)
-        E = jwe.JWE(plaintext, protected)
-        E.add_recipient(rsa_key)
-        e = E.serialize()
-        E.deserialize(e, rsa_key)
-        self.assertEqual(E.payload, plaintext)
-        E.deserialize(JWE_compact_5_1_5, rsa_key)
-        self.assertEqual(E.payload, plaintext)
-        E.deserialize(json_encode(JWE_general_5_1_5), rsa_key)
-        self.assertEqual(E.payload, plaintext)
-        E.deserialize(json_encode(JWE_flattened_5_1_5), rsa_key)
-        self.assertEqual(E.payload, plaintext)
+        e = jwe.JWE(plaintext, protected)
+        e.add_recipient(rsa_key)
+        enc = e.serialize()
+        e.deserialize(enc, rsa_key)
+        self.assertEqual(e.payload, plaintext)
+        e.deserialize(JWE_compact_5_1_5, rsa_key)
+        self.assertEqual(e.payload, plaintext)
+        e.deserialize(json_encode(JWE_general_5_1_5), rsa_key)
+        self.assertEqual(e.payload, plaintext)
+        e.deserialize(json_encode(JWE_flattened_5_1_5), rsa_key)
+        self.assertEqual(e.payload, plaintext)
 
     def test_5_2_encryption(self):
         plaintext = Payload_plaintext_5
         protected = base64url_decode(JWE_Protected_Header_5_2_4)
         rsa_key = jwk.JWK(**RSA_key_5_2_1)
-        E = jwe.JWE(plaintext, protected)
-        E.add_recipient(rsa_key)
-        e = E.serialize()
-        E.deserialize(e, rsa_key)
-        self.assertEqual(E.payload, plaintext)
-        E.deserialize(JWE_compact_5_2_5, rsa_key)
-        self.assertEqual(E.payload, plaintext)
-        E.deserialize(json_encode(JWE_general_5_2_5), rsa_key)
-        self.assertEqual(E.payload, plaintext)
-        E.deserialize(json_encode(JWE_flattened_5_2_5), rsa_key)
-        self.assertEqual(E.payload, plaintext)
+        e = jwe.JWE(plaintext, protected)
+        e.add_recipient(rsa_key)
+        enc = e.serialize()
+        e.deserialize(enc, rsa_key)
+        self.assertEqual(e.payload, plaintext)
+        e.deserialize(JWE_compact_5_2_5, rsa_key)
+        self.assertEqual(e.payload, plaintext)
+        e.deserialize(json_encode(JWE_general_5_2_5), rsa_key)
+        self.assertEqual(e.payload, plaintext)
+        e.deserialize(json_encode(JWE_flattened_5_2_5), rsa_key)
+        self.assertEqual(e.payload, plaintext)
 
 # 5.3 - PBES2-* not implemented yet
 #     def test_5_3_encryption(self):
@@ -996,16 +997,16 @@ class Cookbook08JWETests(unittest.TestCase):
         plaintext = Payload_plaintext_5
         protected = base64url_decode(JWE_Protected_Header_5_6_3)
         aes_key = jwk.JWK(**AES_key_5_6_1)
-        E = jwe.JWE(plaintext, protected)
-        E.add_recipient(aes_key)
-        _ = E.serialize(compact=True)
-        e = E.serialize()
-        E.deserialize(e, aes_key)
-        self.assertEqual(E.payload, plaintext)
-        E.deserialize(JWE_compact_5_6_4, aes_key)
-        self.assertEqual(E.payload, plaintext)
-        E.deserialize(json_encode(JWE_general_5_6_4), aes_key)
-        self.assertEqual(E.payload, plaintext)
+        e = jwe.JWE(plaintext, protected)
+        e.add_recipient(aes_key)
+        e.serialize(compact=True)
+        enc = e.serialize()
+        e.deserialize(enc, aes_key)
+        self.assertEqual(e.payload, plaintext)
+        e.deserialize(JWE_compact_5_6_4, aes_key)
+        self.assertEqual(e.payload, plaintext)
+        e.deserialize(json_encode(JWE_general_5_6_4), aes_key)
+        self.assertEqual(e.payload, plaintext)
 
 # 5.7 - AES-GCM key wrapping not implemented yet
 #     def test_5_7_encryption(self):
@@ -1014,77 +1015,77 @@ class Cookbook08JWETests(unittest.TestCase):
         plaintext = Payload_plaintext_5
         protected = base64url_decode(JWE_Protected_Header_5_8_4)
         aes_key = jwk.JWK(**AES_key_5_8_1)
-        E = jwe.JWE(plaintext, protected)
-        E.add_recipient(aes_key)
-        e = E.serialize()
-        E.deserialize(e, aes_key)
-        self.assertEqual(E.payload, plaintext)
-        E.deserialize(JWE_compact_5_8_5, aes_key)
-        self.assertEqual(E.payload, plaintext)
-        E.deserialize(json_encode(JWE_general_5_8_5), aes_key)
-        self.assertEqual(E.payload, plaintext)
-        E.deserialize(json_encode(JWE_flattened_5_8_5), aes_key)
-        self.assertEqual(E.payload, plaintext)
+        e = jwe.JWE(plaintext, protected)
+        e.add_recipient(aes_key)
+        enc = e.serialize()
+        e.deserialize(enc, aes_key)
+        self.assertEqual(e.payload, plaintext)
+        e.deserialize(JWE_compact_5_8_5, aes_key)
+        self.assertEqual(e.payload, plaintext)
+        e.deserialize(json_encode(JWE_general_5_8_5), aes_key)
+        self.assertEqual(e.payload, plaintext)
+        e.deserialize(json_encode(JWE_flattened_5_8_5), aes_key)
+        self.assertEqual(e.payload, plaintext)
 
     def test_5_9_encryption(self):
         plaintext = Payload_plaintext_5
         protected = base64url_decode(JWE_Protected_Header_5_9_4)
         aes_key = jwk.JWK(**AES_key_5_8_1)
-        E = jwe.JWE(plaintext, protected)
-        E.add_recipient(aes_key)
-        e = E.serialize()
-        E.deserialize(e, aes_key)
-        self.assertEqual(E.payload, plaintext)
-        E.deserialize(JWE_compact_5_9_5, aes_key)
-        self.assertEqual(E.payload, plaintext)
-        E.deserialize(json_encode(JWE_general_5_9_5), aes_key)
-        self.assertEqual(E.payload, plaintext)
-        E.deserialize(json_encode(JWE_flattened_5_9_5), aes_key)
-        self.assertEqual(E.payload, plaintext)
+        e = jwe.JWE(plaintext, protected)
+        e.add_recipient(aes_key)
+        enc = e.serialize()
+        e.deserialize(enc, aes_key)
+        self.assertEqual(e.payload, plaintext)
+        e.deserialize(JWE_compact_5_9_5, aes_key)
+        self.assertEqual(e.payload, plaintext)
+        e.deserialize(json_encode(JWE_general_5_9_5), aes_key)
+        self.assertEqual(e.payload, plaintext)
+        e.deserialize(json_encode(JWE_flattened_5_9_5), aes_key)
+        self.assertEqual(e.payload, plaintext)
 
     def test_5_10_encryption(self):
         plaintext = Payload_plaintext_5
         protected = base64url_decode(JWE_Protected_Header_5_10_4)
         aad = base64url_decode(AAD_5_10_1)
         aes_key = jwk.JWK(**AES_key_5_8_1)
-        E = jwe.JWE(plaintext, protected, aad=aad)
-        E.add_recipient(aes_key)
-        e = E.serialize()
-        E.deserialize(e, aes_key)
-        self.assertEqual(E.payload, plaintext)
-        E.deserialize(json_encode(JWE_general_5_10_5), aes_key)
-        self.assertEqual(E.payload, plaintext)
-        E.deserialize(json_encode(JWE_flattened_5_10_5), aes_key)
-        self.assertEqual(E.payload, plaintext)
+        e = jwe.JWE(plaintext, protected, aad=aad)
+        e.add_recipient(aes_key)
+        enc = e.serialize()
+        e.deserialize(enc, aes_key)
+        self.assertEqual(e.payload, plaintext)
+        e.deserialize(json_encode(JWE_general_5_10_5), aes_key)
+        self.assertEqual(e.payload, plaintext)
+        e.deserialize(json_encode(JWE_flattened_5_10_5), aes_key)
+        self.assertEqual(e.payload, plaintext)
 
     def test_5_11_encryption(self):
         plaintext = Payload_plaintext_5
         protected = base64url_decode(JWE_Protected_Header_5_11_4)
         unprotected = json_encode(JWE_Unprotected_Header_5_11_5)
         aes_key = jwk.JWK(**AES_key_5_8_1)
-        E = jwe.JWE(plaintext, protected, unprotected)
-        E.add_recipient(aes_key)
-        e = E.serialize()
-        E.deserialize(e, aes_key)
-        self.assertEqual(E.payload, plaintext)
-        E.deserialize(json_encode(JWE_general_5_11_5), aes_key)
-        self.assertEqual(E.payload, plaintext)
-        E.deserialize(json_encode(JWE_flattened_5_11_5), aes_key)
-        self.assertEqual(E.payload, plaintext)
+        e = jwe.JWE(plaintext, protected, unprotected)
+        e.add_recipient(aes_key)
+        enc = e.serialize()
+        e.deserialize(enc, aes_key)
+        self.assertEqual(e.payload, plaintext)
+        e.deserialize(json_encode(JWE_general_5_11_5), aes_key)
+        self.assertEqual(e.payload, plaintext)
+        e.deserialize(json_encode(JWE_flattened_5_11_5), aes_key)
+        self.assertEqual(e.payload, plaintext)
 
     def test_5_12_encryption(self):
         plaintext = Payload_plaintext_5
         unprotected = json_encode(JWE_Unprotected_Header_5_12_5)
         aes_key = jwk.JWK(**AES_key_5_8_1)
-        E = jwe.JWE(plaintext, None, unprotected)
-        E.add_recipient(aes_key)
-        e = E.serialize()
-        E.deserialize(e, aes_key)
-        self.assertEqual(E.payload, plaintext)
-        E.deserialize(json_encode(JWE_general_5_12_5), aes_key)
-        self.assertEqual(E.payload, plaintext)
-        E.deserialize(json_encode(JWE_flattened_5_12_5), aes_key)
-        self.assertEqual(E.payload, plaintext)
+        e = jwe.JWE(plaintext, None, unprotected)
+        e.add_recipient(aes_key)
+        enc = e.serialize()
+        e.deserialize(enc, aes_key)
+        self.assertEqual(e.payload, plaintext)
+        e.deserialize(json_encode(JWE_general_5_12_5), aes_key)
+        self.assertEqual(e.payload, plaintext)
+        e.deserialize(json_encode(JWE_flattened_5_12_5), aes_key)
+        self.assertEqual(e.payload, plaintext)
 
 # 5.13 - AES-GCM key wrapping not implemented yet
 #     def test_5_13_encryption(self):

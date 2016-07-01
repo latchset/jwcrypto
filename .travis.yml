@@ -14,9 +14,10 @@ script:
   - tox
 
 env:
+  - TOXENV=pep8
+  - TOXENV=py3pep8
   - TOXENV=lint
   - TOXENV=py27
   - TOXENV=py34
   - TOXENV=doc
   - TOXENV=sphinx
-

@@ -1,14 +1,16 @@
 # Copyright (C) 2015 JWCrypto Project Contributors - see LICENSE file
 
 from binascii import hexlify, unhexlify
+
+from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes, hmac
-from cryptography.hazmat.primitives.asymmetric import padding
 from cryptography.hazmat.primitives.asymmetric import ec
+from cryptography.hazmat.primitives.asymmetric import padding
 from cryptography.hazmat.primitives.asymmetric import utils as ec_utils
-from cryptography.exceptions import InvalidSignature
-from jwcrypto.common import base64url_encode, base64url_decode
+
 from jwcrypto.common import InvalidJWAAlgorithm
+from jwcrypto.common import base64url_decode, base64url_encode
 from jwcrypto.common import json_decode, json_encode
 from jwcrypto.jwk import JWK
 
@@ -88,7 +90,7 @@ class InvalidJWSOperation(Exception):
         super(InvalidJWSOperation, self).__init__(msg)
 
 
-class _raw_jws(object):
+class _RawJWS(object):
 
     def sign(self, key, payload):
         raise NotImplementedError
@@ -97,7 +99,7 @@ class _raw_jws(object):
         raise NotImplementedError
 
 
-class _raw_hmac(_raw_jws):
+class _RawHMAC(_RawJWS):
 
     def __init__(self, hashfn):
         self.backend = default_backend()
@@ -122,7 +124,7 @@ class _raw_hmac(_raw_jws):
             raise InvalidJWSSignature(exception=e)
 
 
-class _raw_rsa(_raw_jws):
+class _RawRSA(_RawJWS):
     def __init__(self, padfn, hashfn):
         self.padfn = padfn
         self.hashfn = hashfn
@@ -140,15 +142,15 @@ class _raw_rsa(_raw_jws):
         verifier.verify()
 
 
-class _raw_ec(_raw_jws):
+class _RawEC(_RawJWS):
     def __init__(self, curve, hashfn):
         self.curve = curve
         self.hashfn = hashfn
 
     def encode_int(self, n, l):
         e = hex(n).rstrip("L").lstrip("0x")
-        L = (l + 7) // 8  # number of bytes rounded up
-        e = '0' * (L * 2 - len(e)) + e  # pad as necessary
+        ilen = (l + 7) // 8  # number of bytes rounded up
+        e = '0' * (ilen * 2 - len(e)) + e  # pad as necessary
         return unhexlify(e)
 
     def sign(self, key, payload):
@@ -162,8 +164,8 @@ class _raw_ec(_raw_jws):
 
     def verify(self, key, payload, signature):
         pkey = key.get_op_key('verify', self.curve)
-        r = signature[:len(signature)//2]
-        s = signature[len(signature)//2:]
+        r = signature[:len(signature) // 2]
+        s = signature[len(signature) // 2:]
         enc_signature = ec_utils.encode_rfc6979_signature(
             int(hexlify(r), 16), int(hexlify(s), 16))
         verifier = pkey.verifier(enc_signature, ec.ECDSA(self.hashfn))
@@ -171,7 +173,7 @@ class _raw_ec(_raw_jws):
         verifier.verify()
 
 
-class _raw_none(_raw_jws):
+class _RawNone(_RawJWS):
 
     def sign(self, key, payload):
         return ''
@@ -219,49 +221,49 @@ class JWSCore(object):
         self.payload = base64url_encode(payload)
 
     def _jwa_HS256(self):
-        return _raw_hmac(hashes.SHA256())
+        return _RawHMAC(hashes.SHA256())
 
     def _jwa_HS384(self):
-        return _raw_hmac(hashes.SHA384())
+        return _RawHMAC(hashes.SHA384())
 
     def _jwa_HS512(self):
-        return _raw_hmac(hashes.SHA512())
+        return _RawHMAC(hashes.SHA512())
 
     def _jwa_RS256(self):
-        return _raw_rsa(padding.PKCS1v15(), hashes.SHA256())
+        return _RawRSA(padding.PKCS1v15(), hashes.SHA256())
 
     def _jwa_RS384(self):
-        return _raw_rsa(padding.PKCS1v15(), hashes.SHA384())
+        return _RawRSA(padding.PKCS1v15(), hashes.SHA384())
 
     def _jwa_RS512(self):
-        return _raw_rsa(padding.PKCS1v15(), hashes.SHA512())
+        return _RawRSA(padding.PKCS1v15(), hashes.SHA512())
 
     def _jwa_ES256(self):
-        return _raw_ec('P-256', hashes.SHA256())
+        return _RawEC('P-256', hashes.SHA256())
 
     def _jwa_ES384(self):
-        return _raw_ec('P-384', hashes.SHA384())
+        return _RawEC('P-384', hashes.SHA384())
 
     def _jwa_ES512(self):
-        return _raw_ec('P-521', hashes.SHA512())
+        return _RawEC('P-521', hashes.SHA512())
 
     def _jwa_PS256(self):
-        return _raw_rsa(padding.PSS(padding.MGF1(hashes.SHA256()),
-                                    hashes.SHA256.digest_size),
-                        hashes.SHA256())
+        return _RawRSA(padding.PSS(padding.MGF1(hashes.SHA256()),
+                                   hashes.SHA256.digest_size),
+                       hashes.SHA256())
 
     def _jwa_PS384(self):
-        return _raw_rsa(padding.PSS(padding.MGF1(hashes.SHA384()),
-                                    hashes.SHA384.digest_size),
-                        hashes.SHA384())
+        return _RawRSA(padding.PSS(padding.MGF1(hashes.SHA384()),
+                                   hashes.SHA384.digest_size),
+                       hashes.SHA384())
 
     def _jwa_PS512(self):
-        return _raw_rsa(padding.PSS(padding.MGF1(hashes.SHA512()),
-                                    hashes.SHA512.digest_size),
-                        hashes.SHA512())
+        return _RawRSA(padding.PSS(padding.MGF1(hashes.SHA512()),
+                                   hashes.SHA512.digest_size),
+                       hashes.SHA512())
 
     def _jwa_none(self):
-        return _raw_none()
+        return _RawNone()
 
     def _jwa(self, name, allowed):
         if allowed is None:
@@ -385,8 +387,8 @@ class JWS(object):
 
         # the following will verify the "alg" is supported and the signature
         # verifies
-        S = JWSCore(a, key, protected, payload, self._allowed_algs)
-        S.verify(signature)
+        c = JWSCore(a, key, protected, payload, self._allowed_algs)
+        c.verify(signature)
 
     def verify(self, key, alg=None):
         """Verifies a JWS token.
@@ -534,8 +536,8 @@ class JWS(object):
         if alg is None:
             raise ValueError('"alg" not specified')
 
-        S = JWSCore(alg, key, protected, self.objects['payload'])
-        sig = S.sign()
+        c = JWSCore(alg, key, protected, self.objects['payload'])
+        sig = c.sign()
 
         o = dict()
         o['signature'] = base64url_decode(sig['signature'])
