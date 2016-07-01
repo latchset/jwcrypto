@@ -1,7 +1,7 @@
 # Copyright (C) 2015 JWCrypto Project Contributors - see LICENSE file
 
-from base64 import urlsafe_b64encode, urlsafe_b64decode
 import json
+from base64 import urlsafe_b64decode, urlsafe_b64encode
 
 
 # Padding stripping versions as described in

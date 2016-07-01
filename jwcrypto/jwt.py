@@ -5,10 +5,10 @@ import uuid
 
 from six import string_types
 
-from jwcrypto.common import json_encode, json_decode
-from jwcrypto.jws import JWS
+from jwcrypto.common import json_decode, json_encode
 from jwcrypto.jwe import JWE
 from jwcrypto.jwk import JWK, JWKSet
+from jwcrypto.jws import JWS
 
 
 # RFC 7519 - 4.1
