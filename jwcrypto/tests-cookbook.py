@@ -630,71 +630,67 @@ JWE_flattened_5_2_5 = {
     "ciphertext": JWE_Ciphertext_5_2_4,
     "tag": JWE_Authentication_Tag_5_2_4}
 
-# 5.3 - PBES2-* not implemented yet
-# Payload_plaintext_5_3_1 = json_encode({
-#     "keys": [
-#         {"kty": "oct",
-#          "kid": "77c7e2b8-6e13-45cf-8672-617b5b45243a",
-#          "use": "enc",
-#          "alg": "A128GCM",
-#          "k": "XctOhJAkA-pD9Lh7ZgW_2A"},
-#         {"kty": "oct",
-#          "kid": "81b20965-8332-43d9-a468-82160ad91ac8",
-#          "use": "enc",
-#          "alg": "A128KW",
-#          "k": "GZy6sIZ6wl9NJOKB-jnmVQ"},
-#         {"kty": "oct",
-#          "kid": "18ec08e1-bfa9-4d95-b205-2b4dd1d4321d",
-#          "use": "enc",
-#          "alg": "A256GCMKW",
-#          "k": "qC57l_uxcm7Nm3K-ct4GFjx8tM1U8CZ0NLBvdQstiS8"}]})
-#
-# Password_5_3_1 = "entrap_o\xe2\x80\x93peter_long\xe2\x80\x93credit_tun"
-#
-# JWE_IV_5_3_2 = "VBiCzVHNoLiR3F4V82uoTQ"
-#
-# JWE_Encrypted_Key_5_3_3 = \
-#     "d3qNhUWfqheyPp4H8sjOWsDYajoej4c5Je6rlUtFPWdgtURtmeDV1g"
-#
-# JWE_Protected_Header_5_3_4 = \
-#     "eyJhbGciOiJQQkVTMi1IUzUxMitBMjU2S1ciLCJwMnMiOiI4UTFTemluYXNSM3" + \
-#     "hjaFl6NlpaY0hBIiwicDJjIjo4MTkyLCJjdHkiOiJqd2stc2V0K2pzb24iLCJl" + \
-#     "bmMiOiJBMTI4Q0JDLUhTMjU2In0"
-#
-# JWE_Ciphertext_5_3_4 = \
-#     "23i-Tb1AV4n0WKVSSgcQrdg6GRqsUKxjruHXYsTHAJLZ2nsnGIX86vMXqIi6IR" + \
-#     "sfywCRFzLxEcZBRnTvG3nhzPk0GDD7FMyXhUHpDjEYCNA_XOmzg8yZR9oyjo6l" + \
-#     "TF6si4q9FZ2EhzgFQCLO_6h5EVg3vR75_hkBsnuoqoM3dwejXBtIodN84PeqMb" + \
-#     "6asmas_dpSsz7H10fC5ni9xIz424givB1YLldF6exVmL93R3fOoOJbmk2GBQZL" + \
-#     "_SEGllv2cQsBgeprARsaQ7Bq99tT80coH8ItBjgV08AtzXFFsx9qKvC982KLKd" + \
-#     "PQMTlVJKkqtV4Ru5LEVpBZXBnZrtViSOgyg6AiuwaS-rCrcD_ePOGSuxvgtrok" + \
-#     "AKYPqmXUeRdjFJwafkYEkiuDCV9vWGAi1DH2xTafhJwcmywIyzi4BqRpmdn_N-" + \
-#     "zl5tuJYyuvKhjKv6ihbsV_k1hJGPGAxJ6wUpmwC4PTQ2izEm0TuSE8oMKdTw8V" + \
-#     "3kobXZ77ulMwDs4p"
-#
-# JWE_Authentication_Tag_5_3_4 = "0HlwodAhOCILG5SQ2LQ9dg"
-#
-# JWE_compact_5_3_5 = \
-#     "%s.%s.%s.%s.%s" % (JWE_Protected_Header_5_3_4,
-#                         JWE_Encrypted_Key_5_3_3,
-#                         JWE_IV_5_3_2,
-#                         JWE_Ciphertext_5_3_4,
-#                         JWE_Authentication_Tag_5_3_4)
-#
-# JWE_general_5_3_5 = {
-#     "recipients": [{
-#         "encrypted_key": JWE_Encrypted_Key_5_3_3}],
-#     "protected": JWE_Protected_Header_5_3_4,
-#     "iv": JWE_IV_5_3_2,
-#     "ciphertext": JWE_Ciphertext_5_3_4,
-#     "tag": JWE_Authentication_Tag_5_3_4}
-#
-# JWE_flattened_5_3_5 = {
-#     "protected": JWE_Protected_Header_5_3_4,
-#     "encrypted_key": JWE_Encrypted_Key_5_3_3,
-#     "iv": JWE_IV_5_3_2,
-#     "ciphertext": JWE_Ciphertext_5_3_4,
-#     "tag": JWE_Authentication_Tag_5_3_4}
+# 5.3
+Payload_plaintext_5_3_1 = \
+    b'{"keys":[{"kty":"oct","kid":"77c7e2b8-6e13-45cf-8672-617b5b45' + \
+    b'243a","use":"enc","alg":"A128GCM","k":"XctOhJAkA-pD9Lh7ZgW_2A' + \
+    b'"},{"kty":"oct","kid":"81b20965-8332-43d9-a468-82160ad91ac8",' + \
+    b'"use":"enc","alg":"A128KW","k":"GZy6sIZ6wl9NJOKB-jnmVQ"},{"kt' + \
+    b'y":"oct","kid":"18ec08e1-bfa9-4d95-b205-2b4dd1d4321d","use":"' + \
+    b'enc","alg":"A256GCMKW","k":"qC57l_uxcm7Nm3K-ct4GFjx8tM1U8CZ0N' + \
+    b'LBvdQstiS8"}]}'
+
+Password_5_3_1 = b'entrap_o\xe2\x80\x93peter_long\xe2\x80\x93credit_tun'
+
+JWE_IV_5_3_2 = "VBiCzVHNoLiR3F4V82uoTQ"
+
+JWE_Encrypted_Key_5_3_3 = \
+    "d3qNhUWfqheyPp4H8sjOWsDYajoej4c5Je6rlUtFPWdgtURtmeDV1g"
+
+JWE_Protected_Header_no_p2x = {
+    "alg": "PBES2-HS512+A256KW",
+    "cty": "jwk-set+json",
+    "enc": "A128CBC-HS256"}
+
+JWE_Protected_Header_5_3_4 = \
+    "eyJhbGciOiJQQkVTMi1IUzUxMitBMjU2S1ciLCJwMnMiOiI4UTFTemluYXNSM3" + \
+    "hjaFl6NlpaY0hBIiwicDJjIjo4MTkyLCJjdHkiOiJqd2stc2V0K2pzb24iLCJl" + \
+    "bmMiOiJBMTI4Q0JDLUhTMjU2In0"
+
+JWE_Ciphertext_5_3_4 = \
+    "23i-Tb1AV4n0WKVSSgcQrdg6GRqsUKxjruHXYsTHAJLZ2nsnGIX86vMXqIi6IR" + \
+    "sfywCRFzLxEcZBRnTvG3nhzPk0GDD7FMyXhUHpDjEYCNA_XOmzg8yZR9oyjo6l" + \
+    "TF6si4q9FZ2EhzgFQCLO_6h5EVg3vR75_hkBsnuoqoM3dwejXBtIodN84PeqMb" + \
+    "6asmas_dpSsz7H10fC5ni9xIz424givB1YLldF6exVmL93R3fOoOJbmk2GBQZL" + \
+    "_SEGllv2cQsBgeprARsaQ7Bq99tT80coH8ItBjgV08AtzXFFsx9qKvC982KLKd" + \
+    "PQMTlVJKkqtV4Ru5LEVpBZXBnZrtViSOgyg6AiuwaS-rCrcD_ePOGSuxvgtrok" + \
+    "AKYPqmXUeRdjFJwafkYEkiuDCV9vWGAi1DH2xTafhJwcmywIyzi4BqRpmdn_N-" + \
+    "zl5tuJYyuvKhjKv6ihbsV_k1hJGPGAxJ6wUpmwC4PTQ2izEm0TuSE8oMKdTw8V" + \
+    "3kobXZ77ulMwDs4p"
+
+JWE_Authentication_Tag_5_3_4 = "0HlwodAhOCILG5SQ2LQ9dg"
+
+JWE_compact_5_3_5 = \
+    "%s.%s.%s.%s.%s" % (JWE_Protected_Header_5_3_4,
+                        JWE_Encrypted_Key_5_3_3,
+                        JWE_IV_5_3_2,
+                        JWE_Ciphertext_5_3_4,
+                        JWE_Authentication_Tag_5_3_4)
+
+JWE_general_5_3_5 = {
+    "recipients": [{
+        "encrypted_key": JWE_Encrypted_Key_5_3_3}],
+    "protected": JWE_Protected_Header_5_3_4,
+    "iv": JWE_IV_5_3_2,
+    "ciphertext": JWE_Ciphertext_5_3_4,
+    "tag": JWE_Authentication_Tag_5_3_4}
+
+JWE_flattened_5_3_5 = {
+    "protected": JWE_Protected_Header_5_3_4,
+    "encrypted_key": JWE_Encrypted_Key_5_3_3,
+    "iv": JWE_IV_5_3_2,
+    "ciphertext": JWE_Ciphertext_5_3_4,
+    "tag": JWE_Authentication_Tag_5_3_4}
 
 # 5.4 - ECDH-ES key agreement not implemented yet
 
@@ -1038,8 +1034,22 @@ class Cookbook08JWETests(unittest.TestCase):
         e.deserialize(json_encode(JWE_flattened_5_2_5), rsa_key)
         self.assertEqual(e.payload, plaintext)
 
-# 5.3 - PBES2-* not implemented yet
-#     def test_5_3_encryption(self):
+    def test_5_3_encryption(self):
+        plaintext = Payload_plaintext_5_3_1
+        password = jwk.JWK(kty="oct", use="enc",
+                           k=base64url_encode(Password_5_3_1.decode('utf8')))
+        e = jwe.JWE(plaintext, json_encode(JWE_Protected_Header_no_p2x))
+        e.add_recipient(password)
+        e.serialize(compact=True)
+        enc = e.serialize()
+        e.deserialize(enc, password)
+        self.assertEqual(e.payload, plaintext)
+        e.deserialize(JWE_compact_5_3_5, password)
+        self.assertEqual(e.payload, plaintext)
+        e.deserialize(json_encode(JWE_general_5_3_5), password)
+        self.assertEqual(e.payload, plaintext)
+        e.deserialize(json_encode(JWE_flattened_5_3_5), password)
+        self.assertEqual(e.payload, plaintext)
 
 # 5.4 - ECDH-ES key agreement not implemented yet
 #     def test_5_4_encryption(self):

@@ -9,6 +9,7 @@ from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import constant_time, hashes, hmac
 from cryptography.hazmat.primitives.asymmetric import padding
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 from cryptography.hazmat.primitives.padding import PKCS7
 
 from jwcrypto.common import InvalidJWAAlgorithm
@@ -289,6 +290,58 @@ class _AesGcmKw(_RawKeyMgmt):
         return cek
 
 
+class _Pbes2HsAesKw(_RawKeyMgmt):
+
+    def __init__(self, hashsize, keysize):
+        self.backend = default_backend()
+        self.hashsize = hashsize
+        self.keysize = keysize // 8
+
+    def _get_key(self, alg, key, p2s, p2c):
+        if key.key_type != 'oct':
+            raise InvalidJWEKeyType('oct', key.key_type)
+        plain = base64url_decode(key.get_op_key('encrypt'))
+        salt = bytes(alg.encode('utf8')) + b'\x00' + p2s
+
+        if self.hashsize == 256:
+            hashalg = hashes.SHA256()
+        elif self.hashsize == 384:
+            hashalg = hashes.SHA384()
+        elif self.hashsize == 512:
+            hashalg = hashes.SHA512()
+        else:
+            raise InvalidJWEData('Unknown Hash Size')
+
+        kdf = PBKDF2HMAC(algorithm=hashalg, length=self.keysize, salt=salt,
+                         iterations=p2c, backend=self.backend)
+        rk = kdf.derive(plain)
+        if len(rk) != self.keysize:
+            raise InvalidJWEKeyLength(self.keysize * 8, len(rk) * 8)
+        return JWK(kty="oct", use="enc", k=base64url_encode(rk))
+
+    def wrap(self, key, keylen, cek, headers):
+        p2s = os.urandom(16)
+        p2c = 8192
+        kek = self._get_key(headers['alg'], key, p2s, p2c)
+
+        aeskw = _AesKw(self.keysize * 8)
+        ret = aeskw.wrap(kek, keylen, cek, headers)
+        ret['header'] = {'p2s': base64url_encode(p2s), 'p2c': p2c}
+        return ret
+
+    def unwrap(self, key, keylen, ek, headers):
+        if 'p2s' not in headers:
+            raise InvalidJWEData('Invalid Header, missing "p2s" parameter')
+        if 'p2c' not in headers:
+            raise InvalidJWEData('Invalid Header, missing "p2c" parameter')
+        p2s = base64url_decode(headers['p2s'])
+        p2c = headers['p2c']
+        kek = self._get_key(headers['alg'], key, p2s, p2c)
+
+        aeskw = _AesKw(self.keysize * 8)
+        return aeskw.unwrap(kek, keylen, ek, headers)
+
+
 class _Direct(_RawKeyMgmt):
 
     def _check_key(self, key):
@@ -516,6 +569,15 @@ class JWE(object):
 
     def _jwa_A256GCMKW(self):
         return _AesGcmKw(256)
+
+    def _jwa_PBES2_HS256_A128KW(self):
+        return _Pbes2HsAesKw(256, 128)
+
+    def _jwa_PBES2_HS384_A192KW(self):
+        return _Pbes2HsAesKw(384, 192)
+
+    def _jwa_PBES2_HS512_A256KW(self):
+        return _Pbes2HsAesKw(512, 256)
 
     def _jwa_dir(self):
         return _Direct()
