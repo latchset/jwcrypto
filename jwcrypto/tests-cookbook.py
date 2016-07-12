@@ -737,6 +737,60 @@ JWE_general_5_6_4 = {
     "tag": JWE_Authentication_Tag_5_6_3}
 
 # 5.7 - A256GCMKW not implemented yet
+AES_key_5_7_1 = {
+    "kty": "oct",
+    "kid": "18ec08e1-bfa9-4d95-b205-2b4dd1d4321d",
+    "use": "enc",
+    "alg": "A256GCMKW",
+    "k": "qC57l_uxcm7Nm3K-ct4GFjx8tM1U8CZ0NLBvdQstiS8"}
+
+JWE_IV_5_7_2 = "gz6NjyEFNm_vm8Gj6FwoFQ"
+
+JWE_Encrypted_Key_5_7_3 = "lJf3HbOApxMEBkCMOoTnnABxs_CvTWUmZQ2ElLvYNok"
+
+JWE_Protected_Header_no_ivtag = {
+    "alg": "A256GCMKW",
+    "kid": "18ec08e1-bfa9-4d95-b205-2b4dd1d4321d",
+    "enc": "A128CBC-HS256"}
+
+JWE_Protected_Header_5_7_4 = \
+    "eyJhbGciOiJBMjU2R0NNS1ciLCJraWQiOiIxOGVjMDhlMS1iZmE5LTRkOTUtYj" + \
+    "IwNS0yYjRkZDFkNDMyMWQiLCJ0YWciOiJrZlBkdVZRM1QzSDZ2bmV3dC0ta3N3" + \
+    "IiwiaXYiOiJLa1lUMEdYXzJqSGxmcU5fIiwiZW5jIjoiQTEyOENCQy1IUzI1Ni" + \
+    "J9"
+
+JWE_Ciphertext_5_7_4 = \
+    "Jf5p9-ZhJlJy_IQ_byKFmI0Ro7w7G1QiaZpI8OaiVgD8EqoDZHyFKFBupS8iaE" + \
+    "eVIgMqWmsuJKuoVgzR3YfzoMd3GxEm3VxNhzWyWtZKX0gxKdy6HgLvqoGNbZCz" + \
+    "LjqcpDiF8q2_62EVAbr2uSc2oaxFmFuIQHLcqAHxy51449xkjZ7ewzZaGV3eFq" + \
+    "hpco8o4DijXaG5_7kp3h2cajRfDgymuxUbWgLqaeNQaJtvJmSMFuEOSAzw9Hde" + \
+    "b6yhdTynCRmu-kqtO5Dec4lT2OMZKpnxc_F1_4yDJFcqb5CiDSmA-psB2k0Jtj" + \
+    "xAj4UPI61oONK7zzFIu4gBfjJCndsZfdvG7h8wGjV98QhrKEnR7xKZ3KCr0_qR" + \
+    "1B-gxpNk3xWU"
+
+JWE_Authentication_Tag_5_7_4 = "DKW7jrb4WaRSNfbXVPlT5g"
+
+JWE_compact_5_7_5 = \
+    "%s.%s.%s.%s.%s" % (JWE_Protected_Header_5_7_4,
+                        JWE_Encrypted_Key_5_7_3,
+                        JWE_IV_5_7_2,
+                        JWE_Ciphertext_5_7_4,
+                        JWE_Authentication_Tag_5_7_4)
+
+JWE_general_5_7_5 = {
+    "recipients": [{
+        "encrypted_key": JWE_Encrypted_Key_5_7_3}],
+    "protected": JWE_Protected_Header_5_7_4,
+    "iv": JWE_IV_5_7_2,
+    "ciphertext": JWE_Ciphertext_5_7_4,
+    "tag": JWE_Authentication_Tag_5_7_4}
+
+JWE_flattened_5_7_5 = {
+    "protected": JWE_Protected_Header_5_7_4,
+    "encrypted_key": JWE_Encrypted_Key_5_7_3,
+    "iv": JWE_IV_5_7_2,
+    "ciphertext": JWE_Ciphertext_5_7_4,
+    "tag": JWE_Authentication_Tag_5_7_4}
 
 # 5.8
 AES_key_5_8_1 = {
@@ -1008,8 +1062,20 @@ class Cookbook08JWETests(unittest.TestCase):
         e.deserialize(json_encode(JWE_general_5_6_4), aes_key)
         self.assertEqual(e.payload, plaintext)
 
-# 5.7 - AES-GCM key wrapping not implemented yet
-#     def test_5_7_encryption(self):
+    def test_5_7_encryption(self):
+        plaintext = Payload_plaintext_5
+        aes_key = jwk.JWK(**AES_key_5_7_1)
+        e = jwe.JWE(plaintext, json_encode(JWE_Protected_Header_no_ivtag))
+        e.add_recipient(aes_key)
+        enc = e.serialize(compact=True)
+        e.deserialize(enc, aes_key)
+        self.assertEqual(e.payload, plaintext)
+        e.deserialize(JWE_compact_5_7_5, aes_key)
+        self.assertEqual(e.payload, plaintext)
+        e.deserialize(json_encode(JWE_general_5_7_5), aes_key)
+        self.assertEqual(e.payload, plaintext)
+        e.deserialize(json_encode(JWE_flattened_5_7_5), aes_key)
+        self.assertEqual(e.payload, plaintext)
 
     def test_5_8_encryption(self):
         plaintext = Payload_plaintext_5

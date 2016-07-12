@@ -240,6 +240,55 @@ class _AesKw(_RawKeyMgmt):
         return cek
 
 
+class _AesGcmKw(_RawKeyMgmt):
+
+    def __init__(self, keysize):
+        self.backend = default_backend()
+        self.keysize = keysize // 8
+
+    def _get_key(self, key, op):
+        if key.key_type != 'oct':
+            raise InvalidJWEKeyType('oct', key.key_type)
+        rk = base64url_decode(key.get_op_key(op))
+        if len(rk) != self.keysize:
+            raise InvalidJWEKeyLength(self.keysize * 8, len(rk) * 8)
+        return rk
+
+    def wrap(self, key, keylen, cek, headers):
+        rk = self._get_key(key, 'encrypt')
+        if not cek:
+            cek = os.urandom(keylen)
+
+        iv = os.urandom(96 // 8)
+        cipher = Cipher(algorithms.AES(rk), modes.GCM(iv),
+                        backend=self.backend)
+        encryptor = cipher.encryptor()
+        ek = encryptor.update(cek) + encryptor.finalize()
+
+        tag = encryptor.tag
+        return {'cek': cek, 'ek': ek,
+                'header': {'iv': base64url_encode(iv),
+                           'tag': base64url_encode(tag)}}
+
+    def unwrap(self, key, keylen, ek, headers):
+        rk = self._get_key(key, 'decrypt')
+
+        if 'iv' not in headers:
+            raise InvalidJWEData('Invalid Header, missing "iv" parameter')
+        iv = base64url_decode(headers['iv'])
+        if 'tag' not in headers:
+            raise InvalidJWEData('Invalid Header, missing "tag" parameter')
+        tag = base64url_decode(headers['tag'])
+
+        cipher = Cipher(algorithms.AES(rk), modes.GCM(iv, tag),
+                        backend=self.backend)
+        decryptor = cipher.decryptor()
+        cek = decryptor.update(ek) + decryptor.finalize()
+        if len(cek) != keylen:
+            raise InvalidJWEKeyLength(keylen, len(cek))
+        return cek
+
+
 class _Direct(_RawKeyMgmt):
 
     def _check_key(self, key):
@@ -459,6 +508,15 @@ class JWE(object):
     def _jwa_A256KW(self):
         return _AesKw(256)
 
+    def _jwa_A128GCMKW(self):
+        return _AesGcmKw(128)
+
+    def _jwa_A192GCMKW(self):
+        return _AesGcmKw(192)
+
+    def _jwa_A256GCMKW(self):
+        return _AesGcmKw(256)
+
     def _jwa_dir(self):
         return _Direct()
 
@@ -542,6 +600,25 @@ class JWE(object):
         enc = self._jwa(encname)
         return alg, enc
 
+    def _encrypt(self, alg, enc, jh):
+        aad = base64url_encode(self.objects.get('protected', ''))
+        if 'aad' in self.objects:
+            aad += '.' + base64url_encode(self.objects['aad'])
+        aad = aad.encode('utf-8')
+
+        compress = jh.get('zip', None)
+        if compress == 'DEF':
+            data = zlib.compress(self.plaintext)[2:-4]
+        elif compress is None:
+            data = self.plaintext
+        else:
+            raise ValueError('Unknown compression')
+
+        iv, ciphertext, tag = enc.encrypt(self.cek, aad, data)
+        self.objects['iv'] = iv
+        self.objects['ciphertext'] = ciphertext
+        self.objects['tag'] = tag
+
     def add_recipient(self, key, header=None):
         """Encrypt the plaintext with the given key.
 
@@ -575,24 +652,13 @@ class JWE(object):
         if 'ek' in wrapped:
             rec['encrypted_key'] = wrapped['ek']
 
+        if 'header' in wrapped:
+            h = json_decode(rec.get('header', '{}'))
+            nh = self._merge_headers(h, wrapped['header'])
+            rec['header'] = json_encode(nh)
+
         if 'ciphertext' not in self.objects:
-            aad = base64url_encode(self.objects.get('protected', ''))
-            if 'aad' in self.objects:
-                aad += '.' + base64url_encode(self.objects['aad'])
-            aad = aad.encode('utf-8')
-
-            compress = jh.get('zip', None)
-            if compress == 'DEF':
-                data = zlib.compress(self.plaintext)[2:-4]
-            elif compress is None:
-                data = self.plaintext
-            else:
-                raise ValueError('Unknown compression')
-
-            iv, ciphertext, tag = enc.encrypt(self.cek, aad, data)
-            self.objects['iv'] = iv
-            self.objects['ciphertext'] = ciphertext
-            self.objects['tag'] = tag
+            self._encrypt(alg, enc, jh)
 
         if 'recipients' in self.objects:
             self.objects['recipients'].append(rec)
@@ -635,6 +701,20 @@ class JWE(object):
                 rec = self.objects['recipients'][0]
             else:
                 rec = self.objects
+            if 'header' in rec:
+                # The AESGCMKW algorithm generates data (iv, tag) we put in the
+                # per-recipient unpotected header by default. Move it to the
+                # protected header and re-encrypt the payload, as the protected
+                # header is used as additional authenticated data.
+                h = json_decode(rec['header'])
+                ph = json_decode(self.objects['protected'])
+                nph = self._merge_headers(h, ph)
+                self.objects['protected'] = json_encode(nph)
+                jh = self._get_jose_header()
+                alg, enc = self._get_alg_enc_from_headers(jh)
+                self._encrypt(alg, enc, jh)
+                del rec['header']
+
             return '.'.join([base64url_encode(self.objects['protected']),
                              base64url_encode(rec.get('encrypted_key', '')),
                              base64url_encode(self.objects['iv']),
