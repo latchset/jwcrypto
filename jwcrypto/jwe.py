@@ -174,6 +174,37 @@ class _RSA(_RawKeyMgmt):
         return cek
 
 
+class _Rsa15(_RSA):
+    def __init__(self):
+        super(_Rsa15, self).__init__(padding.PKCS1v15())
+
+    @property
+    def name(self):
+        return 'RSA1_5'
+
+
+class _RsaOaep(_RSA):
+    def __init__(self):
+        super(_RsaOaep, self).__init__(
+            padding.OAEP(padding.MGF1(hashes.SHA1()),
+                         hashes.SHA1(), None))
+
+    @property
+    def name(self):
+        return 'RSA-OAEP'
+
+
+class _RsaOaep256(_RSA):  # noqa: ignore=N801
+    def __init__(self):
+        super(_RsaOaep256, self).__init__(
+            padding.OAEP(padding.MGF1(hashes.SHA256()),
+                         hashes.SHA256(), None))
+
+    @property
+    def name(self):
+        return 'RSA-OAEP-256'
+
+
 class _AesKw(_RawKeyMgmt):
 
     def __init__(self, keysize):
@@ -241,6 +272,33 @@ class _AesKw(_RawKeyMgmt):
         return cek
 
 
+class _A128KW(_AesKw):
+    def __init__(self):
+        super(_A128KW, self).__init__(128)
+
+    @property
+    def name(self):
+        return 'A128KW'
+
+
+class _A192KW(_AesKw):
+    def __init__(self):
+        super(_A192KW, self).__init__(192)
+
+    @property
+    def name(self):
+        return 'A192KW'
+
+
+class _A256KW(_AesKw):
+    def __init__(self):
+        super(_A256KW, self).__init__(256)
+
+    @property
+    def name(self):
+        return 'A256KW'
+
+
 class _AesGcmKw(_RawKeyMgmt):
 
     def __init__(self, keysize):
@@ -290,7 +348,38 @@ class _AesGcmKw(_RawKeyMgmt):
         return cek
 
 
+class _A128GcmKw(_AesGcmKw):
+    def __init__(self):
+        super(_A128GcmKw, self).__init__(128)
+
+    @property
+    def name(self):
+        return 'A128GCMKW'
+
+
+class _A192GcmKw(_AesGcmKw):
+    def __init__(self):
+        super(_A192GcmKw, self).__init__(192)
+
+    @property
+    def name(self):
+        return 'A192GCMKW'
+
+
+class _A256GcmKw(_AesGcmKw):
+    def __init__(self):
+        super(_A256GcmKw, self).__init__(256)
+
+    @property
+    def name(self):
+        return 'A256GCMKW'
+
+
 class _Pbes2HsAesKw(_RawKeyMgmt):
+
+    @property
+    def name(self):
+        raise NotImplementedError
 
     def __init__(self, hashsize, keysize):
         self.backend = default_backend()
@@ -301,7 +390,7 @@ class _Pbes2HsAesKw(_RawKeyMgmt):
         if key.key_type != 'oct':
             raise InvalidJWEKeyType('oct', key.key_type)
         plain = base64url_decode(key.get_op_key('encrypt'))
-        salt = bytes(alg.encode('utf8')) + b'\x00' + p2s
+        salt = bytes(self.name.encode('utf8')) + b'\x00' + p2s
 
         if self.hashsize == 256:
             hashalg = hashes.SHA256()
@@ -342,7 +431,38 @@ class _Pbes2HsAesKw(_RawKeyMgmt):
         return aeskw.unwrap(kek, keylen, ek, headers)
 
 
+class _Pbes2Hs256A128Kw(_Pbes2HsAesKw):
+    def __init__(self):
+        super(_Pbes2Hs256A128Kw, self).__init__(256, 128)
+
+    @property
+    def name(self):
+        return 'PBES2-HS256+A128KW'
+
+
+class _Pbes2Hs384A192Kw(_Pbes2HsAesKw):
+    def __init__(self):
+        super(_Pbes2Hs384A192Kw, self).__init__(384, 192)
+
+    @property
+    def name(self):
+        return 'PBES2-HS384+A192KW'
+
+
+class _Pbes2Hs512A256Kw(_Pbes2HsAesKw):
+    def __init__(self):
+        super(_Pbes2Hs512A256Kw, self).__init__(512, 256)
+
+    @property
+    def name(self):
+        return 'PBES2-HS512+A256KW'
+
+
 class _Direct(_RawKeyMgmt):
+
+    @property
+    def name(self):
+        return 'dir'
 
     def _check_key(self, key):
         if key.key_type != 'oct':
@@ -453,6 +573,33 @@ class _AesCbcHmacSha2(_RawJWE):
         return unpadder.update(d) + unpadder.finalize()
 
 
+class _A128CbcHs256(_AesCbcHmacSha2):
+    def __init__(self):
+        super(_A128CbcHs256, self).__init__(hashes.SHA256(), 128)
+
+    @property
+    def name(self):
+        return 'A128CBC-HS256'
+
+
+class _A192CbcHs384(_AesCbcHmacSha2):
+    def __init__(self):
+        super(_A192CbcHs384, self).__init__(hashes.SHA384(), 192)
+
+    @property
+    def name(self):
+        return 'A192CBC-HS384'
+
+
+class _A256CbcHs512(_AesCbcHmacSha2):
+    def __init__(self):
+        super(_A256CbcHs512, self).__init__(hashes.SHA512(), 256)
+
+    @property
+    def name(self):
+        return 'A256CBC-HS512'
+
+
 class _AesGcm(_RawJWE):
 
     def __init__(self, keybits):
@@ -501,11 +648,60 @@ class _AesGcm(_RawJWE):
         return decryptor.update(e) + decryptor.finalize()
 
 
+class _A128Gcm(_AesGcm):
+    def __init__(self):
+        super(_A128Gcm, self).__init__(128)
+
+    @property
+    def name(self):
+        return 'A128GCM'
+
+
+class _A192Gcm(_AesGcm):
+    def __init__(self):
+        super(_A192Gcm, self).__init__(192)
+
+    @property
+    def name(self):
+        return 'A192GCM'
+
+
+class _A256Gcm(_AesGcm):
+    def __init__(self):
+        super(_A256Gcm, self).__init__(256)
+
+    @property
+    def name(self):
+        return 'A256GCM'
+
+
 class JWE(object):
     """JSON Web Encryption object
 
     This object represent a JWE token.
     """
+
+    jwas = {
+        'RSA1_5': _Rsa15,
+        'RSA-OAEP': _RsaOaep,
+        'RSA-OAEP-256': _RsaOaep256,
+        'A128KW': _A128KW,
+        'A192KW': _A192KW,
+        'A256KW': _A256KW,
+        'dir': _Direct,
+        'A128GCMKW': _A128GcmKw,
+        'A192GCMKW': _A192GcmKw,
+        'A256GCMKW': _A256GcmKw,
+        'PBES2-HS256+A128KW': _Pbes2Hs256A128Kw,
+        'PBES2-HS384+A192KW': _Pbes2Hs384A192Kw,
+        'PBES2-HS512+A256KW': _Pbes2Hs512A256Kw,
+        'A128CBC-HS256': _A128CbcHs256,
+        'A192CBC-HS384': _A192CbcHs384,
+        'A256CBC-HS512': _A256CbcHs512,
+        'A128GCM': _A128Gcm,
+        'A192GCM': _A192Gcm,
+        'A256GCM': _A256Gcm
+    }
 
     def __init__(self, plaintext=None, protected=None, unprotected=None,
                  aad=None, algs=None):
@@ -538,79 +734,15 @@ class JWE(object):
         if algs:
             self.allowed_algs = algs
 
-    # key wrapping mechanisms
-    def _jwa_RSA1_5(self):
-        return _RSA(padding.PKCS1v15())
-
-    def _jwa_RSA_OAEP(self):
-        return _RSA(padding.OAEP(padding.MGF1(hashes.SHA1()),
-                                 hashes.SHA1(),
-                                 None))
-
-    def _jwa_RSA_OAEP_256(self):
-        return _RSA(padding.OAEP(padding.MGF1(hashes.SHA256()),
-                                 hashes.SHA256(),
-                                 None))
-
-    def _jwa_A128KW(self):
-        return _AesKw(128)
-
-    def _jwa_A192KW(self):
-        return _AesKw(192)
-
-    def _jwa_A256KW(self):
-        return _AesKw(256)
-
-    def _jwa_A128GCMKW(self):
-        return _AesGcmKw(128)
-
-    def _jwa_A192GCMKW(self):
-        return _AesGcmKw(192)
-
-    def _jwa_A256GCMKW(self):
-        return _AesGcmKw(256)
-
-    def _jwa_PBES2_HS256_A128KW(self):
-        return _Pbes2HsAesKw(256, 128)
-
-    def _jwa_PBES2_HS384_A192KW(self):
-        return _Pbes2HsAesKw(384, 192)
-
-    def _jwa_PBES2_HS512_A256KW(self):
-        return _Pbes2HsAesKw(512, 256)
-
-    def _jwa_dir(self):
-        return _Direct()
-
-    # content encryption mechanisms
-    def _jwa_A128CBC_HS256(self):
-        return _AesCbcHmacSha2(hashes.SHA256(), 128)
-
-    def _jwa_A192CBC_HS384(self):
-        return _AesCbcHmacSha2(hashes.SHA384(), 192)
-
-    def _jwa_A256CBC_HS512(self):
-        return _AesCbcHmacSha2(hashes.SHA512(), 256)
-
-    def _jwa_A128GCM(self):
-        return _AesGcm(128)
-
-    def _jwa_A192GCM(self):
-        return _AesGcm(192)
-
-    def _jwa_A256GCM(self):
-        return _AesGcm(256)
-
     def _jwa(self, name):
         try:
-            attr = '_jwa_%s' % name.replace('-', '_').replace('+', '_')
-            fn = getattr(self, attr)
-        except (KeyError, AttributeError):
+            cls = self.jwas[name]
+        except (KeyError):
             raise InvalidJWAAlgorithm()
         allowed = self._allowed_algs or default_allowed_algs
         if name not in allowed:
             raise InvalidJWEOperation('Algorithm not allowed')
-        return fn()
+        return cls()
 
     @property
     def allowed_algs(self):
