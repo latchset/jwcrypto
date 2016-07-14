@@ -1,14 +1,17 @@
 # Copyright (C) 2015 JWCrypto Project Contributors - see LICENSE file
 
 import os
+import struct
 import zlib
 
 from binascii import hexlify, unhexlify
 
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import constant_time, hashes, hmac
+from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.hazmat.primitives.asymmetric import padding
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+from cryptography.hazmat.primitives.kdf.concatkdf import ConcatKDFHash
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 from cryptography.hazmat.primitives.padding import PKCS7
 
@@ -487,6 +490,126 @@ class _Direct(_RawKeyMgmt):
         return cek
 
 
+class _EcdhEs(_RawKeyMgmt):
+
+    @property
+    def name(self):
+        return 'ECDH-ES'
+
+    def __init__(self, keydatalen=None):
+        self.backend = default_backend()
+        self.keydatalen = keydatalen
+
+    def _check_key(self, key):
+        if key.key_type != 'EC':
+            raise InvalidJWEKeyType('EC', key.key_type)
+
+    def _derive(self, privkey, pubkey, alg, keydatalen, headers):
+        # OtherInfo is defined in NIST SP 56A 5.8.1.2.1
+
+        # AlgorithmID
+        otherinfo = struct.pack('>I', len(alg))
+        otherinfo += bytes(alg.encode('utf8'))
+
+        # PartyUInfo
+        apu = base64url_decode(headers['apu']) if 'apu' in headers else b''
+        otherinfo += struct.pack('>I', len(apu))
+        otherinfo += apu
+
+        # PartyVInfo
+        apv = base64url_decode(headers['apv']) if 'apv' in headers else b''
+        otherinfo += struct.pack('>I', len(apv))
+        otherinfo += apv
+
+        # SuppPubInfo
+        otherinfo += struct.pack('>I', keydatalen)
+
+        # no SuppPrivInfo
+
+        shared_key = privkey.exchange(ec.ECDH(), pubkey)
+        ckdf = ConcatKDFHash(algorithm=hashes.SHA256(),
+                             length=keydatalen // 8,
+                             otherinfo=otherinfo,
+                             backend=self.backend)
+        return ckdf.derive(shared_key)
+
+    def wrap(self, key, keylen, cek, headers):
+        self._check_key(key)
+        if self.keydatalen is None:
+            if cek is not None:
+                raise InvalidJWEOperation('ECDH-ES cannot use an existing CEK')
+            keydatalen = keylen * 8
+            alg = headers['enc']
+        else:
+            keydatalen = self.keydatalen
+            alg = headers['alg']
+
+        epk = JWK.generate(kty=key.key_type, crv=key.key_curve)
+        dk = self._derive(epk.get_op_key('unwrapKey'),
+                          key.get_op_key('wrapKey'),
+                          alg, keydatalen, headers)
+
+        if self.keydatalen is None:
+            ret = {'cek': dk}
+        else:
+            aeskw = _AesKw(keydatalen)
+            kek = JWK(kty="oct", use="enc", k=base64url_encode(dk))
+            ret = aeskw.wrap(kek, keydatalen // 8, cek, headers)
+
+        ret['header'] = {'epk': json_decode(epk.export_public())}
+        return ret
+
+    def unwrap(self, key, keylen, ek, headers):
+        if 'epk' not in headers:
+            raise InvalidJWEData('Invalid Header, missing "epk" parameter')
+        self._check_key(key)
+        if self.keydatalen is None:
+            keydatalen = keylen * 8
+            alg = headers['enc']
+        else:
+            keydatalen = self.keydatalen
+            alg = headers['alg']
+
+        epk = JWK(**headers['epk'])
+        dk = self._derive(key.get_op_key('unwrapKey'),
+                          epk.get_op_key('wrapKey'),
+                          alg, keydatalen, headers)
+        if self.keydatalen is None:
+            return dk
+        else:
+            aeskw = _AesKw(keydatalen)
+            kek = JWK(kty="oct", use="enc", k=base64url_encode(dk))
+            cek = aeskw.unwrap(kek, keydatalen // 8, ek, headers)
+            return cek
+
+
+class _EcdhEsAes128Kw(_EcdhEs):
+    def __init__(self):
+        super(_EcdhEsAes128Kw, self).__init__(128)
+
+    @property
+    def name(self):
+        return 'ECDH-ES+A128KW'
+
+
+class _EcdhEsAes192Kw(_EcdhEs):
+    def __init__(self):
+        super(_EcdhEsAes192Kw, self).__init__(192)
+
+    @property
+    def name(self):
+        return 'ECDH-ES+A192KW'
+
+
+class _EcdhEsAes256Kw(_EcdhEs):
+    def __init__(self):
+        super(_EcdhEsAes256Kw, self).__init__(256)
+
+    @property
+    def name(self):
+        return 'ECDH-ES+A256KW'
+
+
 class _RawJWE(object):
 
     def encrypt(self, k, a, m):
@@ -689,6 +812,10 @@ class JWE(object):
         'A192KW': _A192KW,
         'A256KW': _A256KW,
         'dir': _Direct,
+        'ECDH-ES': _EcdhEs,
+        'ECDH-ES+A128KW': _EcdhEsAes128Kw,
+        'ECDH-ES+A192KW': _EcdhEsAes192Kw,
+        'ECDH-ES+A256KW': _EcdhEsAes256Kw,
         'A128GCMKW': _A128GcmKw,
         'A192GCMKW': _A192GcmKw,
         'A256GCMKW': _A256GcmKw,

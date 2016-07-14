@@ -692,9 +692,113 @@ JWE_flattened_5_3_5 = {
     "ciphertext": JWE_Ciphertext_5_3_4,
     "tag": JWE_Authentication_Tag_5_3_4}
 
-# 5.4 - ECDH-ES key agreement not implemented yet
+# 5.4
+EC_key_5_4_1 = {
+    "kty": "EC",
+    "kid": "peregrin.took@tuckborough.example",
+    "use": "enc",
+    "crv": "P-384",
+    "x": "YU4rRUzdmVqmRtWOs2OpDE_T5fsNIodcG8G5FWPrTPMyxpzsSOGaQLpe2FpxBmu2",
+    "y": "A8-yxCHxkfBz3hKZfI1jUYMjUhsEveZ9THuwFjH2sCNdtksRJU7D5-SkgaFL1ETP",
+    "d": "iTx2pk7wW-GqJkHcEkFQb2EFyYcO7RugmaW3mRrQVAOUiPommT0IdnYK2xDlZh-j"}
 
-# 5.5 - ECDH-ES key agreement not implemented yet
+JWE_IV_5_4_2 = "mH-G2zVqgztUtnW_"
+
+JWE_Encrypted_Key_5_4_3 = \
+    "0DJjBXri_kBcC46IkU5_Jk9BqaQeHdv2"
+
+JWE_Protected_Header_no_epk_5_4_4 = {
+    "alg": "ECDH-ES+A128KW",
+    "kid": "peregrin.took@tuckborough.example",
+    "enc": "A128GCM"}
+
+JWE_Protected_Header_5_4_4 = \
+    "eyJhbGciOiJFQ0RILUVTK0ExMjhLVyIsImtpZCI6InBlcmVncmluLnRvb2tAdH" + \
+    "Vja2Jvcm91Z2guZXhhbXBsZSIsImVwayI6eyJrdHkiOiJFQyIsImNydiI6IlAt" + \
+    "Mzg0IiwieCI6InVCbzRrSFB3Nmtiang1bDB4b3dyZF9vWXpCbWF6LUdLRlp1NH" + \
+    "hBRkZrYllpV2d1dEVLNml1RURzUTZ3TmROZzMiLCJ5Ijoic3AzcDVTR2haVkMy" + \
+    "ZmFYdW1JLWU5SlUyTW84S3BvWXJGRHI1eVBOVnRXNFBnRXdaT3lRVEEtSmRhWT" + \
+    "h0YjdFMCJ9LCJlbmMiOiJBMTI4R0NNIn0"
+
+JWE_Ciphertext_5_4_4 = \
+    "tkZuOO9h95OgHJmkkrfLBisku8rGf6nzVxhRM3sVOhXgz5NJ76oID7lpnAi_cP" + \
+    "WJRCjSpAaUZ5dOR3Spy7QuEkmKx8-3RCMhSYMzsXaEwDdXta9Mn5B7cCBoJKB0" + \
+    "IgEnj_qfo1hIi-uEkUpOZ8aLTZGHfpl05jMwbKkTe2yK3mjF6SBAsgicQDVCkc" + \
+    "Y9BLluzx1RmC3ORXaM0JaHPB93YcdSDGgpgBWMVrNU1ErkjcMqMoT_wtCex3w0" + \
+    "3XdLkjXIuEr2hWgeP-nkUZTPU9EoGSPj6fAS-bSz87RCPrxZdj_iVyC6QWcqAu" + \
+    "07WNhjzJEPc4jVntRJ6K53NgPQ5p99l3Z408OUqj4ioYezbS6vTPlQ"
+
+JWE_Authentication_Tag_5_4_4 = "WuGzxmcreYjpHGJoa17EBg"
+
+JWE_compact_5_4_5 = \
+    "%s.%s.%s.%s.%s" % (JWE_Protected_Header_5_4_4,
+                        JWE_Encrypted_Key_5_4_3,
+                        JWE_IV_5_4_2,
+                        JWE_Ciphertext_5_4_4,
+                        JWE_Authentication_Tag_5_4_4)
+
+JWE_general_5_4_5 = {
+    "recipients": [{
+        "encrypted_key": JWE_Encrypted_Key_5_4_3}],
+    "protected": JWE_Protected_Header_5_4_4,
+    "iv": JWE_IV_5_4_2,
+    "ciphertext": JWE_Ciphertext_5_4_4,
+    "tag": JWE_Authentication_Tag_5_4_4}
+
+JWE_flattened_5_4_5 = {
+    "protected": JWE_Protected_Header_5_4_4,
+    "encrypted_key": JWE_Encrypted_Key_5_4_3,
+    "iv": JWE_IV_5_4_2,
+    "ciphertext": JWE_Ciphertext_5_4_4,
+    "tag": JWE_Authentication_Tag_5_4_4}
+
+# 5.5
+EC_key_5_5_1 = {
+    "kty": "EC",
+    "kid": "meriadoc.brandybuck@buckland.example",
+    "use": "enc",
+    "crv": "P-256",
+    "x": "Ze2loSV3wrroKUN_4zhwGhCqo3Xhu1td4QjeQ5wIVR0",
+    "y": "HlLtdXARY_f55A3fnzQbPcm6hgr34Mp8p-nuzQCE0Zw",
+    "d": "r_kHyZ-a06rmxM3yESK84r1otSg-aQcVStkRhA-iCM8"}
+
+JWE_IV_5_5_2 = "yc9N8v5sYyv3iGQT926IUg"
+
+JWE_Protected_Header_no_epk_5_5_4 = {
+    "alg": "ECDH-ES",
+    "kid": "meriadoc.brandybuck@buckland.example",
+    "enc": "A128CBC-HS256"
+}
+
+JWE_Protected_Header_5_5_4 = \
+    "eyJhbGciOiJFQ0RILUVTIiwia2lkIjoibWVyaWFkb2MuYnJhbmR5YnVja0BidW" + \
+    "NrbGFuZC5leGFtcGxlIiwiZXBrIjp7Imt0eSI6IkVDIiwiY3J2IjoiUC0yNTYi" + \
+    "LCJ4IjoibVBVS1RfYkFXR0hJaGcwVHBqanFWc1AxclhXUXVfdndWT0hIdE5rZF" + \
+    "lvQSIsInkiOiI4QlFBc0ltR2VBUzQ2ZnlXdzVNaFlmR1RUMElqQnBGdzJTUzM0" + \
+    "RHY0SXJzIn0sImVuYyI6IkExMjhDQkMtSFMyNTYifQ"
+
+JWE_Ciphertext_5_5_4 = \
+    "BoDlwPnTypYq-ivjmQvAYJLb5Q6l-F3LIgQomlz87yW4OPKbWE1zSTEFjDfhU9" + \
+    "IPIOSA9Bml4m7iDFwA-1ZXvHteLDtw4R1XRGMEsDIqAYtskTTmzmzNa-_q4F_e" + \
+    "vAPUmwlO-ZG45Mnq4uhM1fm_D9rBtWolqZSF3xGNNkpOMQKF1Cl8i8wjzRli7-" + \
+    "IXgyirlKQsbhhqRzkv8IcY6aHl24j03C-AR2le1r7URUhArM79BY8soZU0lzwI" + \
+    "-sD5PZ3l4NDCCei9XkoIAfsXJWmySPoeRb2Ni5UZL4mYpvKDiwmyzGd65KqVw7" + \
+    "MsFfI_K767G9C9Azp73gKZD0DyUn1mn0WW5LmyX_yJ-3AROq8p1WZBfG-ZyJ61" + \
+    "95_JGG2m9Csg"
+
+JWE_Authentication_Tag_5_5_4 = "WCCkNa-x4BeB9hIDIfFuhg"
+
+JWE_compact_5_5_5 = \
+    "%s..%s.%s.%s" % (JWE_Protected_Header_5_5_4,
+                      JWE_IV_5_5_2,
+                      JWE_Ciphertext_5_5_4,
+                      JWE_Authentication_Tag_5_5_4)
+
+JWE_general_5_5_5 = {
+    "protected": JWE_Protected_Header_5_5_4,
+    "iv": JWE_IV_5_5_2,
+    "ciphertext": JWE_Ciphertext_5_5_4,
+    "tag": JWE_Authentication_Tag_5_5_4}
 
 # 5.6
 AES_key_5_6_1 = {
@@ -1051,11 +1155,33 @@ class Cookbook08JWETests(unittest.TestCase):
         e.deserialize(json_encode(JWE_flattened_5_3_5), password)
         self.assertEqual(e.payload, plaintext)
 
-# 5.4 - ECDH-ES key agreement not implemented yet
-#     def test_5_4_encryption(self):
+    def test_5_4_encryption(self):
+        plaintext = Payload_plaintext_5
+        protected = json_encode(JWE_Protected_Header_no_epk_5_4_4)
+        ec_key = jwk.JWK(**EC_key_5_4_1)
+        e = jwe.JWE(plaintext, protected)
+        e.add_recipient(ec_key)
+        enc = e.serialize(compact=True)
+        e.deserialize(enc, ec_key)
+        self.assertEqual(e.payload, plaintext)
+        e.deserialize(JWE_compact_5_4_5, ec_key)
+        self.assertEqual(e.payload, plaintext)
+        e.deserialize(json_encode(JWE_general_5_4_5), ec_key)
+        self.assertEqual(e.payload, plaintext)
 
-# 5.5 - ECDH-ES key agreement not implemented yet
-#     def test_5_5_encryption(self):
+    def test_5_5_encryption(self):
+        plaintext = Payload_plaintext_5
+        protected = json_encode(JWE_Protected_Header_no_epk_5_5_4)
+        ec_key = jwk.JWK(**EC_key_5_5_1)
+        e = jwe.JWE(plaintext, protected)
+        e.add_recipient(ec_key)
+        enc = e.serialize(compact=True)
+        e.deserialize(enc, ec_key)
+        self.assertEqual(e.payload, plaintext)
+        e.deserialize(JWE_compact_5_5_5, ec_key)
+        self.assertEqual(e.payload, plaintext)
+        e.deserialize(json_encode(JWE_general_5_5_5), ec_key)
+        self.assertEqual(e.payload, plaintext)
 
     def test_5_6_encryption(self):
         plaintext = Payload_plaintext_5

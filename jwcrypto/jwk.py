@@ -410,6 +410,13 @@ class JWK(object):
         """
         return self._params.get('kid', None)
 
+    @property
+    def key_curve(self):
+        """The Curve Name."""
+        if self._params['kty'] != 'EC':
+            raise InvalidJWKType('Not an EC key')
+        return self._key['crv']
+
     def get_curve(self, arg):
         """Gets the Elliptic Curve associated with the key.
 
