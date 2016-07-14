@@ -161,7 +161,7 @@ class _RSA(_RawKeyMgmt):
         self._check_key(key)
         if not cek:
             cek = os.urandom(keylen)
-        rk = key.get_op_key('encrypt')
+        rk = key.get_op_key('wrapKey')
         ek = rk.encrypt(cek, self.padfn)
         return {'cek': cek, 'ek': ek}
 
