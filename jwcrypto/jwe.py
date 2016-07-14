@@ -151,13 +151,13 @@ class _RSA(_RawKeyMgmt):
     def __init__(self, padfn):
         self.padfn = padfn
 
-    def check_key(self, key):
+    def _check_key(self, key):
         if key.key_type != 'RSA':
             raise InvalidJWEKeyType('RSA', key.key_type)
 
     # FIXME: get key size and insure > 2048 bits
     def wrap(self, key, keylen, cek):
-        self.check_key(key)
+        self._check_key(key)
         if not cek:
             cek = os.urandom(keylen)
         rk = key.get_op_key('encrypt')
@@ -165,7 +165,7 @@ class _RSA(_RawKeyMgmt):
         return (cek, ek)
 
     def unwrap(self, key, ek):
-        self.check_key(key)
+        self._check_key(key)
         rk = key.get_op_key('decrypt')
         cek = rk.decrypt(ek, self.padfn)
         return cek
@@ -177,7 +177,7 @@ class _AesKw(_RawKeyMgmt):
         self.backend = default_backend()
         self.keysize = keysize // 8
 
-    def get_key(self, key, op):
+    def _get_key(self, key, op):
         if key.key_type != 'oct':
             raise InvalidJWEKeyType('oct', key.key_type)
         rk = base64url_decode(key.get_op_key(op))
@@ -186,7 +186,7 @@ class _AesKw(_RawKeyMgmt):
         return rk
 
     def wrap(self, key, keylen, cek):
-        rk = self.get_key(key, 'encrypt')
+        rk = self._get_key(key, 'encrypt')
         if not cek:
             cek = os.urandom(keylen)
 
@@ -209,7 +209,7 @@ class _AesKw(_RawKeyMgmt):
         return (cek, ek)
 
     def unwrap(self, key, ek):
-        rk = self.get_key(key, 'decrypt')
+        rk = self._get_key(key, 'decrypt')
 
         # Implement RFC 3394 Key Unwrap - 2.2.3
         # TODO: Use cryptography once issue #1733 is resolved
@@ -238,12 +238,12 @@ class _AesKw(_RawKeyMgmt):
 
 class _Direct(_RawKeyMgmt):
 
-    def check_key(self, key):
+    def _check_key(self, key):
         if key.key_type != 'oct':
             raise InvalidJWEKeyType('oct', key.key_type)
 
     def wrap(self, key, keylen, cek):
-        self.check_key(key)
+        self._check_key(key)
         if cek:
             return (cek, None)
         k = base64url_decode(key.get_op_key('encrypt'))
@@ -252,7 +252,7 @@ class _Direct(_RawKeyMgmt):
         return (k, '')
 
     def unwrap(self, key, ek):
-        self.check_key(key)
+        self._check_key(key)
         if ek != b'':
             raise InvalidJWEData('Invalid Encryption Key.')
         return base64url_decode(key.get_op_key('decrypt'))
