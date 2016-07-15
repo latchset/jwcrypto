@@ -35,7 +35,9 @@ PublicKeys = {"keys": [
                     "nqDKgw",
                "e": "AQAB",
                "alg": "RS256",
-               "kid": "2011-04-29"}]}
+               "kid": "2011-04-29"}],
+              "thumbprints": ["cn-I_WNMClehiVp51i_0VpOENW1upEerA8sEam5hn-s",
+                              "NzbLsXh8uDCcd-6MNwXF4W_7noWXFZAfHkxZsRGC9Xs"]}
 
 # RFC 7517 - A.2
 PrivateKeys = {"keys": [
@@ -255,6 +257,13 @@ class TestJWK(unittest.TestCase):
         # test class method import too
         ks3 = jwk.JWKSet.from_json(ks.export())
         self.assertEqual(len(ks), len(ks3))
+
+    def test_thumbprint(self):
+        for i in range(0, len(PublicKeys['keys'])):
+            k = jwk.JWK(**PublicKeys['keys'][i])
+            self.assertEqual(
+                k.thumbprint(),
+                PublicKeys['thumbprints'][i])
 
 
 # RFC 7515 - A.1

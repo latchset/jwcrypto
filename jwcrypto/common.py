@@ -31,7 +31,7 @@ def base64url_decode(payload):
 def json_encode(string):
     if isinstance(string, bytes):
         string = string.decode('utf-8')
-    return json.dumps(string, separators=(',', ':'))
+    return json.dumps(string, separators=(',', ':'), sort_keys=True)
 
 
 def json_decode(string):

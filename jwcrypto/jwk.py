@@ -5,6 +5,7 @@ import os
 from binascii import hexlify, unhexlify
 
 from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.hazmat.primitives.asymmetric import rsa
 
@@ -553,6 +554,20 @@ class JWK(object):
         obj = cls()
         obj.import_from_pyca(key)
         return obj
+
+    def thumbprint(self, hashalg=hashes.SHA256()):
+        """Returns the key thumbprint as specified by RFC 7638.
+
+        :param hashalg: A hash function (defaults to SHA256)
+        """
+
+        t = {'kty': self._params['kty']}
+        for name, val in iteritems(JWKValuesRegistry[t['kty']]):
+            if val[2] == 'Required':
+                t[name] = self._key[name]
+        digest = hashes.Hash(hashalg, backend=default_backend())
+        digest.update(bytes(json_encode(t).encode('utf8')))
+        return base64url_encode(digest.finalize())
 
 
 class _JWKkeys(set):
