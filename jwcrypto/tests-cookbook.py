@@ -1140,17 +1140,17 @@ class Cookbook08JWETests(unittest.TestCase):
 
     def test_5_3_encryption(self):
         plaintext = Payload_plaintext_5_3_1
-        password = jwk.JWK(kty="oct", use="enc",
-                           k=base64url_encode(Password_5_3_1.decode('utf8')))
+        password = Password_5_3_1
+        unicodepwd = Password_5_3_1.decode('utf8')
         e = jwe.JWE(plaintext, json_encode(JWE_Protected_Header_no_p2x))
         e.add_recipient(password)
         e.serialize(compact=True)
         enc = e.serialize()
-        e.deserialize(enc, password)
+        e.deserialize(enc, unicodepwd)
         self.assertEqual(e.payload, plaintext)
         e.deserialize(JWE_compact_5_3_5, password)
         self.assertEqual(e.payload, plaintext)
-        e.deserialize(json_encode(JWE_general_5_3_5), password)
+        e.deserialize(json_encode(JWE_general_5_3_5), unicodepwd)
         self.assertEqual(e.payload, plaintext)
         e.deserialize(json_encode(JWE_flattened_5_3_5), password)
         self.assertEqual(e.payload, plaintext)

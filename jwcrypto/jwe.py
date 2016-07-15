@@ -156,6 +156,8 @@ class _RSA(_RawKeyMgmt):
         self.padfn = padfn
 
     def _check_key(self, key):
+        if not isinstance(key, JWK):
+            raise ValueError('key is not a JWK object')
         if key.key_type != 'RSA':
             raise InvalidJWEKeyType('RSA', key.key_type)
 
@@ -215,6 +217,8 @@ class _AesKw(_RawKeyMgmt):
         self.keysize = keysize // 8
 
     def _get_key(self, key, op):
+        if not isinstance(key, JWK):
+            raise ValueError('key is not a JWK object')
         if key.key_type != 'oct':
             raise InvalidJWEKeyType('oct', key.key_type)
         rk = base64url_decode(key.get_op_key(op))
@@ -309,6 +313,8 @@ class _AesGcmKw(_RawKeyMgmt):
         self.keysize = keysize // 8
 
     def _get_key(self, key, op):
+        if not isinstance(key, JWK):
+            raise ValueError('key is not a JWK object')
         if key.key_type != 'oct':
             raise InvalidJWEKeyType('oct', key.key_type)
         rk = base64url_decode(key.get_op_key(op))
@@ -390,9 +396,10 @@ class _Pbes2HsAesKw(_RawKeyMgmt):
         self.keysize = keysize // 8
 
     def _get_key(self, alg, key, p2s, p2c):
-        if key.key_type != 'oct':
-            raise InvalidJWEKeyType('oct', key.key_type)
-        plain = base64url_decode(key.get_op_key('encrypt'))
+        if isinstance(key, bytes):
+            plain = key
+        else:
+            plain = key.encode('utf8')
         salt = bytes(self.name.encode('utf8')) + b'\x00' + p2s
 
         if self.hashsize == 256:
@@ -468,6 +475,8 @@ class _Direct(_RawKeyMgmt):
         return 'dir'
 
     def _check_key(self, key):
+        if not isinstance(key, JWK):
+            raise ValueError('key is not a JWK object')
         if key.key_type != 'oct':
             raise InvalidJWEKeyType('oct', key.key_type)
 
@@ -501,6 +510,8 @@ class _EcdhEs(_RawKeyMgmt):
         self.keydatalen = keydatalen
 
     def _check_key(self, key):
+        if not isinstance(key, JWK):
+            raise ValueError('key is not a JWK object')
         if key.key_type != 'EC':
             raise InvalidJWEKeyType('EC', key.key_type)
 
@@ -943,12 +954,11 @@ class JWE(object):
     def add_recipient(self, key, header=None):
         """Encrypt the plaintext with the given key.
 
-        :param key: A JWK key of appropriate type for the 'alg' provided
-         in the JOSE Headers.
+        :param key: A JWK key or password of appropriate type for the 'alg'
+         provided in the JOSE Headers.
         :param header: A JSON string representing the per-recipient header.
 
         :raises ValueError: if the plaintext is missing or not of type bytes.
-        :raises ValueError: if the key is not a JWK object.
         :raises ValueError: if the compression type is unknown.
         :raises InvalidJWAAlgorithm: if the 'alg' provided in the JOSE
          headers is missing or unknown, or otherwise not implemented.
@@ -957,8 +967,6 @@ class JWE(object):
             raise ValueError('Missing plaintext')
         if not isinstance(self.plaintext, bytes):
             raise ValueError("Plaintext must be 'bytes'")
-        if not isinstance(key, JWK):
-            raise ValueError('key is not a JWK object')
 
         jh = self._get_jose_header(header)
         alg, enc = self._get_alg_enc_from_headers(jh)
@@ -1115,14 +1123,14 @@ class JWE(object):
         """Decrypt a JWE token.
 
         :param key: The (:class:`jwcrypto.jwk.JWK`) decryption key.
+        :param key: A (:class:`jwcrypto.jwk.JWK`) decryption key or a password
+         string (optional).
 
         :raises InvalidJWEOperation: if the key is not a JWK object.
         :raises InvalidJWEData: if the ciphertext can't be decrypted or
          the object is otherwise malformed.
         """
 
-        if not isinstance(key, JWK):
-            raise ValueError('key is not a JWK object')
         if 'ciphertext' not in self.objects:
             raise InvalidJWEOperation("No available ciphertext")
         self.decryptlog = list()
@@ -1151,7 +1159,8 @@ class JWE(object):
 
         :param raw_jwe: a 'raw' JWE token (JSON Encoded or Compact
          notation) string.
-        :param key: A (:class:`jwcrypto.jwk.JWK`) decryption key (optional).
+        :param key: A (:class:`jwcrypto.jwk.JWK`) decryption key or a password
+         string (optional).
          If a key is provided a decryption step will be attempted after
          the object is successfully deserialized.
 
