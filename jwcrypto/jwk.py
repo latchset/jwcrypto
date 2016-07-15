@@ -23,19 +23,21 @@ JWKTypesRegistry = {'EC': 'Elliptic Curve',
 # RFC 7518 - 7.5
 # It is part of the JWK Parameters Registry, but we want a more
 # specific map for internal usage
-JWKValuesRegistry = {'EC': {'crv': ('Curve', 'Public'),
-                            'x': ('X Coordinate', 'Public'),
-                            'y': ('Y Coordinate', 'Public'),
-                            'd': ('ECC Private Key', 'Private')},
-                     'RSA': {'n': ('Modulus', 'Public'),
-                             'e': ('Exponent', 'Public'),
-                             'd': ('Private Exponent', 'Private'),
-                             'p': ('First Prime Factor', 'Private'),
-                             'q': ('Second Prime Factor', 'Private'),
-                             'dp': ('First Factor CRT Exponent', 'Private'),
-                             'dq': ('Second Factor CRT Exponent', 'Private'),
-                             'qi': ('First CRT Coefficient', 'Private')},
-                     'oct': {'k': ('Key Value', 'Private')}}
+JWKValuesRegistry = {'EC': {'crv': ('Curve', 'Public', 'Required'),
+                            'x': ('X Coordinate', 'Public', 'Required'),
+                            'y': ('Y Coordinate', 'Public', 'Required'),
+                            'd': ('ECC Private Key', 'Private', None)},
+                     'RSA': {'n': ('Modulus', 'Public', 'Required'),
+                             'e': ('Exponent', 'Public', 'Required'),
+                             'd': ('Private Exponent', 'Private', None),
+                             'p': ('First Prime Factor', 'Private', None),
+                             'q': ('Second Prime Factor', 'Private', None),
+                             'dp': ('First Factor CRT Exponent', 'Private',
+                                    None),
+                             'dq': ('Second Factor CRT Exponent', 'Private',
+                                    None),
+                             'qi': ('First CRT Coefficient', 'Private', None)},
+                     'oct': {'k': ('Key Value', 'Private', 'Required')}}
 """Registry of valid key values"""
 
 JWKParamsRegistry = {'kty': ('Key Type', 'Public', ),
@@ -330,6 +332,10 @@ class JWK(object):
                 self._key[name] = kwargs[name]
                 while name in names:
                     names.remove(name)
+
+        for name, val in iteritems(JWKValuesRegistry[kty]):
+            if val[2] == 'Required' and name not in self._key:
+                raise InvalidJWKValue('Missing required value %s' % name)
 
         # Unknown key parameters are allowed
         # Let's just store them out of the way
