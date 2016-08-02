@@ -4,8 +4,9 @@ import os
 
 from binascii import hexlify, unhexlify
 
+from cryptography import x509
 from cryptography.hazmat.backends import default_backend
-from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.hazmat.primitives.asymmetric import rsa
 
@@ -559,10 +560,83 @@ class JWK(object):
         else:
             raise InvalidJWKValue('Unknown key object %r' % key)
 
+    def import_from_pem(self, data, password=None):
+        """Imports a key from data loaded from a PEM file.
+        The key may be encrypted with a password.
+        Private keys (PKCS#8 format), public keys, and X509 certificate's
+        public keys can be imported with this interface.
+
+        :param data(bytes): The data contained in a PEM file.
+        :param password(bytes): An optional password to unwrap the key.
+        """
+
+        try:
+            key = serialization.load_pem_private_key(
+                data, password=password, backend=default_backend())
+        except ValueError as e:
+            if password is not None:
+                raise e
+            try:
+                key = serialization.load_pem_public_key(
+                    data, backend=default_backend())
+            except ValueError:
+                try:
+                    cert = x509.load_pem_x509_certificate(
+                        data, backend=default_backend())
+                    key = cert.public_key()
+                except ValueError:
+                    raise e
+
+        self.import_from_pyca(key)
+        self._params['kid'] = self.thumbprint()
+
+    def export_to_pem(self, private_key=False, password=False):
+        """Exports keys to a data buffer suitable to be stored as a PEM file.
+        Either the public or the private key can be exported to a PEM file.
+        For private keys the PKCS#8 format is used. If a password is provided
+        the best encryption method available as determined by the cryptography
+        module is used to wrap the key.
+
+        :param private_key: Whether the private key should be exported.
+         Defaults to `False` which means the public key is exported by default.
+        :param password(bytes): A password for wrapping the private key.
+         Defaults to False which will cause the operation to fail. To avoid
+         encryption the user must explicitly pass None, otherwise the user
+         needs to provide a password in a bytes buffer.
+        """
+        e = serialization.Encoding.PEM
+        if private_key:
+            f = serialization.PrivateFormat.PKCS8
+            if password is None:
+                a = serialization.NoEncryption()
+            elif isinstance(password, bytes):
+                a = serialization.BestAvailableEncryption(password)
+            elif password is False:
+                raise ValueError("The password must be None or a bytes string")
+            else:
+                raise TypeError("The password string must be bytes")
+            return self._get_private_key().private_bytes(
+                encoding=e, format=f, encryption_algorithm=a)
+        else:
+            f = serialization.PublicFormat.SubjectPublicKeyInfo
+            return self._get_public_key().public_bytes(encoding=e, format=f)
+
     @classmethod
     def from_pyca(cls, key):
         obj = cls()
         obj.import_from_pyca(key)
+        return obj
+
+    @classmethod
+    def from_pem(cls, data, password=None):
+        """Creates a key from PKCS#8 formatted data loaded from a PEM file.
+           See the function `import_from_pem` for details.
+
+        :param data(bytes): The data contained in a PEM file.
+        :param password(bytes): An optional password to unwrap the key.
+        """
+        obj = cls()
+        obj.import_from_pem(data, password)
         return obj
 
     def thumbprint(self, hashalg=hashes.SHA256()):
