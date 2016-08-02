@@ -85,3 +85,7 @@ Import a P-256 Public Key::
                   "crv":"P-256","kty":"EC"}
     >>> key = jwk.JWK(**expkey)
 
+Import a Key from a PEM file::
+    >>> with open("public.pem", "rb") as pemfile:
+    >>>     key = jwk.JWK.from_pem(pemfile.read())
+
