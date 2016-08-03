@@ -1012,7 +1012,7 @@ class JWE(object):
          representation, otherwise generates a standard JSON format.
 
         :raises InvalidJWEOperation: if the object cannot serialized
-         with the compact representation and `compat` is True.
+         with the compact representation and `compact` is True.
         :raises InvalidJWEOperation: if no recipients have been added
          to the object.
         """
