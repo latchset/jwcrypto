@@ -348,6 +348,35 @@ class TestJWK(unittest.TestCase):
         pubc = jwk.JWK.from_pem(PublicCert)
         self.assertEqual(pubc.key_id, PublicCertThumbprint)
 
+    def test_export_symmetric(self):
+        key = jwk.JWK(**SymmetricKeys['keys'][0])
+        self.assertTrue(key.is_symmetric)
+        self.assertFalse(key.has_public)
+        self.assertFalse(key.has_private)
+        self.assertEqual(json_encode(SymmetricKeys['keys'][0]),
+                         key.export_symmetric())
+
+    def test_export_public(self):
+        key = jwk.JWK.from_pem(PublicCert)
+        self.assertFalse(key.is_symmetric)
+        self.assertTrue(key.has_public)
+        self.assertFalse(key.has_private)
+        pubc = key.export_public()
+        self.assertEqual(json_decode(pubc)["kid"], PublicCertThumbprint)
+
+    def test_export_private(self):
+        key = jwk.JWK.from_pem(RSAPrivatePEM, password=RSAPrivatePassword)
+        self.assertFalse(key.is_symmetric)
+        self.assertTrue(key.has_public)
+        self.assertTrue(key.has_private)
+        pri = key.export_private()
+        prikey = jwk.JWK(**json_decode(pri))
+        self.assertTrue(prikey.has_private)
+        pub = key.export_public()
+        pubkey = jwk.JWK(**json_decode(pub))
+        self.assertFalse(pubkey.has_private)
+        self.assertEqual(prikey.key_id, pubkey.key_id)
+
 
 # RFC 7515 - A.1
 A1_protected = \
