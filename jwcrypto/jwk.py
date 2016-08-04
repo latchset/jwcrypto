@@ -387,23 +387,26 @@ class JWK(object):
 
     def export(self, private_key=True):
         """Exports the key in the standard JSON format.
+        Exports the key regardless of type, if private_key is False
+        and the key is_symmetric an exceptionis raised.
 
         :param private_key(bool): Whether to export the private key.
                                   Defaults to True.
         """
-        if private_key is not True:
+        if private_key is True:
+            # Use _export_all for backwards compatibility, as this
+            # function allows to export symmetrict keys too
+            return self._export_all()
+        else:
             return self.export_public()
-        d = dict()
-        d.update(self._params)
-        d.update(self._key)
-        d.update(self._unknown)
-        return json_encode(d)
 
     def export_public(self):
         """Exports the public key in the standard JSON format.
-           This function is deprecated and maintained only for
-           backwards compatibility, use export(private_key=False)
-           instead."""
+        It fails if one is not available like when this function
+        is called on a symmetric key.
+        """
+        if not self.has_public:
+            raise InvalidJWKType("No public key available")
         pub = {}
         preg = JWKParamsRegistry
         for name in preg:
@@ -415,6 +418,52 @@ class JWK(object):
             if reg[param][1] == 'Public':
                 pub[param] = self._key[param]
         return json_encode(pub)
+
+    def _export_all(self):
+        d = dict()
+        d.update(self._params)
+        d.update(self._key)
+        d.update(self._unknown)
+        return json_encode(d)
+
+    def export_private(self):
+        """Export the private key in the standard JSON format.
+        It fails for a JWK that has only a public key or is symmetric.
+        """
+        if self.has_private:
+            return self._export_all()
+        raise InvalidJWKType("No private key available")
+
+    def export_symmetric(self):
+        if self.is_symmetric:
+            return self._export_all()
+        raise InvalidJWKType("Not a symmetric key")
+
+    @property
+    def has_public(self):
+        """Whether this JWK has an asymmetric Public key."""
+        if self.is_symmetric:
+            return False
+        reg = JWKValuesRegistry[self._params['kty']]
+        for value in reg:
+            if reg[value][1] == 'Public' and value in self._key:
+                return True
+
+    @property
+    def has_private(self):
+        """Whether this JWK has an asymmetric key Private key."""
+        if self.is_symmetric:
+            return False
+        reg = JWKValuesRegistry[self._params['kty']]
+        for value in reg:
+            if reg[value][1] == 'Private' and value in self._key:
+                return True
+        return False
+
+    @property
+    def is_symmetric(self):
+        """Whether this JWK is a symmetric key."""
+        return self.key_type == 'oct'
 
     @property
     def key_type(self):
@@ -606,6 +655,8 @@ class JWK(object):
         """
         e = serialization.Encoding.PEM
         if private_key:
+            if not self.has_private:
+                raise InvalidJWKType("No private key available")
             f = serialization.PrivateFormat.PKCS8
             if password is None:
                 a = serialization.NoEncryption()
@@ -618,6 +669,8 @@ class JWK(object):
             return self._get_private_key().private_bytes(
                 encoding=e, format=f, encryption_algorithm=a)
         else:
+            if not self.has_public:
+                raise InvalidJWKType("No public key available")
             f = serialization.PublicFormat.SubjectPublicKeyInfo
             return self._get_public_key().public_bytes(encoding=e, format=f)
 
