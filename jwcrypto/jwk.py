@@ -217,8 +217,7 @@ class JWK(object):
         gen(kwargs)
         return obj
 
-    def generate_key(self, **kwargs):
-        params = kwargs.copy()
+    def generate_key(self, **params):
         try:
             kty = params['generate']
             del params['generate']
@@ -252,26 +251,30 @@ class JWK(object):
             size = params['size']
             del params['size']
         key = rsa.generate_private_key(pubexp, size, default_backend())
-        self._import_pyca_pri_rsa(key)
+        self._import_pyca_pri_rsa(key, **params)
 
-    def _import_pyca_pri_rsa(self, key):
+    def _import_pyca_pri_rsa(self, key, **params):
         pn = key.private_numbers()
-        params = {'kty': 'RSA'}
-        params['n'] = self._encode_int(pn.public_numbers.n)
-        params['e'] = self._encode_int(pn.public_numbers.e)
-        params['d'] = self._encode_int(pn.d)
-        params['p'] = self._encode_int(pn.p)
-        params['q'] = self._encode_int(pn.q)
-        params['dp'] = self._encode_int(pn.dmp1)
-        params['dq'] = self._encode_int(pn.dmq1)
-        params['qi'] = self._encode_int(pn.iqmp)
+        params.update(
+            kty='RSA',
+            n=self._encode_int(pn.public_numbers.n),
+            e=self._encode_int(pn.public_numbers.e),
+            d=self._encode_int(pn.d),
+            p=self._encode_int(pn.p),
+            q=self._encode_int(pn.q),
+            dp=self._encode_int(pn.dmp1),
+            dq=self._encode_int(pn.dmq1),
+            qi=self._encode_int(pn.iqmp)
+        )
         self.import_key(**params)
 
-    def _import_pyca_pub_rsa(self, key):
+    def _import_pyca_pub_rsa(self, key, **params):
         pn = key.public_numbers()
-        params = {'kty': 'RSA'}
-        params['n'] = self._encode_int(pn.n)
-        params['e'] = self._encode_int(pn.e)
+        params.update(
+            kty='RSA',
+            n=self._encode_int(pn.n),
+            e=self._encode_int(pn.e)
+        )
         self.import_key(**params)
 
     def _get_curve_by_name(self, name):
@@ -296,23 +299,27 @@ class JWK(object):
             del params['crv']
         curve_name = self._get_curve_by_name(curve)
         key = ec.generate_private_key(curve_name, default_backend())
-        self._import_pyca_pri_ec(key)
+        self._import_pyca_pri_ec(key, **params)
 
-    def _import_pyca_pri_ec(self, key):
+    def _import_pyca_pri_ec(self, key, **params):
         pn = key.private_numbers()
-        params = {'kty': 'EC'}
-        params['crv'] = JWKpycaCurveMap[key.curve.name]
-        params['x'] = self._encode_int(pn.public_numbers.x)
-        params['y'] = self._encode_int(pn.public_numbers.y)
-        params['d'] = self._encode_int(pn.private_value)
+        params.update(
+            kty='EC',
+            crv=JWKpycaCurveMap[key.curve.name],
+            x=self._encode_int(pn.public_numbers.x),
+            y=self._encode_int(pn.public_numbers.y),
+            d=self._encode_int(pn.private_value)
+        )
         self.import_key(**params)
 
-    def _import_pyca_pub_ec(self, key):
+    def _import_pyca_pub_ec(self, key, **params):
         pn = key.public_numbers()
-        params = {'kty': 'EC'}
-        params['crv'] = JWKpycaCurveMap[key.curve.name]
-        params['x'] = self._encode_int(pn.x)
-        params['y'] = self._encode_int(pn.y)
+        params.update(
+            kty='EC',
+            crv=JWKpycaCurveMap[key.curve.name],
+            x=self._encode_int(pn.x),
+            y=self._encode_int(pn.y),
+        )
         self.import_key(**params)
 
     def import_key(self, **kwargs):
