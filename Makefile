@@ -7,7 +7,8 @@ lint:
 
 pep8:
 	# Check style consistency
-	tox -e pep8
+	tox -e pep8py2
+	tox -e pep8py3
 
 clean:
 	rm -fr build dist *.egg-info
@@ -19,7 +20,8 @@ cscope:
 test:
 	rm -f .coverage
 	tox -e py27
-	tox -e py34
+	tox -e py34 --skip-missing-interpreter
+	tox -e py35 --skip-missing-interpreter
 
 DOCS_DIR = docs
 .PHONY: docs
