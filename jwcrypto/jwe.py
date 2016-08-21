@@ -864,10 +864,16 @@ class JWE(object):
         if aad:
             self.objects['aad'] = aad
         if protected:
-            json_decode(protected)  # check header encoding
+            if isinstance(protected, dict):
+                protected = json_encode(protected)
+            else:
+                json_decode(protected)  # check header encoding
             self.objects['protected'] = protected
         if unprotected:
-            json_decode(unprotected)  # check header encoding
+            if isinstance(unprotected, dict):
+                unprotected = json_encode(unprotected)
+            else:
+                json_decode(unprotected)  # check header encoding
             self.objects['unprotected'] = unprotected
         if algs:
             self.allowed_algs = algs
@@ -967,6 +973,9 @@ class JWE(object):
             raise ValueError('Missing plaintext')
         if not isinstance(self.plaintext, bytes):
             raise ValueError("Plaintext must be 'bytes'")
+
+        if isinstance(header, dict):
+            header = json_encode(header)
 
         jh = self._get_jose_header(header)
         alg, enc = self._get_alg_enc_from_headers(jh)

@@ -215,6 +215,8 @@ class JWSCore(object):
         self.key = key
 
         if header is not None:
+            if isinstance(header, dict):
+                header = json_encode(header)
             self.protected = base64url_encode(header.encode('utf-8'))
         else:
             self.protected = ''
@@ -517,12 +519,16 @@ class JWS(object):
 
         p = dict()
         if protected:
+            if isinstance(protected, dict):
+                protected = json_encode(protected)
             p = json_decode(protected)
             # TODO: allow caller to specify list of headers it understands
             if 'crit' in p:
                 self._check_crit(p['crit'])
 
         if header:
+            if isinstance(header, dict):
+                header = json_encode(header)
             h = json_decode(header)
             p = self._merge_headers(p, h)
 

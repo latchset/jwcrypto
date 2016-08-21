@@ -883,3 +883,27 @@ class ConformanceTests(unittest.TestCase):
         check.deserialize(o, jwk.JWK(kty='oct', k=base64url_encode(b'A' * 16)),
                           alg="HS512")
         self.assertTrue(check.objects['valid'])
+
+    def test_jws_headers_as_dicts(self):
+        sign = jws.JWS(payload='message')
+        key = jwk.JWK(kty='oct', k=base64url_encode(b'A' * 16))
+        sign.add_signature(key, protected={'alg': 'HS512'},
+                           header={'kid': key.thumbprint()})
+        o = sign.serialize()
+        check = jws.JWS()
+        check.deserialize(o, key, alg="HS512")
+        self.assertTrue(check.objects['valid'])
+        self.assertEqual(check.jose_header['kid'], key.thumbprint())
+
+    def test_jwe_headers_as_dicts(self):
+        enc = jwe.JWE(plaintext='message',
+                      protected={"alg": "A256KW", "enc": "A256CBC-HS512"})
+        key = jwk.JWK(kty='oct', k=base64url_encode(b'A' * 32))
+        enc.add_recipient(key, {'kid': key.thumbprint()})
+        o = enc.serialize()
+        check = jwe.JWE()
+        check.deserialize(o)
+        check.decrypt(key)
+        self.assertEqual(check.payload, b'message')
+        self.assertEqual(
+            json_decode(check.objects['header'])['kid'], key.thumbprint())
