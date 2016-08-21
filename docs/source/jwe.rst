@@ -47,3 +47,23 @@ Registries
 
 .. autodata:: jwcrypto.jwe.JWEHeaderRegistry
    :annotation:
+
+Examples
+--------
+
+Encrypt a JWE token::
+    >>> from jwcrypto import jwk, jwe
+    >>> from jwcrypto.common import json_encode
+    >>> key = jwk.JWK.generate(kty='oct', size=256)
+    >>> payload = "My Encrypted message"
+    >>> jwetoken = jwe.JWE(payload.encode('utf-8'),
+                           json_encode({"alg": "A256KW",
+                                        "enc": "A256CBC-HS512"}))
+    >>> jwetoken.add_recipient(key)
+    >>> enc = jwetoken.serialize()
+
+Decrypt a JWE token::
+    >>> jwetoken = jwe.JWE()
+    >>> jwetoken.deserialize(enc)
+    >>> jwetoken.decrypt(key)
+    >>> payload = jwetoken.payload
