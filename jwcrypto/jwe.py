@@ -842,7 +842,7 @@ class JWE(object):
     }
 
     def __init__(self, plaintext=None, protected=None, unprotected=None,
-                 aad=None, algs=None):
+                 aad=None, algs=None, recipient=None, header=None):
         """Creates a JWE token.
 
         :param plaintext(bytes): An arbitrary plaintext to be encrypted.
@@ -850,6 +850,8 @@ class JWE(object):
         :param unprotected: A JSON string with the shared unprotected header.
         :param aad(bytes): Arbitrary additional authenticated data
         :param algs: An optional list of allowed algorithms
+        :param recipient: An optional, default recipient key
+        :param header: An optional header for the default recipient
         """
         self._allowed_algs = None
         self.objects = dict()
@@ -871,6 +873,11 @@ class JWE(object):
             self.objects['unprotected'] = unprotected
         if algs:
             self.allowed_algs = algs
+
+        if recipient:
+            self.add_recipient(recipient, header=header)
+        elif header:
+            raise ValueError('Header is allowed only with default recipient')
 
     def _jwa(self, name):
         try:
