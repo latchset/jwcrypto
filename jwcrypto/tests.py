@@ -883,3 +883,12 @@ class ConformanceTests(unittest.TestCase):
         check.deserialize(o, jwk.JWK(kty='oct', k=base64url_encode(b'A' * 16)),
                           alg="HS512")
         self.assertTrue(check.objects['valid'])
+
+    def test_jwe_default_recipient(self):
+        key = jwk.JWK(kty='oct', k=base64url_encode(b'A' * (128 // 8)))
+        enc = jwe.JWE(plaintext='plain',
+                      protected='{"alg":"A128KW","enc":"A128GCM"}',
+                      recipient=key).serialize()
+        check = jwe.JWE()
+        check.deserialize(enc, key)
+        self.assertEqual(b'plain', check.payload)
