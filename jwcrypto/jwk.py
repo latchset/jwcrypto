@@ -227,11 +227,22 @@ class JWK(object):
 
         gen(params)
 
-    def _generate_oct(self, params):
-        size = 128
+    def _get_gen_size(self, params, default_size=None):
+        size = default_size
         if 'size' in params:
             size = params['size']
             del params['size']
+        elif 'alg' in params:
+            try:
+                from jwcrypto.jwa import JWA
+                alg = JWA.instantiate_alg(params['alg'])
+            except KeyError:
+                raise ValueError("Invalid 'alg' parameter")
+            size = alg.min_key_size
+        return size
+
+    def _generate_oct(self, params):
+        size = self._get_gen_size(params, 128)
         key = os.urandom(size // 8)
         params['kty'] = 'oct'
         params['k'] = base64url_encode(key)
@@ -243,13 +254,10 @@ class JWK(object):
 
     def _generate_RSA(self, params):
         pubexp = 65537
-        size = 2048
+        size = self._get_gen_size(params, 2048)
         if 'public_exponent' in params:
             pubexp = params['public_exponent']
             del params['public_exponent']
-        if 'size' in params:
-            size = params['size']
-            del params['size']
         key = rsa.generate_private_key(pubexp, size, default_backend())
         self._import_pyca_pri_rsa(key, **params)
 

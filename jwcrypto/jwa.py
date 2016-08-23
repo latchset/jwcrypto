@@ -1105,12 +1105,16 @@ class JWA(object):
     }
 
     @classmethod
+    def instantiate_alg(cls, name, use=None):
+        alg = cls.algorithms_registry[name]
+        if use is not None and alg.algorithm_use != use:
+            raise KeyError
+        return alg()
+
+    @classmethod
     def signing_alg(cls, name):
         try:
-            obj = cls.algorithms_registry[name]()
-            if obj.algorithm_use != 'sig':
-                raise KeyError()
-            return obj
+            return cls.instantiate_alg(name, use='sig')
         except KeyError:
             raise InvalidJWAAlgorithm(
                 '%s is not a valid Signign algorithm name' % name)
@@ -1118,10 +1122,7 @@ class JWA(object):
     @classmethod
     def keymgmt_alg(cls, name):
         try:
-            obj = cls.algorithms_registry[name]()
-            if obj.algorithm_use != 'kex':
-                raise KeyError()
-            return obj
+            return cls.instantiate_alg(name, use='kex')
         except KeyError:
             raise InvalidJWAAlgorithm(
                 '%s is not a valid Key Management algorithm name' % name)
@@ -1129,10 +1130,7 @@ class JWA(object):
     @classmethod
     def encryption_alg(cls, name):
         try:
-            obj = cls.algorithms_registry[name]()
-            if obj.algorithm_use != 'enc':
-                raise KeyError()
-            return obj
+            return cls.instantiate_alg(name, use='enc')
         except KeyError:
             raise InvalidJWAAlgorithm(
                 '%s is not a valid Encryption algorithm name' % name)

@@ -198,8 +198,12 @@ class TestJWK(unittest.TestCase):
         jwk.JWK.generate(kty='oct', size=256)
         jwk.JWK.generate(kty='RSA', size=4096)
         jwk.JWK.generate(kty='EC', curve='P-521')
-        k = jwk.JWK.generate(kty='oct', size=256, kid='MySymmetricKey')
+        k = jwk.JWK.generate(kty='oct', alg='A192KW', kid='MySymmetricKey')
         self.assertEqual(k.key_id, 'MySymmetricKey')
+        self.assertEqual(len(base64url_decode(k.get_op_key('encrypt'))), 24)
+        jwk.JWK.generate(kty='RSA', alg='RS256')
+        k = jwk.JWK.generate(kty='RSA', size=4096, alg='RS256')
+        self.assertEqual(k.get_op_key('encrypt').key_size, 4096)
 
     def test_export_public_keys(self):
         k = jwk.JWK(**RSAPrivateKey)
