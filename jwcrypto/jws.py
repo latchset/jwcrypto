@@ -1,17 +1,8 @@
 # Copyright (C) 2015 JWCrypto Project Contributors - see LICENSE file
 
-from binascii import hexlify, unhexlify
-
-from cryptography.exceptions import InvalidSignature
-from cryptography.hazmat.backends import default_backend
-from cryptography.hazmat.primitives import hashes, hmac
-from cryptography.hazmat.primitives.asymmetric import ec
-from cryptography.hazmat.primitives.asymmetric import padding
-from cryptography.hazmat.primitives.asymmetric import utils as ec_utils
-
-from jwcrypto.common import InvalidJWAAlgorithm
 from jwcrypto.common import base64url_decode, base64url_encode
 from jwcrypto.common import json_decode, json_encode
+from jwcrypto.jwa import JWA
 from jwcrypto.jwk import JWK
 
 
@@ -90,100 +81,6 @@ class InvalidJWSOperation(Exception):
         super(InvalidJWSOperation, self).__init__(msg)
 
 
-class _RawJWS(object):
-
-    def sign(self, key, payload):
-        raise NotImplementedError
-
-    def verify(self, key, payload, signature):
-        raise NotImplementedError
-
-
-class _RawHMAC(_RawJWS):
-
-    def __init__(self, hashfn):
-        self.backend = default_backend()
-        self.hashfn = hashfn
-
-    def _hmac_setup(self, key, payload):
-        h = hmac.HMAC(key, self.hashfn, backend=self.backend)
-        h.update(payload)
-        return h
-
-    def sign(self, key, payload):
-        skey = base64url_decode(key.get_op_key('sign'))
-        h = self._hmac_setup(skey, payload)
-        return h.finalize()
-
-    def verify(self, key, payload, signature):
-        vkey = base64url_decode(key.get_op_key('verify'))
-        h = self._hmac_setup(vkey, payload)
-        try:
-            h.verify(signature)
-        except InvalidSignature as e:
-            raise InvalidJWSSignature(exception=e)
-
-
-class _RawRSA(_RawJWS):
-    def __init__(self, padfn, hashfn):
-        self.padfn = padfn
-        self.hashfn = hashfn
-
-    def sign(self, key, payload):
-        skey = key.get_op_key('sign')
-        signer = skey.signer(self.padfn, self.hashfn)
-        signer.update(payload)
-        return signer.finalize()
-
-    def verify(self, key, payload, signature):
-        pkey = key.get_op_key('verify')
-        verifier = pkey.verifier(signature, self.padfn, self.hashfn)
-        verifier.update(payload)
-        verifier.verify()
-
-
-class _RawEC(_RawJWS):
-    def __init__(self, curve, hashfn):
-        self.curve = curve
-        self.hashfn = hashfn
-
-    def encode_int(self, n, l):
-        e = hex(n).rstrip("L").lstrip("0x")
-        ilen = (l + 7) // 8  # number of bytes rounded up
-        e = '0' * (ilen * 2 - len(e)) + e  # pad as necessary
-        return unhexlify(e)
-
-    def sign(self, key, payload):
-        skey = key.get_op_key('sign', self.curve)
-        signer = skey.signer(ec.ECDSA(self.hashfn))
-        signer.update(payload)
-        signature = signer.finalize()
-        r, s = ec_utils.decode_rfc6979_signature(signature)
-        l = key.get_curve(self.curve).key_size
-        return self.encode_int(r, l) + self.encode_int(s, l)
-
-    def verify(self, key, payload, signature):
-        pkey = key.get_op_key('verify', self.curve)
-        r = signature[:len(signature) // 2]
-        s = signature[len(signature) // 2:]
-        enc_signature = ec_utils.encode_rfc6979_signature(
-            int(hexlify(r), 16), int(hexlify(s), 16))
-        verifier = pkey.verifier(enc_signature, ec.ECDSA(self.hashfn))
-        verifier.update(payload)
-        verifier.verify()
-
-
-class _RawNone(_RawJWS):
-
-    def sign(self, key, payload):
-        return ''
-
-    def verify(self, key, payload, signature):
-        if signature != b'':
-            raise InvalidJWSSignature('The "none" signature must be the '
-                                      'empty string')
-
-
 class JWSCore(object):
     """The inner JWS Core object.
 
@@ -222,62 +119,12 @@ class JWSCore(object):
             self.protected = ''
         self.payload = base64url_encode(payload)
 
-    def _jwa_HS256(self):
-        return _RawHMAC(hashes.SHA256())
-
-    def _jwa_HS384(self):
-        return _RawHMAC(hashes.SHA384())
-
-    def _jwa_HS512(self):
-        return _RawHMAC(hashes.SHA512())
-
-    def _jwa_RS256(self):
-        return _RawRSA(padding.PKCS1v15(), hashes.SHA256())
-
-    def _jwa_RS384(self):
-        return _RawRSA(padding.PKCS1v15(), hashes.SHA384())
-
-    def _jwa_RS512(self):
-        return _RawRSA(padding.PKCS1v15(), hashes.SHA512())
-
-    def _jwa_ES256(self):
-        return _RawEC('P-256', hashes.SHA256())
-
-    def _jwa_ES384(self):
-        return _RawEC('P-384', hashes.SHA384())
-
-    def _jwa_ES512(self):
-        return _RawEC('P-521', hashes.SHA512())
-
-    def _jwa_PS256(self):
-        return _RawRSA(padding.PSS(padding.MGF1(hashes.SHA256()),
-                                   hashes.SHA256.digest_size),
-                       hashes.SHA256())
-
-    def _jwa_PS384(self):
-        return _RawRSA(padding.PSS(padding.MGF1(hashes.SHA384()),
-                                   hashes.SHA384.digest_size),
-                       hashes.SHA384())
-
-    def _jwa_PS512(self):
-        return _RawRSA(padding.PSS(padding.MGF1(hashes.SHA512()),
-                                   hashes.SHA512.digest_size),
-                       hashes.SHA512())
-
-    def _jwa_none(self):
-        return _RawNone()
-
     def _jwa(self, name, allowed):
         if allowed is None:
             allowed = default_allowed_algs
-        attr = '_jwa_%s' % name
-        try:
-            fn = getattr(self, attr)
-        except (KeyError, AttributeError):
-            raise InvalidJWAAlgorithm()
         if name not in allowed:
             raise InvalidJWSOperation('Algorithm not allowed')
-        return fn()
+        return JWA.signing_alg(name)
 
     def sign(self):
         """Generates a signature"""
