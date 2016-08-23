@@ -503,7 +503,8 @@ class TestJWS(unittest.TestCase):
                           self.check_sign, A5_example)
         a5_bis = {'allowed_algs': ['none']}
         a5_bis.update(A5_example)
-        self.check_sign(a5_bis)
+        with self.assertRaises(jws.InvalidJWSSignature):
+            self.check_sign(a5_bis)
 
     def test_A6(self):
         s = jws.JWS(A6_example['payload'])

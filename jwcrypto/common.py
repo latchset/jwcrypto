@@ -42,7 +42,7 @@ def json_decode(string):
 
 class InvalidJWAAlgorithm(Exception):
     def __init__(self, message=None):
-        msg = 'Invalid JWS Algorithm name'
+        msg = 'Invalid JWA Algorithm name'
         if message:
             msg += ' (%s)' % message
         super(InvalidJWAAlgorithm, self).__init__(msg)
