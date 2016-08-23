@@ -46,3 +46,57 @@ class InvalidJWAAlgorithm(Exception):
         if message:
             msg += ' (%s)' % message
         super(InvalidJWAAlgorithm, self).__init__(msg)
+
+
+class InvalidCEKeyLength(Exception):
+    """Invalid CEK Key Length.
+
+    This exception is raised when a Content Encryption Key does not match
+    the required lenght.
+    """
+
+    def __init__(self, expected, obtained):
+        msg = 'Expected key of length %d, got %d' % (expected, obtained)
+        super(InvalidCEKeyLength, self).__init__(msg)
+
+
+class InvalidJWEOperation(Exception):
+    """Invalid JWS Object.
+
+    This exception is raised when a requested operation cannot
+    be execute due to unsatisfied conditions.
+    """
+
+    def __init__(self, message=None, exception=None):
+        msg = None
+        if message:
+            msg = message
+        else:
+            msg = 'Unknown Operation Failure'
+        if exception:
+            msg += ' {%s}' % repr(exception)
+        super(InvalidJWEOperation, self).__init__(msg)
+
+
+class InvalidJWEKeyType(Exception):
+    """Invalid JWE Key Type.
+
+    This exception is raised when the provided JWK Key does not match
+    the type required by the sepcified algorithm.
+    """
+
+    def __init__(self, expected, obtained):
+        msg = 'Expected key type %s, got %s' % (expected, obtained)
+        super(InvalidJWEKeyType, self).__init__(msg)
+
+
+class InvalidJWEKeyLength(Exception):
+    """Invalid JWE Key Length.
+
+    This exception is raised when the provided JWK Key does not match
+    the lenght required by the sepcified algorithm.
+    """
+
+    def __init__(self, expected, obtained):
+        msg = 'Expected key of lenght %d, got %d' % (expected, obtained)
+        super(InvalidJWEKeyLength, self).__init__(msg)
