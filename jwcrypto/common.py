@@ -56,7 +56,7 @@ class InvalidCEKeyLength(Exception):
     """
 
     def __init__(self, expected, obtained):
-        msg = 'Expected key of length %d, got %d' % (expected, obtained)
+        msg = 'Expected key of length %d bits, got %d' % (expected, obtained)
         super(InvalidCEKeyLength, self).__init__(msg)
 
 

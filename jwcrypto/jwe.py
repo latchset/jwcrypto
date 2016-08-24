@@ -223,7 +223,7 @@ class JWE(object):
         if header:
             rec['header'] = header
 
-        wrapped = alg.wrap(key, enc.key_size, self.cek, jh)
+        wrapped = alg.wrap(key, enc.wrap_key_size, self.cek, jh)
         self.cek = wrapped['cek']
 
         if 'ek' in wrapped:
@@ -350,7 +350,8 @@ class JWE(object):
         if 'aad' in self.objects:
             aad += '.' + base64url_encode(self.objects['aad'])
 
-        cek = alg.unwrap(key, enc.key_size, ppe.get('encrypted_key', b''), jh)
+        cek = alg.unwrap(key, enc.wrap_key_size,
+                         ppe.get('encrypted_key', b''), jh)
         data = enc.decrypt(cek, aad.encode('utf-8'),
                            self.objects['iv'],
                            self.objects['ciphertext'],
