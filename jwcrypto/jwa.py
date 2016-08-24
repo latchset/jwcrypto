@@ -44,8 +44,8 @@ class JWAAlgorithm(object):
         pass
 
     @abc.abstractproperty
-    def min_key_size(self):
-        """The recommended/minimum key size or bit strenght"""
+    def keysize(self):
+        """The actual/recommended/minimum key size"""
         pass
 
     @abc.abstractproperty
@@ -57,6 +57,20 @@ class JWAAlgorithm(object):
     def algorithm_use(self):
         """One of 'sig', 'kex', 'enc'"""
         pass
+
+
+def _bitsize(x):
+    return len(x) * 8
+
+
+def _inbytes(x):
+    return x // 8
+
+
+def _randombits(x):
+    if x % 8 != 0:
+        raise ValueError("lenght must be a multiple of 8")
+    return os.urandom(_inbytes(x))
 
 
 # Note: l is the number of bits, which should be a multiple of 16
@@ -166,7 +180,7 @@ class _HS256(_RawHMAC, JWAAlgorithm):
 
     name = "HS256"
     description = "HMAC using SHA-256"
-    min_key_size = 256
+    keysize = 256
     algorithm_usage_location = 'alg'
     algorithm_use = 'sig'
 
@@ -178,7 +192,7 @@ class _HS384(_RawHMAC, JWAAlgorithm):
 
     name = "HS384"
     description = "HMAC using SHA-384"
-    min_key_size = 384
+    keysize = 384
     algorithm_usage_location = 'alg'
     algorithm_use = 'sig'
 
@@ -190,7 +204,7 @@ class _HS512(_RawHMAC, JWAAlgorithm):
 
     name = "HS512"
     description = "HMAC using SHA-512"
-    min_key_size = 512
+    keysize = 512
     algorithm_usage_location = 'alg'
     algorithm_use = 'sig'
 
@@ -202,7 +216,7 @@ class _RS256(_RawRSA, JWAAlgorithm):
 
     name = "RS256"
     description = "RSASSA-PKCS1-v1_5 using SHA-256"
-    min_key_size = 2048
+    keysize = 2048
     algorithm_usage_location = 'alg'
     algorithm_use = 'sig'
 
@@ -214,7 +228,7 @@ class _RS384(_RawRSA, JWAAlgorithm):
 
     name = "RS384"
     description = "RSASSA-PKCS1-v1_5 using SHA-384"
-    min_key_size = 2048
+    keysize = 2048
     algorithm_usage_location = 'alg'
     algorithm_use = 'sig'
 
@@ -226,7 +240,7 @@ class _RS512(_RawRSA, JWAAlgorithm):
 
     name = "RS512"
     description = "RSASSA-PKCS1-v1_5 using SHA-512"
-    min_key_size = 2048
+    keysize = 2048
     algorithm_usage_location = 'alg'
     algorithm_use = 'sig'
 
@@ -238,7 +252,7 @@ class _ES256(_RawEC, JWAAlgorithm):
 
     name = "ES256"
     description = "ECDSA using P-256 and SHA-256"
-    min_key_size = 256
+    keysize = 256
     algorithm_usage_location = 'alg'
     algorithm_use = 'sig'
 
@@ -250,7 +264,7 @@ class _ES384(_RawEC, JWAAlgorithm):
 
     name = "ES384"
     description = "ECDSA using P-384 and SHA-384"
-    min_key_size = 384
+    keysize = 384
     algorithm_usage_location = 'alg'
     algorithm_use = 'sig'
 
@@ -262,7 +276,7 @@ class _ES512(_RawEC, JWAAlgorithm):
 
     name = "ES512"
     description = "ECDSA using P-521 and SHA-512"
-    min_key_size = 512
+    keysize = 512
     algorithm_usage_location = 'alg'
     algorithm_use = 'sig'
 
@@ -274,7 +288,7 @@ class _PS256(_RawRSA, JWAAlgorithm):
 
     name = "PS256"
     description = "RSASSA-PSS using SHA-256 and MGF1 with SHA-256"
-    min_key_size = 2048
+    keysize = 2048
     algorithm_usage_location = 'alg'
     algorithm_use = 'sig'
 
@@ -288,7 +302,7 @@ class _PS384(_RawRSA, JWAAlgorithm):
 
     name = "PS384"
     description = "RSASSA-PSS using SHA-384 and MGF1 with SHA-384"
-    min_key_size = 2048
+    keysize = 2048
     algorithm_usage_location = 'alg'
     algorithm_use = 'sig'
 
@@ -302,7 +316,7 @@ class _PS512(_RawRSA, JWAAlgorithm):
 
     name = "PS512"
     description = "RSASSA-PSS using SHA-512 and MGF1 with SHA-512"
-    min_key_size = 2048
+    keysize = 2048
     algorithm_usage_location = 'alg'
     algorithm_use = 'sig'
 
@@ -316,17 +330,17 @@ class _None(_RawNone, JWAAlgorithm):
 
     name = "none"
     description = "No digital signature or MAC performed"
-    min_key_size = 0
+    keysize = 0
     algorithm_usage_location = 'alg'
     algorithm_use = 'sig'
 
 
 class _RawKeyMgmt(object):
 
-    def wrap(self, key, keylen, cek, headers):
+    def wrap(self, key, bitsize, cek, headers):
         raise NotImplementedError
 
-    def unwrap(self, key, keylen, ek, headers):
+    def unwrap(self, key, bitsize, ek, headers):
         raise NotImplementedError
 
 
@@ -342,20 +356,20 @@ class _RSA(_RawKeyMgmt):
             raise InvalidJWEKeyType('RSA', key.key_type)
 
     # FIXME: get key size and insure > 2048 bits
-    def wrap(self, key, keylen, cek, headers):
+    def wrap(self, key, bitsize, cek, headers):
         self._check_key(key)
         if not cek:
-            cek = os.urandom(keylen)
+            cek = _randombits(bitsize)
         rk = key.get_op_key('wrapKey')
         ek = rk.encrypt(cek, self.padfn)
         return {'cek': cek, 'ek': ek}
 
-    def unwrap(self, key, keylen, ek, headers):
+    def unwrap(self, key, bitsize, ek, headers):
         self._check_key(key)
         rk = key.get_op_key('decrypt')
         cek = rk.decrypt(ek, self.padfn)
-        if len(cek) != keylen:
-            raise InvalidJWEKeyLength(keylen, len(cek))
+        if _bitsize(cek) != bitsize:
+            raise InvalidJWEKeyLength(bitsize, _bitsize(cek))
         return cek
 
 
@@ -363,7 +377,7 @@ class _Rsa15(_RSA, JWAAlgorithm):
 
     name = 'RSA1_5'
     description = "RSAES-PKCS1-v1_5"
-    min_key_size = 2048
+    keysize = 2048
     algorithm_usage_location = 'alg'
     algorithm_use = 'kex'
 
@@ -375,7 +389,7 @@ class _RsaOaep(_RSA, JWAAlgorithm):
 
     name = 'RSA-OAEP'
     description = "RSAES OAEP using default parameters"
-    min_key_size = 2048
+    keysize = 2048
     algorithm_usage_location = 'alg'
     algorithm_use = 'kex'
 
@@ -389,7 +403,7 @@ class _RsaOaep256(_RSA, JWAAlgorithm):  # noqa: ignore=N801
 
     name = 'RSA-OAEP-256'
     description = "RSAES OAEP using SHA-256 and MGF1 with SHA-256"
-    min_key_size = 2048
+    keysize = 2048
     algorithm_usage_location = 'alg'
     algorithm_use = 'kex'
 
@@ -401,13 +415,10 @@ class _RsaOaep256(_RSA, JWAAlgorithm):  # noqa: ignore=N801
 
 class _AesKw(_RawKeyMgmt):
 
-    def __init__(self, keysize):
-        self.backend = default_backend()
-        self.keysize = keysize // 8
+    keysize = None
 
-    @property
-    def min_key_size(self):
-        return self.keysize * 8
+    def __init__(self):
+        self.backend = default_backend()
 
     def _get_key(self, key, op):
         if not isinstance(key, JWK):
@@ -415,14 +426,14 @@ class _AesKw(_RawKeyMgmt):
         if key.key_type != 'oct':
             raise InvalidJWEKeyType('oct', key.key_type)
         rk = base64url_decode(key.get_op_key(op))
-        if len(rk) != self.keysize:
-            raise InvalidJWEKeyLength(self.keysize * 8, len(rk) * 8)
+        if _bitsize(rk) != self.keysize:
+            raise InvalidJWEKeyLength(self.keysize, _bitsize(rk))
         return rk
 
-    def wrap(self, key, keylen, cek, headers):
+    def wrap(self, key, bitsize, cek, headers):
         rk = self._get_key(key, 'encrypt')
         if not cek:
-            cek = os.urandom(keylen)
+            cek = _randombits(bitsize)
 
         # Implement RFC 3394 Key Unwrap - 2.2.2
         # TODO: Use cryptography once issue #1733 is resolved
@@ -442,7 +453,7 @@ class _AesKw(_RawKeyMgmt):
             ek += r[i]
         return {'cek': cek, 'ek': ek}
 
-    def unwrap(self, key, keylen, ek, headers):
+    def unwrap(self, key, bitsize, ek, headers):
         rk = self._get_key(key, 'decrypt')
 
         # Implement RFC 3394 Key Unwrap - 2.2.3
@@ -467,8 +478,8 @@ class _AesKw(_RawKeyMgmt):
             raise RuntimeError('Decryption Failed')
 
         cek = b''.join(r)
-        if len(cek) != keylen:
-            raise InvalidJWEKeyLength(keylen, len(cek))
+        if _bitsize(cek) != bitsize:
+            raise InvalidJWEKeyLength(bitsize, _bitsize(cek))
         return cek
 
 
@@ -476,33 +487,27 @@ class _A128KW(_AesKw, JWAAlgorithm):
 
     name = 'A128KW'
     description = "AES Key Wrap using 128-bit key"
+    keysize = 128
     algorithm_usage_location = 'alg'
     algorithm_use = 'kex'
-
-    def __init__(self):
-        super(_A128KW, self).__init__(128)
 
 
 class _A192KW(_AesKw, JWAAlgorithm):
 
     name = 'A192KW'
     description = "AES Key Wrap using 192-bit key"
+    keysize = 192
     algorithm_usage_location = 'alg'
     algorithm_use = 'kex'
-
-    def __init__(self):
-        super(_A192KW, self).__init__(192)
 
 
 class _A256KW(_AesKw, JWAAlgorithm):
 
     name = 'A256KW'
     description = "AES Key Wrap using 256-bit key"
+    keysize = 256
     algorithm_usage_location = 'alg'
     algorithm_use = 'kex'
-
-    def __init__(self):
-        super(_A256KW, self).__init__(256)
 
 
 class _AesGcmKw(_RawKeyMgmt):
@@ -512,26 +517,22 @@ class _AesGcmKw(_RawKeyMgmt):
     def __init__(self):
         self.backend = default_backend()
 
-    @property
-    def min_key_size(self):
-        return self.keysize * 8
-
     def _get_key(self, key, op):
         if not isinstance(key, JWK):
             raise ValueError('key is not a JWK object')
         if key.key_type != 'oct':
             raise InvalidJWEKeyType('oct', key.key_type)
         rk = base64url_decode(key.get_op_key(op))
-        if len(rk) != self.keysize:
-            raise InvalidJWEKeyLength(self.keysize * 8, len(rk) * 8)
+        if _bitsize(rk) != self.keysize:
+            raise InvalidJWEKeyLength(self.keysize, _bitsize(rk))
         return rk
 
-    def wrap(self, key, keylen, cek, headers):
+    def wrap(self, key, bitsize, cek, headers):
         rk = self._get_key(key, 'encrypt')
         if not cek:
-            cek = os.urandom(keylen)
+            cek = _randombits(bitsize)
 
-        iv = os.urandom(96 // 8)
+        iv = _randombits(96)
         cipher = Cipher(algorithms.AES(rk), modes.GCM(iv),
                         backend=self.backend)
         encryptor = cipher.encryptor()
@@ -542,7 +543,7 @@ class _AesGcmKw(_RawKeyMgmt):
                 'header': {'iv': base64url_encode(iv),
                            'tag': base64url_encode(tag)}}
 
-    def unwrap(self, key, keylen, ek, headers):
+    def unwrap(self, key, bitsize, ek, headers):
         rk = self._get_key(key, 'decrypt')
 
         if 'iv' not in headers:
@@ -556,8 +557,8 @@ class _AesGcmKw(_RawKeyMgmt):
                         backend=self.backend)
         decryptor = cipher.decryptor()
         cek = decryptor.update(ek) + decryptor.finalize()
-        if len(cek) != keylen:
-            raise InvalidJWEKeyLength(keylen, len(cek))
+        if _bitsize(cek) != bitsize:
+            raise InvalidJWEKeyLength(bitsize, _bitsize(cek))
         return cek
 
 
@@ -565,30 +566,27 @@ class _A128GcmKw(_AesGcmKw, JWAAlgorithm):
 
     name = 'A128GCMKW'
     description = "Key wrapping with AES GCM using 128-bit key"
+    keysize = 128
     algorithm_usage_location = 'alg'
     algorithm_use = 'kex'
-
-    keysize = 128 // 8
 
 
 class _A192GcmKw(_AesGcmKw, JWAAlgorithm):
 
     name = 'A192GCMKW'
     description = "Key wrapping with AES GCM using 192-bit key"
+    keysize = 192
     algorithm_usage_location = 'alg'
     algorithm_use = 'kex'
-
-    keysize = 192 // 8
 
 
 class _A256GcmKw(_AesGcmKw, JWAAlgorithm):
 
     name = 'A256GCMKW'
     description = "Key wrapping with AES GCM using 256-bit key"
+    keysize = 256
     algorithm_usage_location = 'alg'
     algorithm_use = 'kex'
-
-    keysize = 256 // 8
 
 
 class _Pbes2HsAesKw(_RawKeyMgmt):
@@ -599,10 +597,7 @@ class _Pbes2HsAesKw(_RawKeyMgmt):
 
     def __init__(self):
         self.backend = default_backend()
-
-    @property
-    def min_key_size(self):
-        return self.keysize * 8
+        self.aeskwmap = {128: _A128KW, 192: _A192KW, 256: _A256KW}
 
     def _get_key(self, alg, key, p2s, p2c):
         if isinstance(key, bytes):
@@ -620,24 +615,24 @@ class _Pbes2HsAesKw(_RawKeyMgmt):
         else:
             raise ValueError('Unknown Hash Size')
 
-        kdf = PBKDF2HMAC(algorithm=hashalg, length=self.keysize, salt=salt,
-                         iterations=p2c, backend=self.backend)
+        kdf = PBKDF2HMAC(algorithm=hashalg, length=_inbytes(self.keysize),
+                         salt=salt, iterations=p2c, backend=self.backend)
         rk = kdf.derive(plain)
-        if len(rk) != self.keysize:
-            raise InvalidJWEKeyLength(self.keysize * 8, len(rk) * 8)
+        if _bitsize(rk) != self.keysize:
+            raise InvalidJWEKeyLength(self.keysize, len(rk))
         return JWK(kty="oct", use="enc", k=base64url_encode(rk))
 
-    def wrap(self, key, keylen, cek, headers):
-        p2s = os.urandom(16)
+    def wrap(self, key, bitsize, cek, headers):
+        p2s = _randombits(128)
         p2c = 8192
         kek = self._get_key(headers['alg'], key, p2s, p2c)
 
-        aeskw = _AesKw(self.keysize * 8)
-        ret = aeskw.wrap(kek, keylen, cek, headers)
+        aeskw = self.aeskwmap[self.keysize]()
+        ret = aeskw.wrap(kek, bitsize, cek, headers)
         ret['header'] = {'p2s': base64url_encode(p2s), 'p2c': p2c}
         return ret
 
-    def unwrap(self, key, keylen, ek, headers):
+    def unwrap(self, key, bitsize, ek, headers):
         if 'p2s' not in headers:
             raise ValueError('Invalid Header, missing "p2s" parameter')
         if 'p2c' not in headers:
@@ -646,48 +641,45 @@ class _Pbes2HsAesKw(_RawKeyMgmt):
         p2c = headers['p2c']
         kek = self._get_key(headers['alg'], key, p2s, p2c)
 
-        aeskw = _AesKw(self.keysize * 8)
-        return aeskw.unwrap(kek, keylen, ek, headers)
+        aeskw = self.aeskwmap[self.keysize]()
+        return aeskw.unwrap(kek, bitsize, ek, headers)
 
 
 class _Pbes2Hs256A128Kw(_Pbes2HsAesKw, JWAAlgorithm):
 
     name = 'PBES2-HS256+A128KW'
     description = 'PBES2 with HMAC SHA-256 and "A128KW" wrapping'
+    keysize = 128
     algorithm_usage_location = 'alg'
     algorithm_use = 'kex'
-
     hashsize = 256
-    keysize = 128 // 8
 
 
 class _Pbes2Hs384A192Kw(_Pbes2HsAesKw, JWAAlgorithm):
 
     name = 'PBES2-HS384+A192KW'
     description = 'PBES2 with HMAC SHA-384 and "A192KW" wrapping'
+    keysize = 192
     algorithm_usage_location = 'alg'
     algorithm_use = 'kex'
-
     hashsize = 384
-    keysize = 192 // 8
 
 
 class _Pbes2Hs512A256Kw(_Pbes2HsAesKw, JWAAlgorithm):
 
     name = 'PBES2-HS512+A256KW'
     description = 'PBES2 with HMAC SHA-512 and "A256KW" wrapping'
+    keysize = 256
     algorithm_usage_location = 'alg'
     algorithm_use = 'kex'
-
     hashsize = 512
-    keysize = 256 // 8
 
 
 class _Direct(_RawKeyMgmt, JWAAlgorithm):
 
     name = 'dir'
     description = "Direct use of a shared symmetric key"
-    min_key_size = 128
+    keysize = 128
     algorithm_usage_location = 'alg'
     algorithm_use = 'kex'
 
@@ -697,22 +689,22 @@ class _Direct(_RawKeyMgmt, JWAAlgorithm):
         if key.key_type != 'oct':
             raise InvalidJWEKeyType('oct', key.key_type)
 
-    def wrap(self, key, keylen, cek, headers):
+    def wrap(self, key, bitsize, cek, headers):
         self._check_key(key)
         if cek:
             return (cek, None)
         k = base64url_decode(key.get_op_key('encrypt'))
-        if len(k) != keylen:
-            raise InvalidCEKeyLength(keylen, len(k))
+        if _bitsize(k) != bitsize:
+            raise InvalidCEKeyLength(bitsize, _bitsize(k))
         return {'cek': k}
 
-    def unwrap(self, key, keylen, ek, headers):
+    def unwrap(self, key, bitsize, ek, headers):
         self._check_key(key)
         if ek != b'':
             raise ValueError('Invalid Encryption Key.')
         cek = base64url_decode(key.get_op_key('decrypt'))
-        if len(cek) != keylen:
-            raise InvalidJWEKeyLength(keylen, len(cek))
+        if _bitsize(cek) != bitsize:
+            raise InvalidJWEKeyLength(bitsize, _bitsize(cek))
         return cek
 
 
@@ -722,14 +714,11 @@ class _EcdhEs(_RawKeyMgmt):
     description = "ECDH-ES using Concat KDF"
     algorithm_usage_location = 'alg'
     algorithm_use = 'kex'
-    keydatalen = None
+    keysize = None
 
     def __init__(self):
         self.backend = default_backend()
-
-    @property
-    def min_key_size(self):
-        return self.keydatalen
+        self.aeskwmap = {128: _A128KW, 192: _A192KW, 256: _A256KW}
 
     def _check_key(self, key):
         if not isinstance(key, JWK):
@@ -737,7 +726,7 @@ class _EcdhEs(_RawKeyMgmt):
         if key.key_type != 'EC':
             raise InvalidJWEKeyType('EC', key.key_type)
 
-    def _derive(self, privkey, pubkey, alg, keydatalen, headers):
+    def _derive(self, privkey, pubkey, alg, bitsize, headers):
         # OtherInfo is defined in NIST SP 56A 5.8.1.2.1
 
         # AlgorithmID
@@ -755,64 +744,62 @@ class _EcdhEs(_RawKeyMgmt):
         otherinfo += apv
 
         # SuppPubInfo
-        otherinfo += struct.pack('>I', keydatalen)
+        otherinfo += struct.pack('>I', bitsize)
 
         # no SuppPrivInfo
 
         shared_key = privkey.exchange(ec.ECDH(), pubkey)
         ckdf = ConcatKDFHash(algorithm=hashes.SHA256(),
-                             length=keydatalen // 8,
+                             length=_inbytes(bitsize),
                              otherinfo=otherinfo,
                              backend=self.backend)
         return ckdf.derive(shared_key)
 
-    def wrap(self, key, keylen, cek, headers):
+    def wrap(self, key, bitsize, cek, headers):
         self._check_key(key)
-        if self.keydatalen is None:
+        if self.keysize is None:
             if cek is not None:
                 raise InvalidJWEOperation('ECDH-ES cannot use an existing CEK')
-            keydatalen = keylen * 8
             alg = headers['enc']
         else:
-            keydatalen = self.keydatalen
+            bitsize = self.keysize
             alg = headers['alg']
 
         epk = JWK.generate(kty=key.key_type, crv=key.key_curve)
         dk = self._derive(epk.get_op_key('unwrapKey'),
                           key.get_op_key('wrapKey'),
-                          alg, keydatalen, headers)
+                          alg, bitsize, headers)
 
-        if self.keydatalen is None:
+        if self.keysize is None:
             ret = {'cek': dk}
         else:
-            aeskw = _AesKw(keydatalen)
+            aeskw = self.aeskwmap[bitsize]()
             kek = JWK(kty="oct", use="enc", k=base64url_encode(dk))
-            ret = aeskw.wrap(kek, keydatalen // 8, cek, headers)
+            ret = aeskw.wrap(kek, bitsize, cek, headers)
 
         ret['header'] = {'epk': json_decode(epk.export_public())}
         return ret
 
-    def unwrap(self, key, keylen, ek, headers):
+    def unwrap(self, key, bitsize, ek, headers):
         if 'epk' not in headers:
             raise ValueError('Invalid Header, missing "epk" parameter')
         self._check_key(key)
-        if self.keydatalen is None:
-            keydatalen = keylen * 8
+        if self.keysize is None:
             alg = headers['enc']
         else:
-            keydatalen = self.keydatalen
+            bitsize = self.keysize
             alg = headers['alg']
 
         epk = JWK(**headers['epk'])
         dk = self._derive(key.get_op_key('unwrapKey'),
                           epk.get_op_key('wrapKey'),
-                          alg, keydatalen, headers)
-        if self.keydatalen is None:
+                          alg, bitsize, headers)
+        if self.keysize is None:
             return dk
         else:
-            aeskw = _AesKw(keydatalen)
+            aeskw = self.aeskwmap[bitsize]()
             kek = JWK(kty="oct", use="enc", k=base64url_encode(dk))
-            cek = aeskw.unwrap(kek, keydatalen // 8, ek, headers)
+            cek = aeskw.unwrap(kek, bitsize, ek, headers)
             return cek
 
 
@@ -820,30 +807,27 @@ class _EcdhEsAes128Kw(_EcdhEs, JWAAlgorithm):
 
     name = 'ECDH-ES+A128KW'
     description = 'ECDH-ES using Concat KDF and "A128KW" wrapping'
+    keysize = 128
     algorithm_usage_location = 'alg'
     algorithm_use = 'kex'
-
-    keydatalen = 128
 
 
 class _EcdhEsAes192Kw(_EcdhEs, JWAAlgorithm):
 
     name = 'ECDH-ES+A192KW'
     description = 'ECDH-ES using Concat KDF and "A192KW" wrapping'
+    keysize = 192
     algorithm_usage_location = 'alg'
     algorithm_use = 'kex'
-
-    keydatalen = 192
 
 
 class _EcdhEsAes256Kw(_EcdhEs, JWAAlgorithm):
 
     name = 'ECDH-ES+A256KW'
     description = 'ECDH-ES using Concat KDF and "A128KW" wrapping'
+    keysize = 256
     algorithm_usage_location = 'alg'
     algorithm_use = 'kex'
-
-    keydatalen = 256
 
 
 class _RawJWE(object):
@@ -863,24 +847,17 @@ class _AesCbcHmacSha2(_RawJWE):
         self.backend = default_backend()
         self.hashfn = hashfn
         self.blocksize = algorithms.AES.block_size
-
-    @property
-    def min_key_size(self):
-        return self.keysize * 8
-
-    @property
-    def key_size(self):
-        return self.keysize * 2
+        self.wrap_key_size = self.keysize * 2
 
     def _mac(self, k, a, iv, e):
-        al = _encode_int(len(a * 8), 64)
+        al = _encode_int(_bitsize(a), 64)
         h = hmac.HMAC(k, self.hashfn, backend=self.backend)
         h.update(a)
         h.update(iv)
         h.update(e)
         h.update(al)
         m = h.finalize()
-        return m[:self.keysize]
+        return m[:_inbytes(self.keysize)]
 
     # RFC 7518 - 5.2.2
     def encrypt(self, k, a, m):
@@ -893,11 +870,11 @@ class _AesCbcHmacSha2(_RawJWE):
 
         Returns a dictionary with the computed data.
         """
-        hkey = k[:self.keysize]
-        ekey = k[self.keysize:]
+        hkey = k[:_inbytes(self.keysize)]
+        ekey = k[_inbytes(self.keysize):]
 
         # encrypt
-        iv = os.urandom(self.blocksize // 8)
+        iv = _randombits(self.blocksize)
         cipher = Cipher(algorithms.AES(ekey), modes.CBC(iv),
                         backend=self.backend)
         encryptor = cipher.encryptor()
@@ -921,8 +898,8 @@ class _AesCbcHmacSha2(_RawJWE):
 
         Returns plaintext or raises an error
         """
-        hkey = k[:self.keysize]
-        dkey = k[self.keysize:]
+        hkey = k[:_inbytes(self.keysize)]
+        dkey = k[_inbytes(self.keysize):]
 
         # verify mac
         if not constant_time.bytes_eq(t, self._mac(hkey, a, iv, e)):
@@ -941,10 +918,9 @@ class _A128CbcHs256(_AesCbcHmacSha2, JWAAlgorithm):
 
     name = 'A128CBC-HS256'
     description = "AES_128_CBC_HMAC_SHA_256 authenticated"
+    keysize = 128
     algorithm_usage_location = 'enc'
     algorithm_use = 'enc'
-
-    keysize = 128 // 8
 
     def __init__(self):
         super(_A128CbcHs256, self).__init__(hashes.SHA256())
@@ -954,10 +930,9 @@ class _A192CbcHs384(_AesCbcHmacSha2, JWAAlgorithm):
 
     name = 'A192CBC-HS384'
     description = "AES_192_CBC_HMAC_SHA_384 authenticated"
+    keysize = 192
     algorithm_usage_location = 'enc'
     algorithm_use = 'enc'
-
-    keysize = 192 // 8
 
     def __init__(self):
         super(_A192CbcHs384, self).__init__(hashes.SHA384())
@@ -967,10 +942,9 @@ class _A256CbcHs512(_AesCbcHmacSha2, JWAAlgorithm):
 
     name = 'A256CBC-HS512'
     description = "AES_256_CBC_HMAC_SHA_512 authenticated"
+    keysize = 256
     algorithm_usage_location = 'enc'
     algorithm_use = 'enc'
-
-    keysize = 256 // 8
 
     def __init__(self):
         super(_A256CbcHs512, self).__init__(hashes.SHA512())
@@ -982,14 +956,7 @@ class _AesGcm(_RawJWE):
 
     def __init__(self):
         self.backend = default_backend()
-
-    @property
-    def min_key_size(self):
-        return self.keysize * 8
-
-    @property
-    def key_size(self):
-        return self.keysize
+        self.wrap_key_size = self.keysize
 
     # RFC 7518 - 5.3
     def encrypt(self, k, a, m):
@@ -1002,7 +969,7 @@ class _AesGcm(_RawJWE):
 
         Returns a dictionary with the computed data.
         """
-        iv = os.urandom(96 // 8)
+        iv = _randombits(96)
         cipher = Cipher(algorithms.AES(k), modes.GCM(iv),
                         backend=self.backend)
         encryptor = cipher.encryptor()
@@ -1033,30 +1000,27 @@ class _A128Gcm(_AesGcm, JWAAlgorithm):
 
     name = 'A128GCM'
     description = "AES GCM using 128-bit key"
+    keysize = 128
     algorithm_usage_location = 'enc'
     algorithm_use = 'enc'
-
-    keysize = 128 // 8
 
 
 class _A192Gcm(_AesGcm, JWAAlgorithm):
 
     name = 'A192GCM'
     description = "AES GCM using 192-bit key"
+    keysize = 192
     algorithm_usage_location = 'enc'
     algorithm_use = 'enc'
-
-    keysize = 192 // 8
 
 
 class _A256Gcm(_AesGcm, JWAAlgorithm):
 
     name = 'A256GCM'
     description = "AES GCM using 256-bit key"
+    keysize = 256
     algorithm_usage_location = 'enc'
     algorithm_use = 'enc'
-
-    keysize = 256 // 8
 
 
 class JWA(object):

@@ -238,7 +238,7 @@ class JWK(object):
                 alg = JWA.instantiate_alg(params['alg'])
             except KeyError:
                 raise ValueError("Invalid 'alg' parameter")
-            size = alg.min_key_size
+            size = alg.keysize
         return size
 
     def _generate_oct(self, params):
