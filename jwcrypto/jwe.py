@@ -243,11 +243,9 @@ class JWE(object):
             self.objects['recipients'] = list()
             n = dict()
             if 'encrypted_key' in self.objects:
-                n['encrypted_key'] = self.objects['encrypted_key']
-                del self.objects['encrypted_key']
+                n['encrypted_key'] = self.objects.pop('encrypted_key')
             if 'header' in self.objects:
-                n['header'] = self.objects['header']
-                del self.objects['header']
+                n['header'] = self.objects.pop('header')
             self.objects['recipients'].append(n)
             self.objects['recipients'].append(rec)
         else:

@@ -73,16 +73,11 @@ def _randombits(x):
     return os.urandom(_inbytes(x))
 
 
-# Note: l is the number of bits, which should be a multiple of 16
-def _encode_int(n, l):
-    e = hex(n).rstrip("L").lstrip("0x")
-    elen = len(e)
-    ilen = ((l + 7) // 8) * 2  # number of bytes rounded up times 2 chars/bytes
-    if elen > ilen:
-        e = e[:ilen]
-    else:
-        e = '0' * (ilen - elen) + e  # pad as necessary
-    return unhexlify(e)
+# Note: the number of bits should be a multiple of 16
+def _encode_int(n, bits):
+    e = '{:x}'.format(n)
+    ilen = ((bits + 7) // 8) * 2  # number of bytes rounded up times 2 bytes
+    return unhexlify(e.rjust(ilen, '0')[:ilen])
 
 
 def _decode_int(n):
