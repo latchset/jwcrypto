@@ -40,7 +40,11 @@ def json_decode(string):
     return json.loads(string)
 
 
-class InvalidJWAAlgorithm(Exception):
+class JWException(Exception):
+    pass
+
+
+class InvalidJWAAlgorithm(JWException):
     def __init__(self, message=None):
         msg = 'Invalid JWA Algorithm name'
         if message:
@@ -48,7 +52,7 @@ class InvalidJWAAlgorithm(Exception):
         super(InvalidJWAAlgorithm, self).__init__(msg)
 
 
-class InvalidCEKeyLength(Exception):
+class InvalidCEKeyLength(JWException):
     """Invalid CEK Key Length.
 
     This exception is raised when a Content Encryption Key does not match
@@ -60,7 +64,7 @@ class InvalidCEKeyLength(Exception):
         super(InvalidCEKeyLength, self).__init__(msg)
 
 
-class InvalidJWEOperation(Exception):
+class InvalidJWEOperation(JWException):
     """Invalid JWS Object.
 
     This exception is raised when a requested operation cannot
@@ -78,7 +82,7 @@ class InvalidJWEOperation(Exception):
         super(InvalidJWEOperation, self).__init__(msg)
 
 
-class InvalidJWEKeyType(Exception):
+class InvalidJWEKeyType(JWException):
     """Invalid JWE Key Type.
 
     This exception is raised when the provided JWK Key does not match
@@ -90,7 +94,7 @@ class InvalidJWEKeyType(Exception):
         super(InvalidJWEKeyType, self).__init__(msg)
 
 
-class InvalidJWEKeyLength(Exception):
+class InvalidJWEKeyLength(JWException):
     """Invalid JWE Key Length.
 
     This exception is raised when the provided JWK Key does not match

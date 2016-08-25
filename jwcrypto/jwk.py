@@ -219,8 +219,7 @@ class JWK(object):
 
     def generate_key(self, **params):
         try:
-            kty = params['generate']
-            del params['generate']
+            kty = params.pop('generate')
             gen = getattr(self, '_generate_%s' % kty)
         except (KeyError, AttributeError):
             raise InvalidJWKType(kty)
@@ -230,8 +229,7 @@ class JWK(object):
     def _get_gen_size(self, params, default_size=None):
         size = default_size
         if 'size' in params:
-            size = params['size']
-            del params['size']
+            size = params.pop('size')
         elif 'alg' in params:
             try:
                 from jwcrypto.jwa import JWA
@@ -256,8 +254,7 @@ class JWK(object):
         pubexp = 65537
         size = self._get_gen_size(params, 2048)
         if 'public_exponent' in params:
-            pubexp = params['public_exponent']
-            del params['public_exponent']
+            pubexp = params.pop('public_exponent')
         key = rsa.generate_private_key(pubexp, size, default_backend())
         self._import_pyca_pri_rsa(key, **params)
 
@@ -298,13 +295,11 @@ class JWK(object):
     def _generate_EC(self, params):
         curve = 'P-256'
         if 'curve' in params:
-            curve = params['curve']
-            del params['curve']
+            curve = params.pop('curve')
         # 'curve' is for backwards compat, if 'crv' is defined it takes
         # precedence
         if 'crv' in params:
-            curve = params['crv']
-            del params['crv']
+            curve = params.pop('crv')
         curve_name = self._get_curve_by_name(curve)
         key = ec.generate_private_key(curve_name, default_backend())
         self._import_pyca_pri_ec(key, **params)

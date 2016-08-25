@@ -405,17 +405,13 @@ class JWS(object):
         elif 'signature' in self.objects:
             self.objects['signatures'] = list()
             n = dict()
-            n['signature'] = self.objects['signature']
-            del self.objects['signature']
+            n['signature'] = self.objects.pop('signature')
             if 'protected' in self.objects:
-                n['protected'] = self.objects['protected']
-                del self.objects['protected']
+                n['protected'] = self.objects.pop('protected')
             if 'header' in self.objects:
-                n['header'] = self.objects['header']
-                del self.objects['header']
+                n['header'] = self.objects.pop('header')
             if 'valid' in self.objects:
-                n['valid'] = self.objects['valid']
-                del self.objects['valid']
+                n['valid'] = self.objects.pop('valid')
             self.objects['signatures'].append(n)
             self.objects['signatures'].append(o)
         else:
