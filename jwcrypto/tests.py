@@ -170,6 +170,70 @@ RSAPrivateKey = {"kty": "RSA",
                        "eAvmj4sm-Fp0oYu_neotgQ0hzbI5gry7ajdYy9-2lNx_76aBZoOUu"
                        "9HCJ-UsfSOI8"}
 
+# From
+# vectors/cryptography_vectors/asymmetric/PEM_Serialization/rsa_private_key.pem
+RSAPrivatePEM = b"""-----BEGIN RSA PRIVATE KEY-----
+Proc-Type: 4,ENCRYPTED
+DEK-Info: DES-EDE3-CBC,B4B3C8C536E57CBE
+
+B8Lq1K/wcOr4JMspWrX3zCX14WAp3xgHsKAB4XfuCuju/HQZoWXtok1xoi5e2Ovw
+ENA99Jvb2yvBdDUfOlp1L1L+By3q+SwcdeNuEKjwGFG6MY2uZaVtLSiAFXf1N8PL
+id7FMRGPIxpTtXKMhfAq4luRb0BgKh7+ZvM7LkxkRxF7M1XVQPGhrU0OfxX9VODe
+YFH1q47os5JzHRcrRaFx6sn30e79ij2gRjzMVFuAX07n+yw3qeyNQNYdmDNP7iCZ
+x//0iN0NboTI81coNlxx7TL4bYwgESt1c2i/TCfLITjKgEny7MKqU1/jTrOJWu85
+PiK/ojaD1EMx9xxVgBCioQJVG/Jm9y+XhtGFAJUShzzsabX7KuANKRn3fgUN+yZS
+yp8hmD+R5gQHJk/8+zZ6/Imv8W/G+7fPZuSMgWeWtDReCkfzgnyIdjaIp3Pdp5yN
+WLLWADI4tHmNUqIzY7T25gVfg0P2tgQNzn3WzHxq4SfZN9Aw57woi8eSRpLBEn+C
+JjqwTxtFQ14ynG6GPsBaDcAduchmJPL7e9PuAfFyLJuM8sU8QyB2oir1M/qYFhTC
+ClXw2yylYjAy8TFw1L3UZA4hfAflINjYUY8pgAtTAjxeD/9PhiKSoMEX8Q/8Npti
+1Db5RpAClIEdB6nPywj6BzC+6El3dSGaCV0sTQ42LD+S3QH8VCwTB2AuKq7zyuD6
+wEQopcbIOGHSir875vYLmWLmqR9MCWZtKj/dWfTIQpBsPsI2ssZn/MptNqyEN9TW
+GfnWoTuzoziCS5YmEq7Mh98fwP9Krb0abo3fFvu6CY3dhvvoxPaXahyAxBfpKArB
+9nOf3gzHGReWNiFUtNZlvueYrC5CnblFzKaKB+81Imjw6RXM3QtuzbZ71zp+reL8
+JeiwE/mriwuGbxTJx5gwQX48zA5PJ342CCrl7jMeIos5KXmYkWoU5hEuGM3tK4Lx
+VAoGqcd/a4cWHuLWub8fbhFkIDcxFaMF8yQi0r2LOmvMOsv3RVpyfgJ07z5b9X1B
+w76CYkjGqgr0EdU40VTPtNhtHq7rrJSzGbapRsFUpvqgnkEwUSdbY6bRknLETmfo
+H3dPf2XQwXXPDMZTW54QsmQ9WjundqOFI2YsH6dCX/kmZK0IJVBpikL8SuM/ZJLK
+LcYJcrNGetENEKKl6hDwTTIsG1y3gx6y3wPzBkyJ2DtMx9dPoCqYhPHsIGc/td0/
+r4Ix9TWVLIl3MKq3z+/Hszd7jOnrkflfmKeA0DgJlqVJsuxP75pbdiKS/hCKRf8D
+AFJLvt6JSGBnz9ZZCB4KrjpHK/k+X7p8Y65uc/aX5BLu8vyRqFduhg98GVXJmD7k
+0ggXnqqFnies6SpnQ45cjfKSGDx/NjY0AwoGPH8n8CL6ZagU6K1utfHIMrqKkJME
+F6KcPHWrQkECojLdMoDInnRirdRb/FcAadWBSPrf+6Nln4ilbBJIi8W/yzeM/WFj
+UKKNjk4W26PGnNO6+TO5h1EpocDI4fx6UYIMmFjnyaLdLrSn1/SzuLL6I7pYZ0Um
+8qI4aWjP9RiUvGYJirfAUjL5Vp9w4+osf1sGiioe0GH/1WVuHeQ93A==
+-----END RSA PRIVATE KEY-----
+"""
+
+RSAPrivatePassword = b"123456"
+
+# From
+# vectors/cryptography_vectors/asymmetric/PEM_Serialization/rsa_public_key.pem
+RSAPublicPEM = b"""-----BEGIN PUBLIC KEY-----
+MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAnR4AZ+tgWYql+S3MaTQ6
+zeIO1fKzFIoau9Q0zGuv/1oCAewXwxeDSSxw+/Z3GL1NpuuS9CpbR5EQ3d71bD0v
+0G+Sf+mShSl0oljG7YqnNSPzKl+EQ3/KE+eEButcwas6KGof2BA4bFNCw/fPbuhk
+u/d8sIIEgdzBMiGRMdW33uci3rsdOenMZQA7uWsM/q/pu85YLAVOxq6wlUCzP4FM
+Tw/RKzayrPkn3Jfbqcy1aM2HDlFVx24vaN+RRbPSnVoQbo5EQYkUMXE8WmadSyHl
+pXGRnWsJSV9AdGyDrbU+6tcFwcIwnW22jb/OJy8swHdqKGkuR1kQ0XqokK1yGKFZ
+8wIDAQAB
+-----END PUBLIC KEY-----
+"""
+
+# From cryptography/vectors/cryptography_vectors/x509/v1_cert.pem
+PublicCert = b"""-----BEGIN CERTIFICATE-----
+MIIBWzCCAQYCARgwDQYJKoZIhvcNAQEEBQAwODELMAkGA1UEBhMCQVUxDDAKBgNV
+BAgTA1FMRDEbMBkGA1UEAxMSU1NMZWF5L3JzYSB0ZXN0IENBMB4XDTk1MDYxOTIz
+MzMxMloXDTk1MDcxNzIzMzMxMlowOjELMAkGA1UEBhMCQVUxDDAKBgNVBAgTA1FM
+RDEdMBsGA1UEAxMUU1NMZWF5L3JzYSB0ZXN0IGNlcnQwXDANBgkqhkiG9w0BAQEF
+AANLADBIAkEAqtt6qS5GTxVxGZYWa0/4u+IwHf7p2LNZbcPBp9/OfIcYAXBQn8hO
+/Re1uwLKXdCjIoaGs4DLdG88rkzfyK5dPQIDAQABMAwGCCqGSIb3DQIFBQADQQAE
+Wc7EcF8po2/ZO6kNCwK/ICH6DobgLekA5lSLr5EvuioZniZp5lFzAw4+YzPQ7XKJ
+zl9HYIMxATFyqSiD9jsx
+-----END CERTIFICATE-----
+"""
+
+PublicCertThumbprint = u'7KITkGJF74IZ9NKVvHfuJILbuIZny6j-roaNjB1vgiA'
+
 
 class TestJWK(unittest.TestCase):
     def test_create_pubKeys(self):
@@ -270,6 +334,48 @@ class TestJWK(unittest.TestCase):
             self.assertEqual(
                 k.thumbprint(),
                 PublicKeys['thumbprints'][i])
+
+    def test_import_from_pem(self):
+        pubk = jwk.JWK.from_pem(RSAPublicPEM)
+        self.assertEqual(pubk.export_to_pem(), RSAPublicPEM)
+        rsapub = pubk.get_op_key('verify')
+
+        prik = jwk.JWK.from_pem(RSAPrivatePEM, password=RSAPrivatePassword)
+        rsapri = prik.get_op_key('sign')
+        self.assertEqual(rsapri.public_key().public_numbers().n,
+                         rsapub.public_numbers().n)
+
+        pubc = jwk.JWK.from_pem(PublicCert)
+        self.assertEqual(pubc.key_id, PublicCertThumbprint)
+
+    def test_export_symmetric(self):
+        key = jwk.JWK(**SymmetricKeys['keys'][0])
+        self.assertTrue(key.is_symmetric)
+        self.assertFalse(key.has_public)
+        self.assertFalse(key.has_private)
+        self.assertEqual(json_encode(SymmetricKeys['keys'][0]),
+                         key.export_symmetric())
+
+    def test_export_public(self):
+        key = jwk.JWK.from_pem(PublicCert)
+        self.assertFalse(key.is_symmetric)
+        self.assertTrue(key.has_public)
+        self.assertFalse(key.has_private)
+        pubc = key.export_public()
+        self.assertEqual(json_decode(pubc)["kid"], PublicCertThumbprint)
+
+    def test_export_private(self):
+        key = jwk.JWK.from_pem(RSAPrivatePEM, password=RSAPrivatePassword)
+        self.assertFalse(key.is_symmetric)
+        self.assertTrue(key.has_public)
+        self.assertTrue(key.has_private)
+        pri = key.export_private()
+        prikey = jwk.JWK(**json_decode(pri))
+        self.assertTrue(prikey.has_private)
+        pub = key.export_public()
+        pubkey = jwk.JWK(**json_decode(pub))
+        self.assertFalse(pubkey.has_private)
+        self.assertEqual(prikey.key_id, pubkey.key_id)
 
 
 # RFC 7515 - A.1
