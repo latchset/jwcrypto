@@ -17,6 +17,12 @@ clean:
 cscope:
 	git ls-files | xargs pycscope
 
+testlong: export JWCRYPTO_TESTS_ENABLE_MMA=True
+testlong: export TOX_TESTENV_PASSENV=JWCRYPTO_TESTS_ENABLE_MMA
+testlong:
+	rm -f .coverage
+	tox -e py35
+
 test:
 	rm -f .coverage
 	tox -e py27

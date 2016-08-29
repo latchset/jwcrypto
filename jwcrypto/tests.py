@@ -842,6 +842,86 @@ class TestJWE(unittest.TestCase):
             e = jwe.JWE(algs=['A256KW'])
             e.deserialize(E_A5_ex, E_A4_ex['key2'])
 
+MMA_vector_key = jwk.JWK(**E_A2_key)
+MMA_vector_ok_cek =  \
+    '{"protected":"eyJlbmMiOiJBMTI4Q0JDLUhTMjU2In0",' \
+    '"unprotected":{"jku":"https://server.example.com/keys.jwks"},' \
+    '"recipients":[' \
+    '{"header":{"alg":"RSA1_5","kid":"2011-04-29"},' \
+    '"encrypted_key":'\
+    '"UGhIOguC7IuEvf_NPVaXsGMoLOmwvc1GyqlIKOK1nN94nHPoltGRhWhw7Zx0-' \
+    'kFm1NJn8LE9XShH59_i8J0PH5ZZyNfGy2xGdULU7sHNF6Gp2vPLgNZ__deLKx' \
+    'GHZ7PcHALUzoOegEI-8E66jX2E4zyJKx-YxzZIItRzC5hlRirb6Y5Cl_p-ko3' \
+    'YvkkysZIFNPccxRU7qve1WYPxqbb2Yw8kZqa2rMWI5ng8OtvzlV7elprCbuPh' \
+    'cCdZ6XDP0_F8rkXds2vE4X-ncOIM8hAYHHi29NX0mcKiRaD0-D-ljQTP-cFPg' \
+    'wCp6X-nZZd9OHBv-B3oWh2TbqmScqXMR4gp_A"}],' \
+    '"iv":"AxY8DCtDaGlsbGljb3RoZQ",' \
+    '"ciphertext":"PURPOSEFULLYBROKENYGS4HffxPSUrfmqCHXaI9wOGY",' \
+    '"tag":"Mz-VPPyU4RlcuYv1IwIvzw"}'
+MMA_vector_ko_cek = \
+    '{"protected":"eyJlbmMiOiJBMTI4Q0JDLUhTMjU2In0",' \
+    '"unprotected":{"jku":"https://server.example.com/keys.jwks"},' \
+    '"recipients":[' \
+    '{"header":{"alg":"RSA1_5","kid":"2011-04-29"},' \
+    '"encrypted_key":'\
+    '"UGhIOguC7IuEvf_NPVaYsGMoLOmwvc1GyqlIKOK1nN94nHPoltGRhWhw7Zx0-' \
+    'kFm1NJn8LE9XShH59_i8J0PH5ZZyNfGy2xGdULU7sHNF6Gp2vPLgNZ__deLKx' \
+    'GHZ7PcHALUzoOegEI-8E66jX2E4zyJKx-YxzZIItRzC5hlRirb6Y5Cl_p-ko3' \
+    'YvkkysZIFNPccxRU7qve1WYPxqbb2Yw8kZqa2rMWI5ng8OtvzlV7elprCbuPh' \
+    'cCdZ6XDP0_F8rkXds2vE4X-ncOIM8hAYHHi29NX0mcKiRaD0-D-ljQTP-cFPg' \
+    'wCp6X-nZZd9OHBv-B3oWh2TbqmScqXMR4gp_A"}],' \
+    '"iv":"AxY8DCtDaGlsbGljb3RoZQ",' \
+    '"ciphertext":"PURPOSEFULLYBROKENYGS4HffxPSUrfmqCHXaI9wOGY",' \
+    '"tag":"Mz-VPPyU4RlcuYv1IwIvzw"}'
+
+
+class TestMMA(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        import os
+        cls.enableMMA = os.environ.get('JWCRYPTO_TESTS_ENABLE_MMA', False)
+        cls.iterations = 500
+        cls.sub_iterations = 100
+
+    def test_MMA(self):
+        if self.enableMMA:
+
+            print('Testing MMA timing attacks')
+
+            ok_cek = 0
+            ok_e = jwe.JWE()
+            ok_e.deserialize(MMA_vector_ok_cek)
+            ko_cek = 0
+            ko_e = jwe.JWE()
+            ko_e.deserialize(MMA_vector_ko_cek)
+
+            import time
+            counter = getattr(time, 'perf_counter', time.time)
+
+            for _ in range(self.iterations):
+                start = counter()
+                for _ in range(self.sub_iterations):
+                    with self.assertRaises(jwe.InvalidJWEData):
+                        ok_e.decrypt(MMA_vector_key)
+                stop = counter()
+                ok_cek += (stop - start) / self.sub_iterations
+
+                start = counter()
+                for _ in range(self.sub_iterations):
+                    with self.assertRaises(jwe.InvalidJWEData):
+                        ko_e.decrypt(MMA_vector_key)
+                stop = counter()
+                ko_cek += (stop - start) / self.sub_iterations
+
+            ok_cek /= self.iterations
+            ko_cek /= self.iterations
+
+            deviation = ((ok_cek - ko_cek) / ok_cek) * 100
+            print('MMA ok cek: {}'.format(ok_cek))
+            print('MMA ko cek: {}'.format(ko_cek))
+            print('MMA deviation: {}% ({})'.format(int(deviation), deviation))
+            self.assertLess(deviation, 2)
+
 
 # RFC 7519
 A1_header = {
