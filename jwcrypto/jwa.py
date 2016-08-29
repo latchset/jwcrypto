@@ -379,6 +379,23 @@ class _Rsa15(_RSA, JWAAlgorithm):
     def __init__(self):
         super(_Rsa15, self).__init__(padding.PKCS1v15())
 
+    def unwrap(self, key, bitsize, ek, headers):
+        self._check_key(key)
+        # Address MMA attack by implementing RFC 3218 - 2.3.2. Random Filling
+        # provides a random cek that will cause the decryption engine to
+        # run to the end, but will fail decryption later.
+
+        # always generate a random cek so we spend roughly the
+        # same time as in the exception side of the branch
+        cek = _randombits(bitsize)
+        try:
+            cek = super(_Rsa15, self).unwrap(key, bitsize, ek, headers)
+            # always raise so we always run through the exception handling
+            # code in all cases
+            raise Exception('Dummy')
+        except Exception:  # pylint: disable=broad-except
+            return cek
+
 
 class _RsaOaep(_RSA, JWAAlgorithm):
 
