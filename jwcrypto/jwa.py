@@ -720,7 +720,7 @@ class _Direct(_RawKeyMgmt, JWAAlgorithm):
         return cek
 
 
-class _EcdhEs(_RawKeyMgmt):
+class _EcdhEs(_RawKeyMgmt, JWAAlgorithm):
 
     name = 'ECDH-ES'
     description = "ECDH-ES using Concat KDF"
@@ -815,7 +815,7 @@ class _EcdhEs(_RawKeyMgmt):
             return cek
 
 
-class _EcdhEsAes128Kw(_EcdhEs, JWAAlgorithm):
+class _EcdhEsAes128Kw(_EcdhEs):
 
     name = 'ECDH-ES+A128KW'
     description = 'ECDH-ES using Concat KDF and "A128KW" wrapping'
@@ -824,7 +824,7 @@ class _EcdhEsAes128Kw(_EcdhEs, JWAAlgorithm):
     algorithm_use = 'kex'
 
 
-class _EcdhEsAes192Kw(_EcdhEs, JWAAlgorithm):
+class _EcdhEsAes192Kw(_EcdhEs):
 
     name = 'ECDH-ES+A192KW'
     description = 'ECDH-ES using Concat KDF and "A192KW" wrapping'
@@ -833,7 +833,7 @@ class _EcdhEsAes192Kw(_EcdhEs, JWAAlgorithm):
     algorithm_use = 'kex'
 
 
-class _EcdhEsAes256Kw(_EcdhEs, JWAAlgorithm):
+class _EcdhEsAes256Kw(_EcdhEs):
 
     name = 'ECDH-ES+A256KW'
     description = 'ECDH-ES using Concat KDF and "A128KW" wrapping'
