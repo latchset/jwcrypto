@@ -10,6 +10,7 @@ from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.hazmat.primitives.asymmetric import rsa
 
+from jwcrypto import jwa
 from jwcrypto import jwe
 from jwcrypto import jwk
 from jwcrypto import jws
@@ -1107,3 +1108,42 @@ class ConformanceTests(unittest.TestCase):
         check = jwe.JWE()
         check.deserialize(enc, key)
         self.assertEqual(b'plain', check.payload)
+
+
+class JWATests(unittest.TestCase):
+    def test_jwa_create(self):
+        for name, cls in jwa.JWA.algorithms_registry.items():
+            self.assertEqual(cls.name, name)
+            self.assertIn(cls.algorithm_usage_location, {'alg', 'enc'})
+            if name == 'ECDH-ES':
+                self.assertIs(cls.keysize, None)
+            else:
+                self.assertIsInstance(cls.keysize, int)
+                self.assertGreaterEqual(cls.keysize, 0)
+
+            if cls.algorithm_use == 'sig':
+                with self.assertRaises(jwa.InvalidJWAAlgorithm):
+                    jwa.JWA.encryption_alg(name)
+                with self.assertRaises(jwa.InvalidJWAAlgorithm):
+                    jwa.JWA.keymgmt_alg(name)
+                inst = jwa.JWA.signing_alg(name)
+                self.assertIsInstance(inst, jwa.JWAAlgorithm)
+                self.assertEqual(inst.name, name)
+            elif cls.algorithm_use == 'kex':
+                with self.assertRaises(jwa.InvalidJWAAlgorithm):
+                    jwa.JWA.encryption_alg(name)
+                with self.assertRaises(jwa.InvalidJWAAlgorithm):
+                    jwa.JWA.signing_alg(name)
+                inst = jwa.JWA.keymgmt_alg(name)
+                self.assertIsInstance(inst, jwa.JWAAlgorithm)
+                self.assertEqual(inst.name, name)
+            elif cls.algorithm_use == 'enc':
+                with self.assertRaises(jwa.InvalidJWAAlgorithm):
+                    jwa.JWA.signing_alg(name)
+                with self.assertRaises(jwa.InvalidJWAAlgorithm):
+                    jwa.JWA.keymgmt_alg(name)
+                inst = jwa.JWA.encryption_alg(name)
+                self.assertIsInstance(inst, jwa.JWAAlgorithm)
+                self.assertEqual(inst.name, name)
+            else:
+                self.fail((name, cls))
