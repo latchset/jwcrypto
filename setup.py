@@ -22,5 +22,8 @@ setup(
         'Topic :: Software Development :: Libraries :: Python Modules'
     ],
     data_files = [('share/doc/jwcrypto', ['LICENSE', 'README.md'])],
+    install_requires = [
+        'cryptography >= 0.7.2',
+    ],
 )
 
