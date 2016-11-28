@@ -843,6 +843,7 @@ class TestJWE(unittest.TestCase):
             e = jwe.JWE(algs=['A256KW'])
             e.deserialize(E_A5_ex, E_A4_ex['key2'])
 
+
 MMA_vector_key = jwk.JWK(**E_A2_key)
 MMA_vector_ok_cek =  \
     '{"protected":"eyJlbmMiOiJBMTI4Q0JDLUhTMjU2In0",' \
