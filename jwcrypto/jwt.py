@@ -340,7 +340,7 @@ class JWT(object):
             if 'exp' in claims:
                 self._check_exp(claims['exp'], time.time(), self._leeway)
             if 'nbf' in claims:
-                self._check_exp(claims['nbf'], time.time(), self._leeway)
+                self._check_nbf(claims['nbf'], time.time(), self._leeway)
 
     def _check_provided_claims(self):
         # check_claims can be set to False to skip any check
