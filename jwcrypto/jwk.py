@@ -793,6 +793,13 @@ class JWKSet(dict):
         obj = cls()
         return obj.import_keyset(keyset)
 
+    def export_public(self):
+        """Exports the set public keys using the standard JSON format"""
+        keys = list()
+        for jwk in self:
+            keys.append(json_decode(jwk.export_public()))
+        return json_encode({'keys': keys})
+
     def get_key(self, kid):
         """Gets a key from the set.
         :param kid: the 'kid' key identifier.
