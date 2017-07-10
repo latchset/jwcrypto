@@ -191,14 +191,14 @@ class JWT(object):
         if header:
             self.header = header
 
-        if claims:
-            self.claims = claims
-
         if default_claims is not None:
             self._reg_claims = default_claims
 
         if check_claims is not None:
             self._check_claims = check_claims
+
+        if claims:
+            self.claims = claims
 
         if jwt is not None:
             self.deserialize(jwt, key)
