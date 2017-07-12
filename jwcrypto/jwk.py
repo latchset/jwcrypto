@@ -166,7 +166,7 @@ class JWK(object):
 
     This object represent a Key.
     It must be instantiated by using the standard defined key/value pairs
-    as arguents of the initialization function.
+    as arguments of the initialization function.
     """
 
     def __init__(self, **kwargs):
