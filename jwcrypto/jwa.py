@@ -122,15 +122,11 @@ class _RawRSA(_RawJWS):
 
     def sign(self, key, payload):
         skey = key.get_op_key('sign')
-        signer = skey.signer(self.padfn, self.hashfn)
-        signer.update(payload)
-        return signer.finalize()
+        return skey.sign(payload, self.padfn, self.hashfn)
 
     def verify(self, key, payload, signature):
         pkey = key.get_op_key('verify')
-        verifier = pkey.verifier(signature, self.padfn, self.hashfn)
-        verifier.update(payload)
-        verifier.verify()
+        pkey.verify(signature, payload, self.padfn, self.hashfn)
 
 
 class _RawEC(_RawJWS):
@@ -144,9 +140,7 @@ class _RawEC(_RawJWS):
 
     def sign(self, key, payload):
         skey = key.get_op_key('sign', self._curve)
-        signer = skey.signer(ec.ECDSA(self.hashfn))
-        signer.update(payload)
-        signature = signer.finalize()
+        signature = skey.sign(payload, ec.ECDSA(self.hashfn))
         r, s = ec_utils.decode_rfc6979_signature(signature)
         l = key.get_curve(self._curve).key_size
         return _encode_int(r, l) + _encode_int(s, l)
@@ -157,9 +151,7 @@ class _RawEC(_RawJWS):
         s = signature[len(signature) // 2:]
         enc_signature = ec_utils.encode_rfc6979_signature(
             int(hexlify(r), 16), int(hexlify(s), 16))
-        verifier = pkey.verifier(enc_signature, ec.ECDSA(self.hashfn))
-        verifier.update(payload)
-        verifier.verify()
+        pkey.verify(enc_signature, payload, ec.ECDSA(self.hashfn))
 
 
 class _RawNone(_RawJWS):
