@@ -23,7 +23,7 @@ setup(
     ],
     data_files = [('share/doc/jwcrypto', ['LICENSE', 'README.md'])],
     install_requires = [
-        'cryptography >= 0.7.2',
+        'cryptography >= 1.5',
     ],
 )
 
