@@ -423,30 +423,30 @@ class JWE(object):
         try:
             try:
                 djwe = json_decode(raw_jwe)
-                o['iv'] = base64url_decode(str(djwe['iv']))
-                o['ciphertext'] = base64url_decode(str(djwe['ciphertext']))
-                o['tag'] = base64url_decode(str(djwe['tag']))
+                o['iv'] = base64url_decode(djwe['iv'])
+                o['ciphertext'] = base64url_decode(djwe['ciphertext'])
+                o['tag'] = base64url_decode(djwe['tag'])
                 if 'protected' in djwe:
-                    p = base64url_decode(str(djwe['protected']))
+                    p = base64url_decode(djwe['protected'])
                     o['protected'] = p.decode('utf-8')
                 if 'unprotected' in djwe:
                     o['unprotected'] = json_encode(djwe['unprotected'])
                 if 'aad' in djwe:
-                    o['aad'] = base64url_decode(str(djwe['aad']))
+                    o['aad'] = base64url_decode(djwe['aad'])
                 if 'recipients' in djwe:
                     o['recipients'] = list()
                     for rec in djwe['recipients']:
                         e = dict()
                         if 'encrypted_key' in rec:
                             e['encrypted_key'] = \
-                                base64url_decode(str(rec['encrypted_key']))
+                                base64url_decode(rec['encrypted_key'])
                         if 'header' in rec:
                             e['header'] = json_encode(rec['header'])
                         o['recipients'].append(e)
                 else:
                     if 'encrypted_key' in djwe:
                         o['encrypted_key'] = \
-                            base64url_decode(str(djwe['encrypted_key']))
+                            base64url_decode(djwe['encrypted_key'])
                     if 'header' in djwe:
                         o['header'] = json_encode(djwe['header'])
 
@@ -454,14 +454,14 @@ class JWE(object):
                 c = raw_jwe.split('.')
                 if len(c) != 5:
                     raise InvalidJWEData()
-                p = base64url_decode(str(c[0]))
+                p = base64url_decode(c[0])
                 o['protected'] = p.decode('utf-8')
-                ekey = base64url_decode(str(c[1]))
+                ekey = base64url_decode(c[1])
                 if ekey != b'':
-                    o['encrypted_key'] = base64url_decode(str(c[1]))
-                o['iv'] = base64url_decode(str(c[2]))
-                o['ciphertext'] = base64url_decode(str(c[3]))
-                o['tag'] = base64url_decode(str(c[4]))
+                    o['encrypted_key'] = base64url_decode(c[1])
+                o['iv'] = base64url_decode(c[2])
+                o['ciphertext'] = base64url_decode(c[3])
+                o['tag'] = base64url_decode(c[4])
 
             self.objects = o
 
