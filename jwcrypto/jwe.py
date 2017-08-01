@@ -457,7 +457,7 @@ class JWE(object):
                 p = base64url_decode(str(c[0]))
                 o['protected'] = p.decode('utf-8')
                 ekey = base64url_decode(str(c[1]))
-                if ekey != '':
+                if ekey != b'':
                     o['encrypted_key'] = base64url_decode(str(c[1]))
                 o['iv'] = base64url_decode(str(c[2]))
                 o['ciphertext'] = base64url_decode(str(c[3]))
