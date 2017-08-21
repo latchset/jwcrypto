@@ -158,7 +158,7 @@ class JWT(object):
         :param claims: A dict or a string withthe JWT Claims data.
         :param jwt: a 'raw' JWT token
         :param key: A (:class:`jwcrypto.jwk.JWK`) key to deserialize
-         the token. A (:class:`jwcrypt.jwk.JWKSet`) can also be used.
+         the token. A (:class:`jwcrypto.jwk.JWKSet`) can also be used.
         :param algs: An optional list of allowed algorithms
         :param default_claims: An optional dict with default values for
          registred claims. A None value for NumericDate type claims
@@ -437,7 +437,7 @@ class JWT(object):
 
         :param jwt: a 'raw' JWT token.
         :param key: A (:class:`jwcrypto.jwk.JWK`) verification or
-         decryption key, or a (:class:`jwcrypt.jwk.JWKSet`) that
+         decryption key, or a (:class:`jwcrypto.jwk.JWKSet`) that
          contains a key indexed by the 'kid' header.
         """
         c = jwt.count('.')
