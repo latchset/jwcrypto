@@ -398,7 +398,7 @@ class JWT(object):
             else:
                 if value is not None and value != claims[name]:
                     raise JWTInvalidClaimValue(
-                        "Invalid '%s' value. Expected '%d' got '%d'" % (
+                        "Invalid '%s' value. Expected '%s' got '%s'" % (
                             name, value, claims[name]))
 
     def make_signed_token(self, key):
