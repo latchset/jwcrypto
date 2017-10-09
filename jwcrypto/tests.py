@@ -1018,6 +1018,25 @@ class TestJWT(unittest.TestCase):
         keyset.add(key)
         jwt.JWT(jwt=token, key=keyset, check_claims={'exp': 1300819380})
 
+    def test_invalid_claim_type(self):
+        key = jwk.JWK(**E_A2_key)
+        claims = {"testclaim": "test"}
+        claims.update(A1_claims)
+        t = jwt.JWT(A1_header, claims)
+        t.make_encrypted_token(key)
+        token = t.serialize()
+
+        # Wrong string
+        self.assertRaises(jwt.JWTInvalidClaimValue, jwt.JWT, jwt=token,
+                          key=key, check_claims={"testclaim": "ijgi"})
+
+        # Wrong type
+        self.assertRaises(jwt.JWTInvalidClaimValue, jwt.JWT, jwt=token,
+                          key=key, check_claims={"testclaim": 123})
+
+        # Correct
+        jwt.JWT(jwt=token, key=key, check_claims={"testclaim": "test"})
+
 
 class ConformanceTests(unittest.TestCase):
 
