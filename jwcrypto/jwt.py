@@ -5,7 +5,7 @@ import uuid
 
 from six import string_types
 
-from jwcrypto.common import json_decode, json_encode
+from jwcrypto.common import JWException, json_decode, json_encode
 from jwcrypto.jwe import JWE
 from jwcrypto.jwk import JWK, JWKSet
 from jwcrypto.jws import JWS
@@ -22,7 +22,7 @@ JWTClaimsRegistry = {'iss': 'Issuer',
                      'jti': 'JWT ID'}
 
 
-class JWTExpired(Exception):
+class JWTExpired(JWException):
     """Json Web Token is expired.
 
     This exception is raised when a token is expired accoring to its claims.
@@ -39,7 +39,7 @@ class JWTExpired(Exception):
         super(JWTExpired, self).__init__(msg)
 
 
-class JWTNotYetValid(Exception):
+class JWTNotYetValid(JWException):
     """Json Web Token is not yet valid.
 
     This exception is raised when a token is not valid yet according to its
@@ -57,7 +57,7 @@ class JWTNotYetValid(Exception):
         super(JWTNotYetValid, self).__init__(msg)
 
 
-class JWTMissingClaim(Exception):
+class JWTMissingClaim(JWException):
     """Json Web Token claim is invalid.
 
     This exception is raised when a claim does not match the expected value.
@@ -74,7 +74,7 @@ class JWTMissingClaim(Exception):
         super(JWTMissingClaim, self).__init__(msg)
 
 
-class JWTInvalidClaimValue(Exception):
+class JWTInvalidClaimValue(JWException):
     """Json Web Token claim is invalid.
 
     This exception is raised when a claim does not match the expected value.
@@ -91,7 +91,7 @@ class JWTInvalidClaimValue(Exception):
         super(JWTInvalidClaimValue, self).__init__(msg)
 
 
-class JWTInvalidClaimFormat(Exception):
+class JWTInvalidClaimFormat(JWException):
     """Json Web Token claim format is invalid.
 
     This exception is raised when a claim is not in a valid format.
@@ -108,7 +108,7 @@ class JWTInvalidClaimFormat(Exception):
         super(JWTInvalidClaimFormat, self).__init__(msg)
 
 
-class JWTMissingKeyID(Exception):
+class JWTMissingKeyID(JWException):
     """Json Web Token is missing key id.
 
     This exception is raised when trying to decode a JWT with a key set
@@ -126,7 +126,7 @@ class JWTMissingKeyID(Exception):
         super(JWTMissingKeyID, self).__init__(msg)
 
 
-class JWTMissingKey(Exception):
+class JWTMissingKey(JWException):
     """Json Web Token is using a key not in the key set.
 
     This exception is raised if the key that was used is not available

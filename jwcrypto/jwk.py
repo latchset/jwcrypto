@@ -12,6 +12,7 @@ from cryptography.hazmat.primitives.asymmetric import rsa
 
 from six import iteritems
 
+from jwcrypto.common import JWException
 from jwcrypto.common import base64url_decode, base64url_encode
 from jwcrypto.common import json_decode, json_encode
 
@@ -83,7 +84,7 @@ JWKpycaCurveMap = {'secp256r1': 'P-256',
                    'secp521r1': 'P-521'}
 
 
-class InvalidJWKType(Exception):
+class InvalidJWKType(JWException):
     """Invalid JWK Type Exception.
 
     This exception is raised when an invalid parameter type is used.
@@ -98,7 +99,7 @@ class InvalidJWKType(Exception):
             self.value, list(JWKTypesRegistry.keys()))
 
 
-class InvalidJWKUsage(Exception):
+class InvalidJWKUsage(JWException):
     """Invalid JWK usage Exception.
 
     This exception is raised when an invalid key usage is requested,
@@ -123,7 +124,7 @@ class InvalidJWKUsage(Exception):
                                                                    valid)
 
 
-class InvalidJWKOperation(Exception):
+class InvalidJWKOperation(JWException):
     """Invalid JWK Operation Exception.
 
     This exception is raised when an invalid key operation is requested,
@@ -150,7 +151,7 @@ class InvalidJWKOperation(Exception):
                                                                        valid)
 
 
-class InvalidJWKValue(Exception):
+class InvalidJWKValue(JWException):
     """Invalid JWK Value Exception.
 
     This exception is raised when an invalid/unknown value is used in the

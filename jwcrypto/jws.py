@@ -1,5 +1,6 @@
 # Copyright (C) 2015 JWCrypto Project Contributors - see LICENSE file
 
+from jwcrypto.common import JWException
 from jwcrypto.common import base64url_decode, base64url_encode
 from jwcrypto.common import json_decode, json_encode
 from jwcrypto.jwa import JWA
@@ -30,7 +31,7 @@ default_allowed_algs = [
 """Default allowed algorithms"""
 
 
-class InvalidJWSSignature(Exception):
+class InvalidJWSSignature(JWException):
     """Invalid JWS Signature.
 
     This exception is raised when a signature cannot be validated.
@@ -47,7 +48,7 @@ class InvalidJWSSignature(Exception):
         super(InvalidJWSSignature, self).__init__(msg)
 
 
-class InvalidJWSObject(Exception):
+class InvalidJWSObject(JWException):
     """Invalid JWS Object.
 
     This exception is raised when the JWS Object is invalid and/or
@@ -63,7 +64,7 @@ class InvalidJWSObject(Exception):
         super(InvalidJWSObject, self).__init__(msg)
 
 
-class InvalidJWSOperation(Exception):
+class InvalidJWSOperation(JWException):
     """Invalid JWS Object.
 
     This exception is raised when a requested operation cannot
