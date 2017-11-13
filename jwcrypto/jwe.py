@@ -3,6 +3,7 @@
 import zlib
 
 from jwcrypto import common
+from jwcrypto.common import JWException
 from jwcrypto.common import base64url_decode, base64url_encode
 from jwcrypto.common import json_decode, json_encode
 from jwcrypto.jwa import JWA
@@ -40,7 +41,7 @@ default_allowed_algs = [
 """Default allowed algorithms"""
 
 
-class InvalidJWEData(Exception):
+class InvalidJWEData(JWException):
     """Invalid JWE Object.
 
     This exception is raised when the JWE Object is invalid and/or
