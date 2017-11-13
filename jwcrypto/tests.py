@@ -857,6 +857,26 @@ class TestJWE(unittest.TestCase):
             e = jwe.JWE(algs=['A256KW'])
             e.deserialize(E_A5_ex, E_A4_ex['key2'])
 
+    def test_compact_protected_header(self):
+        """Compact representation requires a protected header"""
+        e = jwe.JWE(E_A1_ex['plaintext'])
+        e.add_recipient(E_A1_ex['key'], E_A1_ex['protected'])
+
+        with self.assertRaises(jwe.InvalidJWEOperation):
+            e.serialize(compact=True)
+
+    def test_compact_invalid_header(self):
+        with self.assertRaises(jwe.InvalidJWEOperation):
+            e = jwe.JWE(E_A1_ex['plaintext'], E_A1_ex['protected'],
+                        aad='XYZ', recipient=E_A1_ex['key'])
+            e.serialize(compact=True)
+
+        with self.assertRaises(jwe.InvalidJWEOperation):
+            e = jwe.JWE(E_A1_ex['plaintext'], E_A1_ex['protected'],
+                        unprotected='{"jku":"https://example.com/keys.jwks"}',
+                        recipient=E_A1_ex['key'])
+            e.serialize(compact=True)
+
 
 MMA_vector_key = jwk.JWK(**E_A2_key)
 MMA_vector_ok_cek =  \

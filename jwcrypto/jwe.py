@@ -59,7 +59,7 @@ class InvalidJWEData(JWException):
         super(InvalidJWEData, self).__init__(msg)
 
 
-# These have been moved to jwcrypto.common, maintain here for bacwards compat
+# These have been moved to jwcrypto.common, maintain here for backwards compat
 InvalidCEKeyLength = common.InvalidCEKeyLength
 InvalidJWEKeyLength = common.InvalidJWEKeyLength
 InvalidJWEKeyType = common.InvalidJWEKeyType
@@ -270,7 +270,19 @@ class JWE(object):
         if compact:
             for invalid in 'aad', 'unprotected':
                 if invalid in self.objects:
-                    raise InvalidJWEOperation("Can't use compact encoding")
+                    raise InvalidJWEOperation(
+                        "Can't use compact encoding when the '%s' parameter"
+                        "is set", invalid)
+            if 'protected' not in self.objects:
+                raise InvalidJWEOperation(
+                    "Can't use compat encoding without protected headers")
+            else:
+                ph = json_decode(self.objects['protected'])
+                for required in 'alg', 'enc':
+                    if required not in ph:
+                        raise InvalidJWEOperation(
+                            "Can't use compat encoding, '%s' must be in the "
+                            "protected header", required)
             if 'recipients' in self.objects:
                 if len(self.objects['recipients']) != 1:
                     raise InvalidJWEOperation("Invalid number of recipients")
