@@ -3,7 +3,6 @@
 from __future__ import unicode_literals
 
 import copy
-
 import unittest
 
 from cryptography.hazmat.backends import default_backend
