@@ -142,8 +142,8 @@ class _RawEC(_RawJWS):
         skey = key.get_op_key('sign', self._curve)
         signature = skey.sign(payload, ec.ECDSA(self.hashfn))
         r, s = ec_utils.decode_rfc6979_signature(signature)
-        l = key.get_curve(self._curve).key_size
-        return _encode_int(r, l) + _encode_int(s, l)
+        size = key.get_curve(self._curve).key_size
+        return _encode_int(r, size) + _encode_int(s, size)
 
     def verify(self, key, payload, signature):
         pkey = key.get_op_key('verify', self._curve)

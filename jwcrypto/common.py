@@ -16,12 +16,12 @@ def base64url_encode(payload):
 
 
 def base64url_decode(payload):
-    l = len(payload) % 4
-    if l == 2:
+    size = len(payload) % 4
+    if size == 2:
         payload += '=='
-    elif l == 3:
+    elif size == 3:
         payload += '='
-    elif l != 0:
+    elif size != 0:
         raise ValueError('Invalid base64 string')
     return urlsafe_b64decode(payload.encode('utf-8'))
 

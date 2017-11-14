@@ -1,7 +1,6 @@
 # Copyright (C) 2015  JWCrypto Project Contributors - see LICENSE file
 
 import os
-
 from binascii import hexlify, unhexlify
 
 from cryptography import x509
@@ -770,7 +769,7 @@ class JWKSet(dict):
         """
         try:
             jwkset = json_decode(keyset)
-        except:
+        except Exception:  # pylint: disable=broad-except
             raise InvalidJWKValue()
 
         if 'keys' not in jwkset:
