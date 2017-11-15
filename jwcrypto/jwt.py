@@ -155,7 +155,7 @@ class JWT(object):
         """Creates a JWT object.
 
         :param header: A dict or a JSON string with the JWT Header data.
-        :param claims: A dict or a string withthe JWT Claims data.
+        :param claims: A dict or a string with the JWT Claims data.
         :param jwt: a 'raw' JWT token
         :param key: A (:class:`jwcrypto.jwk.JWK`) key to deserialize
          the token. A (:class:`jwcrypto.jwk.JWKSet`) can also be used.
@@ -163,7 +163,7 @@ class JWT(object):
         :param default_claims: An optional dict with default values for
          registred claims. A None value for NumericDate type claims
          will cause generation according to system time. Only the values
-         fro RFC 7519 - 4.1 are evaluated.
+         from RFC 7519 - 4.1 are evaluated.
         :param check_claims: An optional dict of claims that must be
          present in the token, if the value is not None the claim must
          match exactly.
@@ -224,6 +224,10 @@ class JWT(object):
 
     @claims.setter
     def claims(self, c):
+        if self._reg_claims and not isinstance(c, dict):
+            # decode c so we can set default claims
+            c = json_decode(c)
+
         if isinstance(c, dict):
             self._add_default_claims(c)
             self._claims = json_encode(c)

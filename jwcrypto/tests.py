@@ -1036,6 +1036,18 @@ class TestJWT(unittest.TestCase):
         # Correct
         jwt.JWT(jwt=token, key=key, check_claims={"testclaim": "test"})
 
+    def test_claim_params(self):
+        key = jwk.JWK(**E_A2_key)
+        default_claims = {"iss": "test", "exp": None}
+        string_claims = '{"string_claim":"test"}'
+        t = jwt.JWT(A1_header, string_claims, default_claims=default_claims)
+        t.make_encrypted_token(key)
+        token = t.serialize()
+
+        # Check default_claims
+        jwt.JWT(jwt=token, key=key, check_claims={"iss": "test", "exp": None,
+                                                  "string_claim": "test"})
+
 
 class ConformanceTests(unittest.TestCase):
 
