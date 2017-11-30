@@ -405,6 +405,10 @@ class JWK(object):
         It fails if one is not available like when this function
         is called on a symmetric key.
         """
+        pub = self._public_params()
+        return json_encode(pub)
+
+    def _public_params(self):
         if not self.has_public:
             raise InvalidJWKType("No public key available")
         pub = {}
@@ -417,7 +421,7 @@ class JWK(object):
         for param in reg:
             if reg[param][1] == 'Public':
                 pub[param] = self._key[param]
-        return json_encode(pub)
+        return pub
 
     def _export_all(self):
         d = dict()
@@ -438,6 +442,10 @@ class JWK(object):
         if self.is_symmetric:
             return self._export_all()
         raise InvalidJWKType("Not a symmetric key")
+
+    def public(self):
+        pub = self._public_params()
+        return JWK(**pub)
 
     @property
     def has_public(self):
