@@ -377,6 +377,21 @@ class TestJWK(unittest.TestCase):
         self.assertFalse(pubkey.has_private)
         self.assertEqual(prikey.key_id, pubkey.key_id)
 
+    def test_public(self):
+        key = jwk.JWK.from_pem(RSAPrivatePEM, password=RSAPrivatePassword)
+        self.assertTrue(key.has_public)
+        self.assertTrue(key.has_private)
+        pubkey = key.public()
+        self.assertTrue(pubkey.has_public)
+        self.assertFalse(pubkey.has_private)
+        # finally check public works
+        e = jwe.JWE('plaintext', '{"alg":"RSA-OAEP","enc":"A256GCM"}')
+        e.add_recipient(pubkey)
+        enc = e.serialize()
+        d = jwe.JWE()
+        d.deserialize(enc, key)
+        self.assertEqual(d.payload, b'plaintext')
+
 
 # RFC 7515 - A.1
 A1_protected = \
