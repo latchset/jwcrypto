@@ -1055,7 +1055,9 @@ class TestJWT(unittest.TestCase):
         key = jwk.JWK(**E_A2_key)
         default_claims = {"iss": "test", "exp": None}
         string_claims = '{"string_claim":"test"}'
-        t = jwt.JWT(A1_header, string_claims, default_claims=default_claims)
+        string_header = '{"alg":"RSA1_5","enc":"A128CBC-HS256"}'
+        t = jwt.JWT(string_header, string_claims,
+                    default_claims=default_claims)
         t.make_encrypted_token(key)
         token = t.serialize()
 
