@@ -210,6 +210,7 @@ class JWK(object):
     @classmethod
     def generate(cls, **kwargs):
         obj = cls()
+        kty = None
         try:
             kty = kwargs['kty']
             gen = getattr(obj, '_generate_%s' % kty)
@@ -219,6 +220,7 @@ class JWK(object):
         return obj
 
     def generate_key(self, **params):
+        kty = None
         try:
             kty = params.pop('generate')
             gen = getattr(self, '_generate_%s' % kty)
