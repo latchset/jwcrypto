@@ -496,7 +496,7 @@ class JWS(object):
             jhl = list()
             for o in obj['signatures']:
                 jh = dict()
-                if 'protected' in obj:
+                if 'protected' in o:
                     p = json_decode(o['protected'])
                     jh = self._merge_headers(jh, p)
                 jh = self._merge_headers(jh, o.get('header', dict()))

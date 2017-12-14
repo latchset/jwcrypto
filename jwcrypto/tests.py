@@ -570,7 +570,11 @@ A6_example = {
     'key2': jwk.JWK(**A3_key),
     'protected2': bytes(bytearray(A3_protected)).decode('utf-8'),
     'header2': json_encode({"kid": "e9bc097a-ce51-4036-9562-d2ade882db0d"}),
-    'serialized': A6_serialized}
+    'serialized': A6_serialized,
+    'jose_header': [{"kid": "2010-12-29",
+                     "alg": "RS256"},
+                    {"kid": "e9bc097a-ce51-4036-9562-d2ade882db0d",
+                     "alg": "ES256"}]}
 
 A7_example = \
     '{' + \
@@ -644,6 +648,7 @@ class TestJWS(unittest.TestCase):
         sig = s.serialize()
         s.deserialize(sig, A6_example['key1'])
         s.deserialize(A6_serialized, A6_example['key2'])
+        self.assertEqual(A6_example['jose_header'], s.jose_header)
 
     def test_A7(self):
         s = jws.JWS(A6_example['payload'])
