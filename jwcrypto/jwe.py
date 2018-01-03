@@ -272,7 +272,7 @@ class JWE(object):
                 if invalid in self.objects:
                     raise InvalidJWEOperation(
                         "Can't use compact encoding when the '%s' parameter"
-                        "is set", invalid)
+                        "is set" % invalid)
             if 'protected' not in self.objects:
                 raise InvalidJWEOperation(
                     "Can't use compat encoding without protected headers")
@@ -282,7 +282,7 @@ class JWE(object):
                     if required not in ph:
                         raise InvalidJWEOperation(
                             "Can't use compat encoding, '%s' must be in the "
-                            "protected header", required)
+                            "protected header" % required)
             if 'recipients' in self.objects:
                 if len(self.objects['recipients']) != 1:
                     raise InvalidJWEOperation("Invalid number of recipients")
