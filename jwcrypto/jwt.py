@@ -384,8 +384,8 @@ class JWT(object):
                         if value in claims[name]:
                             continue
                     raise JWTInvalidClaimValue(
-                        "Invalid '%s' value. Expected '%s' in '%s'" % (
-                            name, value, claims[name]))
+                        "Invalid '%s' value. Expected '%s' to be in '%s'" % (
+                            name, claims[name], value))
 
             elif name == 'exp':
                 if value is not None:
