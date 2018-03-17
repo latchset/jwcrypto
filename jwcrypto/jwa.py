@@ -828,7 +828,7 @@ class _EcdhEsAes192Kw(_EcdhEs):
 class _EcdhEsAes256Kw(_EcdhEs):
 
     name = 'ECDH-ES+A256KW'
-    description = 'ECDH-ES using Concat KDF and "A128KW" wrapping'
+    description = 'ECDH-ES using Concat KDF and "A256KW" wrapping'
     keysize = 256
     algorithm_usage_location = 'alg'
     algorithm_use = 'kex'
