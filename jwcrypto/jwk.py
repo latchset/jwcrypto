@@ -387,6 +387,19 @@ class JWK(object):
                                               ' "key_ops" values specified at'
                                               ' the same time')
 
+    @classmethod
+    def from_json(cls, key):
+        """Creates a RFC 7517 JWK from the standard JSON format.
+
+        :param key: The RFC 7517 representation of a JWK.
+        """
+        obj = cls()
+        try:
+            jkey = json_decode(key)
+        except Exception as e:  # pylint: disable=broad-except
+            raise InvalidJWKValue(e)
+        return obj.import_key(**jkey)
+
     def export(self, private_key=True):
         """Exports the key in the standard JSON format.
         Exports the key regardless of type, if private_key is False
