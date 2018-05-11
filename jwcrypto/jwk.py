@@ -756,6 +756,12 @@ class JWKSet(dict):
         super(JWKSet, self).__setitem__('keys', _JWKkeys())
         self.update(*args, **kwargs)
 
+    def __iter__(self):
+        return self['keys'].__iter__()
+
+    def __contains__(self, key):
+        return self['keys'].__contains__(key)
+
     def __setitem__(self, key, val):
         if key == 'keys':
             self['keys'].add(val)

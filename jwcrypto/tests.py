@@ -328,6 +328,15 @@ class TestJWK(unittest.TestCase):
         ks3 = jwk.JWKSet.from_json(ks.export())
         self.assertEqual(len(ks), len(ks3))
 
+        # Test Keyset with mutiple keys
+        ksm = jwk.JWKSet.from_json(json_encode(PrivateKeys))
+        num = 0
+        for item in ksm:
+            self.assertTrue(isinstance(item, jwk.JWK))
+            self.assertTrue(item in ksm)
+            num += 1
+        self.assertEqual(num, len(PrivateKeys['keys']))
+
     def test_thumbprint(self):
         for i in range(0, len(PublicKeys['keys'])):
             k = jwk.JWK(**PublicKeys['keys'][i])
