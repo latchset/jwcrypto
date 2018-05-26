@@ -401,6 +401,10 @@ class TestJWK(unittest.TestCase):
         d.deserialize(enc, key)
         self.assertEqual(d.payload, b'plaintext')
 
+    def test_invalid_value(self):
+        with self.assertRaises(jwk.InvalidJWKValue):
+            jwk.JWK(kty='oct', k=b'\x01')
+
 
 # RFC 7515 - A.1
 A1_protected = \

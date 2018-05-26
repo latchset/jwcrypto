@@ -25,21 +25,28 @@ JWKTypesRegistry = {'EC': 'Elliptic Curve',
 # RFC 7518 - 7.5
 # It is part of the JWK Parameters Registry, but we want a more
 # specific map for internal usage
-JWKValuesRegistry = {'EC': {'crv': ('Curve', 'Public', 'Required'),
-                            'x': ('X Coordinate', 'Public', 'Required'),
-                            'y': ('Y Coordinate', 'Public', 'Required'),
-                            'd': ('ECC Private Key', 'Private', None)},
-                     'RSA': {'n': ('Modulus', 'Public', 'Required'),
-                             'e': ('Exponent', 'Public', 'Required'),
-                             'd': ('Private Exponent', 'Private', None),
-                             'p': ('First Prime Factor', 'Private', None),
-                             'q': ('Second Prime Factor', 'Private', None),
-                             'dp': ('First Factor CRT Exponent', 'Private',
-                                    None),
-                             'dq': ('Second Factor CRT Exponent', 'Private',
-                                    None),
-                             'qi': ('First CRT Coefficient', 'Private', None)},
-                     'oct': {'k': ('Key Value', 'Private', 'Required')}}
+JWKValuesRegistry = {
+    'EC': {
+        'crv': ('Curve', 'Public', 'Required', None),
+        'x': ('X Coordinate', 'Public', 'Required', 'b64'),
+        'y': ('Y Coordinate', 'Public', 'Required', 'b64'),
+        'd': ('ECC Private Key', 'Private', None, 'b64'),
+    },
+    'RSA': {
+        'n': ('Modulus', 'Public', 'Required', 'b64'),
+        'e': ('Exponent', 'Public', 'Required', 'b64U'),
+        'd': ('Private Exponent', 'Private', None, 'b64U'),
+        'p': ('First Prime Factor', 'Private', None, 'b64U'),
+        'q': ('Second Prime Factor', 'Private', None, 'b64U'),
+        'dp': ('First Factor CRT Exponent', 'Private', None, 'b64U'),
+        'dq': ('Second Factor CRT Exponent', 'Private', None, 'b64U'),
+        'qi': ('First CRT Coefficient', 'Private', None, 'b64U'),
+        'oth': ('Other Primes Info', 'Private', 'Unsupported', None),
+    },
+    'oct': {
+        'k': ('Key Value', 'Private', 'Required', 'b64'),
+    }
+}
 """Registry of valid key values"""
 
 JWKParamsRegistry = {'kty': ('Key Type', 'Public', ),
@@ -350,6 +357,24 @@ class JWK(object):
         for name, val in iteritems(JWKValuesRegistry[kty]):
             if val[2] == 'Required' and name not in self._key:
                 raise InvalidJWKValue('Missing required value %s' % name)
+            if val[2] == 'Unsupported' and name in self._key:
+                raise InvalidJWKValue('Unsupported parameter %s' % name)
+            if val[3] == 'b64' and name in self._key:
+                # Check that the value is base64url encoded
+                try:
+                    base64url_decode(self._key[name])
+                except Exception:  # pylint: disable=broad-except
+                    raise InvalidJWKValue(
+                        '"%s" is not base64url encoded' % name
+                    )
+            if val[3] == 'b64U' and name in self._key:
+                # Check that the value is Base64urlUInt encoded
+                try:
+                    self._decode_int(self._key[name])
+                except Exception:  # pylint: disable=broad-except
+                    raise InvalidJWKValue(
+                        '"%s" is not Base64urlUInt encoded' % name
+                    )
 
         # Unknown key parameters are allowed
         # Let's just store them out of the way
