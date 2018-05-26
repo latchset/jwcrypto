@@ -1229,3 +1229,20 @@ class JWATests(unittest.TestCase):
                 self.assertEqual(inst.name, name)
             else:
                 self.fail((name, cls))
+
+class BytestringTests(unittest.TestCase):
+    def test_decrypt_with_bytestring_secret(self):
+        import hashlib
+        unhashed_secret = '1BZa99E9i7w3AWTFBDM51BZa99E9i7w3AWTFBDM51BZa99E9i7w3AWTFBDM5'
+        hashed_secret = hashlib.sha256(unhashed_secret).digest()
+        # hashed_secret = b''{\x1db\xfbO\xe6k4\xb4\xb8G\xd6\x82\x99\xa4\x84\x99\x82\x1fB3\xdd\xf7y\x89\xbe\x08\xfa\xea\xe5I\xf1'
+
+        payload = "eyJhbGciOiJkaXIiLCJlbmMiOiJBMjU2R0NNIn0..hCm3EgHHMsnH5Xrd.NwCKEDreWGmTGCpPgWc.HhQ5QlE307KrKOFQkFjTgw"
+        jwetoken = jwe.JWE()
+        jwetoken.deserialize(payload)
+        key = jwk.JWK(kty='oct', k=hashed_secret)
+        jwetoken.decrypt(key)
+        payload = jwetoken.payload
+        self.assertEqual("Hello, Python!", payload)
+
+
