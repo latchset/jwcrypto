@@ -2,6 +2,8 @@
 
 import os
 from binascii import hexlify, unhexlify
+from collections import namedtuple
+from enum import Enum
 
 from cryptography import x509
 from cryptography.hazmat.backends import default_backend
@@ -22,43 +24,59 @@ JWKTypesRegistry = {'EC': 'Elliptic Curve',
                     'oct': 'Octet sequence'}
 """Registry of valid Key Types"""
 
+
 # RFC 7518 - 7.5
 # It is part of the JWK Parameters Registry, but we want a more
 # specific map for internal usage
+class ParmType(Enum):
+    name = 'A string with a name'
+    b64 = 'Base64url Encoded'
+    b64U = 'Base64urlUint Encoded'
+    unsupported = 'Unsupported Parameter'
+
+
+JWKParameter = namedtuple('Parameter', 'description public required type')
 JWKValuesRegistry = {
     'EC': {
-        'crv': ('Curve', 'Public', 'Required', None),
-        'x': ('X Coordinate', 'Public', 'Required', 'b64'),
-        'y': ('Y Coordinate', 'Public', 'Required', 'b64'),
-        'd': ('ECC Private Key', 'Private', None, 'b64'),
+        'crv': JWKParameter('Curve', True, True, ParmType.name),
+        'x': JWKParameter('X Coordinate', True, True, ParmType.b64),
+        'y': JWKParameter('Y Coordinate', True, True, ParmType.b64),
+        'd': JWKParameter('ECC Private Key', False, False, ParmType.b64),
     },
     'RSA': {
-        'n': ('Modulus', 'Public', 'Required', 'b64'),
-        'e': ('Exponent', 'Public', 'Required', 'b64U'),
-        'd': ('Private Exponent', 'Private', None, 'b64U'),
-        'p': ('First Prime Factor', 'Private', None, 'b64U'),
-        'q': ('Second Prime Factor', 'Private', None, 'b64U'),
-        'dp': ('First Factor CRT Exponent', 'Private', None, 'b64U'),
-        'dq': ('Second Factor CRT Exponent', 'Private', None, 'b64U'),
-        'qi': ('First CRT Coefficient', 'Private', None, 'b64U'),
-        'oth': ('Other Primes Info', 'Private', 'Unsupported', None),
+        'n': JWKParameter('Modulus', True, True, ParmType.b64),
+        'e': JWKParameter('Exponent', True, True, ParmType.b64U),
+        'd': JWKParameter('Private Exponent', False, False, ParmType.b64U),
+        'p': JWKParameter('First Prime Factor', False, False, ParmType.b64U),
+        'q': JWKParameter('Second Prime Factor', False, False, ParmType.b64U),
+        'dp': JWKParameter('First Factor CRT Exponent',
+                           False, False, ParmType.b64U),
+        'dq': JWKParameter('Second Factor CRT Exponent',
+                           False, False, ParmType.b64U),
+        'qi': JWKParameter('First CRT Coefficient',
+                           False, False, ParmType.b64U),
+        'oth': JWKParameter('Other Primes Info',
+                            False, False, ParmType.unsupported),
     },
     'oct': {
-        'k': ('Key Value', 'Private', 'Required', 'b64'),
+        'k': JWKParameter('Key Value', False, True, ParmType.b64),
     }
 }
 """Registry of valid key values"""
 
-JWKParamsRegistry = {'kty': ('Key Type', 'Public', ),
-                     'use': ('Public Key Use', 'Public'),
-                     'key_ops': ('Key Operations', 'Public'),
-                     'alg': ('Algorithm', 'Public'),
-                     'kid': ('Key ID', 'Public'),
-                     'x5u': ('X.509 URL', 'Public'),
-                     'x5c': ('X.509 Certificate Chain', 'Public'),
-                     'x5t': ('X.509 Certificate SHA-1 Thumbprint', 'Public'),
-                     'x5t#S256': ('X.509 Certificate SHA-256 Thumbprint',
-                                  'Public')}
+JWKParamsRegistry = {
+    'kty': JWKParameter('Key Type', True, None, None),
+    'use': JWKParameter('Public Key Use', True, None, None),
+    'key_ops': JWKParameter('Key Operations', True, None, None),
+    'alg': JWKParameter('Algorithm', True, None, None),
+    'kid': JWKParameter('Key ID', True, None, None),
+    'x5u': JWKParameter('X.509 URL', True, None, None),
+    'x5c': JWKParameter('X.509 Certificate Chain', True, None, None),
+    'x5t': JWKParameter('X.509 Certificate SHA-1 Thumbprint',
+                        True, None, None),
+    'x5t#S256': JWKParameter('X.509 Certificate SHA-256 Thumbprint',
+                             True, None, None)
+}
 """Regstry of valid key parameters"""
 
 # RFC 7518 - 7.6
@@ -355,11 +373,11 @@ class JWK(object):
                     names.remove(name)
 
         for name, val in iteritems(JWKValuesRegistry[kty]):
-            if val[2] == 'Required' and name not in self._key:
+            if val.required and name not in self._key:
                 raise InvalidJWKValue('Missing required value %s' % name)
-            if val[2] == 'Unsupported' and name in self._key:
+            if val.type == ParmType.unsupported and name in self._key:
                 raise InvalidJWKValue('Unsupported parameter %s' % name)
-            if val[3] == 'b64' and name in self._key:
+            if val.type == ParmType.b64 and name in self._key:
                 # Check that the value is base64url encoded
                 try:
                     base64url_decode(self._key[name])
@@ -367,7 +385,7 @@ class JWK(object):
                     raise InvalidJWKValue(
                         '"%s" is not base64url encoded' % name
                     )
-            if val[3] == 'b64U' and name in self._key:
+            if val[3] == ParmType.b64U and name in self._key:
                 # Check that the value is Base64urlUInt encoded
                 try:
                     self._decode_int(self._key[name])
@@ -454,12 +472,12 @@ class JWK(object):
         pub = {}
         preg = JWKParamsRegistry
         for name in preg:
-            if preg[name][1] == 'Public':
+            if preg[name].public:
                 if name in self._params:
                     pub[name] = self._params[name]
         reg = JWKValuesRegistry[self._params['kty']]
         for param in reg:
-            if reg[param][1] == 'Public':
+            if reg[param].public:
                 pub[param] = self._key[param]
         return pub
 
@@ -494,7 +512,7 @@ class JWK(object):
             return False
         reg = JWKValuesRegistry[self._params['kty']]
         for value in reg:
-            if reg[value][1] == 'Public' and value in self._key:
+            if reg[value].public and value in self._key:
                 return True
 
     @property
@@ -504,7 +522,7 @@ class JWK(object):
             return False
         reg = JWKValuesRegistry[self._params['kty']]
         for value in reg:
-            if reg[value][1] == 'Private' and value in self._key:
+            if not reg[value].public and value in self._key:
                 return True
         return False
 
@@ -748,7 +766,7 @@ class JWK(object):
 
         t = {'kty': self._params['kty']}
         for name, val in iteritems(JWKValuesRegistry[t['kty']]):
-            if val[2] == 'Required':
+            if val.required:
                 t[name] = self._key[name]
         digest = hashes.Hash(hashalg, backend=default_backend())
         digest.update(bytes(json_encode(t).encode('utf8')))
