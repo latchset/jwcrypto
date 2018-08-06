@@ -212,9 +212,15 @@ class JWT(object):
     @header.setter
     def header(self, h):
         if isinstance(h, dict):
-            self._header = json_encode(h)
+            eh = json_encode(h)
         else:
-            self._header = h
+            eh = h
+            h = json_decode(eh)
+
+        if h.get('b64') is False:
+            raise ValueError("b64 header is invalid."
+                             "JWTs cannot use unencoded payloads")
+        self._header = eh
 
     @property
     def claims(self):

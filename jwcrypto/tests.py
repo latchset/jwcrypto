@@ -1270,3 +1270,57 @@ class JWATests(unittest.TestCase):
                 self.assertEqual(inst.name, name)
             else:
                 self.fail((name, cls))
+
+
+# RFC 7797
+
+rfc7797_e_header = '{"alg":"HS256"}'
+rfc7797_u_header = '{"alg":"HS256","b64":false,"crit":["b64"]}'
+rfc7797_payload = "$.02"
+
+
+class TestUnencodedPayload(unittest.TestCase):
+
+    def test_regular(self):
+        result = \
+            'eyJhbGciOiJIUzI1NiJ9.JC4wMg.' + \
+            '5mvfOroL-g7HyqJoozehmsaqmvTYGEq5jTI1gVvoEoQ'
+
+        s = jws.JWS(rfc7797_payload)
+        s.add_signature(jwk.JWK(**SymmetricKeys['keys'][1]),
+                        protected=rfc7797_e_header)
+        sig = s.serialize(compact=True)
+        self.assertEqual(sig, result)
+
+    def test_compat_unencoded(self):
+        result = \
+            'eyJhbGciOiJIUzI1NiIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..' + \
+            'A5dxf2s96_n5FLueVuW1Z_vh161FwXZC4YLPff6dmDY'
+
+        s = jws.JWS(rfc7797_payload)
+        s.add_signature(jwk.JWK(**SymmetricKeys['keys'][1]),
+                        protected=rfc7797_u_header)
+        # check unencoded payload is in serialized form
+        sig = s.serialize()
+        self.assertEqual(json_decode(sig)['payload'], rfc7797_payload)
+        # check error raises if we try to get compact serialization
+        with self.assertRaises(jws.InvalidJWSOperation):
+            sig = s.serialize(compact=True)
+        # check compact serialization is allowed with detached payload
+        s.detach_payload()
+        sig = s.serialize(compact=True)
+        self.assertEqual(sig, result)
+
+    def test_misses_crit(self):
+        s = jws.JWS(rfc7797_payload)
+        with self.assertRaises(jws.InvalidJWSObject):
+            s.add_signature(jwk.JWK(**SymmetricKeys['keys'][1]),
+                            protected={"alg": "HS256", "b64": False})
+
+    def test_mismatching_encoding(self):
+        s = jws.JWS(rfc7797_payload)
+        s.add_signature(jwk.JWK(**SymmetricKeys['keys'][0]),
+                        protected=rfc7797_e_header)
+        with self.assertRaises(jws.InvalidJWSObject):
+            s.add_signature(jwk.JWK(**SymmetricKeys['keys'][1]),
+                            protected=rfc7797_u_header)
