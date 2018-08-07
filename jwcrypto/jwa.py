@@ -696,8 +696,8 @@ class _EcdhEs(_RawKeyMgmt, JWAAlgorithm):
         if key.key_type not in ['EC', 'OKP']:
             raise InvalidJWEKeyType('EC or OKP', key.key_type)
         if key.key_type == 'OKP':
-            if key.key_curve not in ['Ed25519', 'Ed448']:
-                raise InvalidJWEKeyType('Ed25519 or Ed448',
+            if key.key_curve not in ['X25519', 'X448']:
+                raise InvalidJWEKeyType('X25519 or X448',
                                         key.key_curve)
 
     def _derive(self, privkey, pubkey, alg, bitsize, headers):
@@ -722,7 +722,13 @@ class _EcdhEs(_RawKeyMgmt, JWAAlgorithm):
 
         # no SuppPrivInfo
 
-        shared_key = privkey.exchange(ec.ECDH(), pubkey)
+        # Shared Key generation
+        if isinstance(privkey, ec.EllipticCurvePrivateKey):
+            shared_key = privkey.exchange(ec.ECDH(), pubkey)
+        else:
+            # X25519/X448
+            shared_key = privkey.exchange(pubkey)
+
         ckdf = ConcatKDFHash(algorithm=hashes.SHA256(),
                              length=_inbytes(bitsize),
                              otherinfo=otherinfo,
