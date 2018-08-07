@@ -236,7 +236,7 @@ zl9HYIMxATFyqSiD9jsx
 
 PublicCertThumbprint = u'7KITkGJF74IZ9NKVvHfuJILbuIZny6j-roaNjB1vgiA'
 
-# RFC 8037 - A.1
+# RFC 8037 - A.2
 PublicKeys_EdDsa = {
     "keys": [
         {
@@ -321,7 +321,7 @@ class TestJWK(unittest.TestCase):
         key.get_curve('P-521')
 
     def test_generate_OKP_keys(self):
-        for crv in ['Ed25519', 'Ed448']:
+        for crv in ['Ed25519', 'Ed448', 'X25519', 'X448']:
             key = jwk.JWK.generate(kty='OKP', crv=crv)
             self.assertEqual(key.get_curve(crv), crv)
 
@@ -990,6 +990,10 @@ E_Ed25519 = {
                                  'nLWG1PPOt7-09PGcvMg3AIbQR6dWbhijcNR4ki'
                                  '4iylGjg5BhVsPt9g7sVvpAr_MuM0KAg'}
 
+X25519_Protected_Header_no_epk = {
+    "alg": "ECDH-ES+A128KW",
+    "enc": "A128GCM"}
+
 
 class TestJWE(unittest.TestCase):
     def check_enc(self, plaintext, protected, key, vector):
@@ -1089,6 +1093,18 @@ class TestJWE(unittest.TestCase):
         newreg = {'alg': newhdr}
         with self.assertRaises(InvalidJWSERegOperation):
             jwe.JWE(header_registry=newreg)
+
+    def test_X25519_ECDH(self):
+        plaintext = "plain"
+        protected = json_encode(X25519_Protected_Header_no_epk)
+        with self.assertRaises(NotImplementedError):
+            x25519key = jwk.JWK.generate(kty='OKP', crv='X25519')
+            e1 = jwe.JWE(plaintext, protected)
+            e1.add_recipient(x25519key)
+            enc = e1.serialize()
+            e2 = jwe.JWE()
+            e2.deserialize(enc, x25519key)
+            self.assertEqual(e2.payload, plaintext)
 
 
 MMA_vector_key = jwk.JWK(**E_A2_key)
