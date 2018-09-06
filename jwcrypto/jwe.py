@@ -109,7 +109,7 @@ class JWE(object):
                 json_decode(unprotected)  # check header encoding
             self.objects['unprotected'] = unprotected
         if algs:
-            self.allowed_algs = algs
+            self._allowed_algs = algs
 
         if recipient:
             self.add_recipient(recipient, header=header)
