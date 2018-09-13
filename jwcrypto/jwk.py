@@ -429,6 +429,7 @@ class JWK(object):
                         raise InvalidJWKValue('Incompatible "use" and'
                                               ' "key_ops" values specified at'
                                               ' the same time')
+        return self
 
     @classmethod
     def from_json(cls, key):
@@ -674,6 +675,7 @@ class JWK(object):
             self._import_pyca_pub_ec(key)
         else:
             raise InvalidJWKValue('Unknown key object %r' % key)
+        return self
 
     def import_from_pem(self, data, password=None):
         """Imports a key from data loaded from a PEM file.
@@ -704,6 +706,7 @@ class JWK(object):
 
         self.import_from_pyca(key)
         self._params['kid'] = self.thumbprint()
+        return self
 
     def export_to_pem(self, private_key=False, password=False):
         """Exports keys to a data buffer suitable to be stored as a PEM file.
@@ -743,8 +746,7 @@ class JWK(object):
     @classmethod
     def from_pyca(cls, key):
         obj = cls()
-        obj.import_from_pyca(key)
-        return obj
+        return obj.import_from_pyca(key)
 
     @classmethod
     def from_pem(cls, data, password=None):
@@ -755,8 +757,7 @@ class JWK(object):
         :param password(bytes): An optional password to unwrap the key.
         """
         obj = cls()
-        obj.import_from_pem(data, password)
-        return obj
+        return obj.import_from_pem(data, password)
 
     def thumbprint(self, hashalg=hashes.SHA256()):
         """Returns the key thumbprint as specified by RFC 7638.
@@ -853,7 +854,6 @@ class JWKSet(dict):
                     self['keys'].add(JWK(**jwk))
             else:
                 self[k] = v
-
         return self
 
     @classmethod
