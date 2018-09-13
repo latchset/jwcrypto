@@ -311,11 +311,17 @@ class TestJWK(unittest.TestCase):
         self.assertRaises(jwk.InvalidJWKValue,
                           jwk.JWK.from_pyca, dict())
 
+    def test_jwk_from_json(self):
+        k = jwk.JWK.generate(kty='oct', size=256)
+        y = jwk.JWK.from_json(k.export())
+        self.assertEqual(k.export(), y.export())
+
     def test_jwkset(self):
         k = jwk.JWK(**RSAPrivateKey)
         ks = jwk.JWKSet()
         ks.add(k)
-        ks2 = jwk.JWKSet().import_keyset(ks.export())
+        ks2 = jwk.JWKSet()
+        ks2.import_keyset(ks.export())
         self.assertEqual(len(ks), len(ks2))
         self.assertEqual(len(ks), 1)
         k1 = ks.get_key(RSAPrivateKey['kid'])
