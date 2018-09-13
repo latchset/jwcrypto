@@ -441,7 +441,8 @@ class JWK(object):
             jkey = json_decode(key)
         except Exception as e:  # pylint: disable=broad-except
             raise InvalidJWKValue(e)
-        return obj.import_key(**jkey)
+        obj.import_key(**jkey)
+        return obj
 
     def export(self, private_key=True):
         """Exports the key in the standard JSON format.
@@ -854,8 +855,6 @@ class JWKSet(dict):
             else:
                 self[k] = v
 
-        return self
-
     @classmethod
     def from_json(cls, keyset):
         """Creates a RFC 7517 keyset from the standard JSON format.
@@ -863,7 +862,8 @@ class JWKSet(dict):
         :param keyset: The RFC 7517 representation of a JOSE Keyset.
         """
         obj = cls()
-        return obj.import_keyset(keyset)
+        obj.import_keyset(keyset)
+        return obj
 
     def get_key(self, kid):
         """Gets a key from the set.
