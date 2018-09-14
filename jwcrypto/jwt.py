@@ -280,7 +280,7 @@ class JWT(object):
     def _add_jti_claim(self, claims):
         if 'jti' in claims or 'jti' not in self._reg_claims:
             return
-        claims['jti'] = uuid.uuid4()
+        claims['jti'] = str(uuid.uuid4())
 
     def _add_default_claims(self, claims):
         if self._reg_claims is None:
