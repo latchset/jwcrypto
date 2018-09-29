@@ -77,7 +77,7 @@ Asymmetric keys
 Encrypt a JWE token::
     >>> from jwcrypto import jwk, jwe
     >>> from jwcrypto.common import json_encode, json_decode
-    >>> public_key = JWK()
+    >>> public_key = jwk.JWK()
     >>> private_key = jwk.JWK.generate(kty='RSA', size=2048)
     >>> public_key.import_key(**json_decode(private_key.export_public()))
     >>> payload = "My Encrypted message"
