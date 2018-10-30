@@ -833,6 +833,29 @@ E_A5_ex = \
     '"ciphertext":"KDlTtXchhZTGufMYmOYGS4HffxPSUrfmqCHXaI9wOGY",' \
     '"tag":"Mz-VPPyU4RlcuYv1IwIvzw"}'
 
+Issue_136_Protected_Header_no_epk = {
+    "alg": "ECDH-ES+A256KW",
+    "enc": "A256CBC-HS512"}
+
+Issue_136_Contributed_JWE = \
+    "eyJhbGciOiJFQ0RILUVTK0ExMjhLVyIsImVuYyI6IkEyNTZDQkMtSFM1MTIiLCJr" \
+    "aWQiOiJrZXkxIiwiZXBrIjp7Imt0eSI6IkVDIiwiY3J2IjoiUC0yNTYiLCJ4Ijoi" \
+    "cDNpU241cEFSNUpYUE5aVF9SSEw2MTJMUGliWEI2WDhvTE9EOXFrN2NhTSIsInki" \
+    "OiI1Y04yQ2FqeXM3SVlDSXFEby1QUHF2bVQ1RzFvMEEtU0JicEQ5NFBOb3NNIn19" \
+    ".wG51hYE_Vma8tvFKVyeZs4lsHhXiarEw3-59eWHPmhRflDAKrMvnBw1urezo_Bz" \
+    "ZyPJ76m42ORQPbhEu5NvbJk3vgdgcp03j" \
+    ".lRttW8r6P6zM0uYDQt0EjQ.qnOnz7biCbqdLEdUH3acMamFm-cBRCSTFb83tNPrgDU" \
+    ".vZnwYpYjzrTaYritwMzaguaAMsq9rQOWe8NUHICv2hg"
+
+Issue_136_Contributed_Key = {
+    "alg": "ECDH-ES+A128KW",
+    "crv": "P-256",
+    "d": "F2PnliYin65AoIUxL1CwwzBPNeL2TyZPAKtkXOP50l8",
+    "kid": "key1",
+    "kty": "EC",
+    "x": "FPrb_xwxe8SBP3kO-e-WsofFp7n5-yc_tGgfAvqAP8g",
+    "y": "lM3HuyKMYUVsYdGqiWlkwTZbGO3Fh-hyadq8lfkTgBc"}
+
 
 class TestJWE(unittest.TestCase):
     def check_enc(self, plaintext, protected, key, vector):
@@ -894,6 +917,20 @@ class TestJWE(unittest.TestCase):
                         unprotected='{"jku":"https://example.com/keys.jwks"}',
                         recipient=E_A1_ex['key'])
             e.serialize(compact=True)
+
+    def test_JWE_Issue_136(self):
+        plaintext = "plain"
+        protected = json_encode(Issue_136_Protected_Header_no_epk)
+        key = jwk.JWK.generate(kty='EC', crv='P-521')
+        e = jwe.JWE(plaintext, protected)
+        e.add_recipient(key)
+        enc = e.serialize()
+        e.deserialize(enc, key)
+        self.assertEqual(e.payload, plaintext.encode('utf-8'))
+
+        e = jwe.JWE()
+        e.deserialize(Issue_136_Contributed_JWE,
+                      jwk.JWK(**Issue_136_Contributed_Key))
 
 
 MMA_vector_key = jwk.JWK(**E_A2_key)
