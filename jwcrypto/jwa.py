@@ -14,6 +14,7 @@ from cryptography.hazmat.primitives.asymmetric import utils as ec_utils
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.primitives.kdf.concatkdf import ConcatKDFHash
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
+from cryptography.hazmat.primitives.keywrap import aes_key_unwrap, aes_key_wrap
 from cryptography.hazmat.primitives.padding import PKCS7
 
 import six
@@ -439,49 +440,14 @@ class _AesKw(_RawKeyMgmt):
         if not cek:
             cek = _randombits(bitsize)
 
-        # Implement RFC 3394 Key Unwrap - 2.2.2
-        # TODO: Use cryptography once issue #1733 is resolved
-        iv = 'a6a6a6a6a6a6a6a6'
-        a = unhexlify(iv)
-        r = [cek[i:i + 8] for i in range(0, len(cek), 8)]
-        n = len(r)
-        for j in range(0, 6):
-            for i in range(0, n):
-                e = Cipher(algorithms.AES(rk), modes.ECB(),
-                           backend=self.backend).encryptor()
-                b = e.update(a + r[i]) + e.finalize()
-                a = _encode_int(_decode_int(b[:8]) ^ ((n * j) + i + 1), 64)
-                r[i] = b[-8:]
-        ek = a
-        for i in range(0, n):
-            ek += r[i]
+        ek = aes_key_wrap(rk, cek, default_backend())
+
         return {'cek': cek, 'ek': ek}
 
     def unwrap(self, key, bitsize, ek, headers):
         rk = self._get_key(key, 'decrypt')
 
-        # Implement RFC 3394 Key Unwrap - 2.2.3
-        # TODO: Use cryptography once issue #1733 is resolved
-        iv = 'a6a6a6a6a6a6a6a6'
-        aiv = unhexlify(iv)
-
-        r = [ek[i:i + 8] for i in range(0, len(ek), 8)]
-        a = r.pop(0)
-        n = len(r)
-        for j in range(5, -1, -1):
-            for i in range(n - 1, -1, -1):
-                da = _decode_int(a)
-                atr = _encode_int((da ^ ((n * j) + i + 1)), 64) + r[i]
-                d = Cipher(algorithms.AES(rk), modes.ECB(),
-                           backend=self.backend).decryptor()
-                b = d.update(atr) + d.finalize()
-                a = b[:8]
-                r[i] = b[-8:]
-
-        if a != aiv:
-            raise RuntimeError('Decryption Failed')
-
-        cek = b''.join(r)
+        cek = aes_key_unwrap(rk, ek, default_backend())
         if _bitsize(cek) != bitsize:
             raise InvalidJWEKeyLength(bitsize, _bitsize(cek))
         return cek
