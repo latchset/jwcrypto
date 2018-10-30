@@ -727,23 +727,24 @@ class _EcdhEs(_RawKeyMgmt, JWAAlgorithm):
 
     def wrap(self, key, bitsize, cek, headers):
         self._check_key(key)
+        dk_size = self.keysize
         if self.keysize is None:
             if cek is not None:
                 raise InvalidJWEOperation('ECDH-ES cannot use an existing CEK')
             alg = headers['enc']
+            dk_size = bitsize
         else:
-            bitsize = self.keysize
             alg = headers['alg']
 
         epk = JWK.generate(kty=key.key_type, crv=key.key_curve)
         dk = self._derive(epk.get_op_key('unwrapKey'),
                           key.get_op_key('wrapKey'),
-                          alg, bitsize, headers)
+                          alg, dk_size, headers)
 
         if self.keysize is None:
             ret = {'cek': dk}
         else:
-            aeskw = self.aeskwmap[bitsize]()
+            aeskw = self.aeskwmap[self.keysize]()
             kek = JWK(kty="oct", use="enc", k=base64url_encode(dk))
             ret = aeskw.wrap(kek, bitsize, cek, headers)
 
@@ -754,20 +755,21 @@ class _EcdhEs(_RawKeyMgmt, JWAAlgorithm):
         if 'epk' not in headers:
             raise ValueError('Invalid Header, missing "epk" parameter')
         self._check_key(key)
+        dk_size = self.keysize
         if self.keysize is None:
             alg = headers['enc']
+            dk_size = bitsize
         else:
-            bitsize = self.keysize
             alg = headers['alg']
 
         epk = JWK(**headers['epk'])
         dk = self._derive(key.get_op_key('unwrapKey'),
                           epk.get_op_key('wrapKey'),
-                          alg, bitsize, headers)
+                          alg, dk_size, headers)
         if self.keysize is None:
             return dk
         else:
-            aeskw = self.aeskwmap[bitsize]()
+            aeskw = self.aeskwmap[self.keysize]()
             kek = JWK(kty="oct", use="enc", k=base64url_encode(dk))
             cek = aeskw.unwrap(kek, bitsize, ek, headers)
             return cek
