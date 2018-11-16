@@ -16,6 +16,7 @@ from six import iteritems
 from jwcrypto.common import JWException
 from jwcrypto.common import base64url_decode, base64url_encode
 from jwcrypto.common import json_decode, json_encode
+from jwcrypto.pkcs11 import PKCS11Key
 
 
 # RFC 7518 - 7.4
@@ -33,6 +34,7 @@ class ParmType(Enum):
     b64 = 'Base64url Encoded'
     b64U = 'Base64urlUint Encoded'
     unsupported = 'Unsupported Parameter'
+    uri = 'RFC7512 PKCS#11 URI'
 
 
 JWKParameter = namedtuple('Parameter', 'description public required type')
@@ -57,6 +59,7 @@ JWKValuesRegistry = {
                            False, False, ParmType.b64U),
         'oth': JWKParameter('Other Primes Info',
                             False, False, ParmType.unsupported),
+        'p11': JWKParameter('Key URI', False, False, ParmType.uri),
     },
     'oct': {
         'k': JWKParameter('Key Value', False, True, ParmType.b64),
@@ -226,6 +229,7 @@ class JWK(object):
         self._params = dict()
         self._key = dict()
         self._unknown = dict()
+        self._private_p11_pin = None
 
         if 'generate' in kwargs:
             self.generate_key(**kwargs)
@@ -609,6 +613,10 @@ class JWK(object):
         if self._params['kty'] == 'oct':
             return self._key['k']
         elif self._params['kty'] == 'RSA':
+            if self._key.get('p11'):
+                k = PKCS11Key.import_from_pkcs11_uri(self._key['p11'],
+                                                     self._private_p11_pin)
+                return k.get_public_key()
             return self._rsa_pub(self._key).public_key(default_backend())
         elif self._params['kty'] == 'EC':
             return self._ec_pub(self._key, arg).public_key(default_backend())
@@ -619,6 +627,10 @@ class JWK(object):
         if self._params['kty'] == 'oct':
             return self._key['k']
         elif self._params['kty'] == 'RSA':
+            if self._key.get('p11'):
+                k = PKCS11Key.import_from_pkcs11_uri(self._key['p11'],
+                                                     self._private_p11_pin)
+                return k
             return self._rsa_pri(self._key).private_key(default_backend())
         elif self._params['kty'] == 'EC':
             return self._ec_pri(self._key, arg).private_key(default_backend())
@@ -676,6 +688,29 @@ class JWK(object):
         else:
             raise InvalidJWKValue('Unknown key object %r' % key)
 
+    def import_from_uri(self, uri, pin, **params):
+        """Imports a key from a pkcs11 URL.
+        The implementation currently depends on python-gnutls on the system.
+        """
+        pkcs11_key = PKCS11Key.import_from_pkcs11_uri(uri, pin)
+        pn = pkcs11_key.get_public_key().public_numbers()
+        params.update(
+            kty='RSA',
+            n=self._encode_int(pn.n),
+            e=self._encode_int(pn.e),
+            p11=uri,
+        )
+        self._private_p11_pin = pin
+        self.import_key(**params)
+
+    @classmethod
+    def from_uri(cls, uri, pin=None):
+        """Imports a key from a pkcs11 URL.
+        """
+        obj = cls()
+        obj.import_from_uri(uri, pin)
+        return obj
+
     def import_from_pem(self, data, password=None):
         """Imports a key from data loaded from a PEM file.
         The key may be encrypted with a password.
@@ -724,6 +759,8 @@ class JWK(object):
         if private_key:
             if not self.has_private:
                 raise InvalidJWKType("No private key available")
+            if self._key.get('p11'):
+                raise InvalidJWKType("PKCS11 private keys cannot be encoded")
             f = serialization.PrivateFormat.PKCS8
             if password is None:
                 a = serialization.NoEncryption()

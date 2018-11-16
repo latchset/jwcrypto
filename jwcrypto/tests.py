@@ -3,6 +3,8 @@
 from __future__ import unicode_literals
 
 import copy
+import subprocess
+import sys
 import unittest
 
 from cryptography.hazmat.backends import default_backend
@@ -1330,3 +1332,97 @@ class TestUnencodedPayload(unittest.TestCase):
         with self.assertRaises(jws.InvalidJWSObject):
             s.add_signature(jwk.JWK(**SymmetricKeys['keys'][1]),
                             protected=rfc7797_u_header)
+
+
+class PKCS11Tests(unittest.TestCase):
+
+    @staticmethod
+    def runSetupSofthsm(command):
+        import os
+        keyuri = None
+        script = os.path.dirname(os.path.abspath(__file__)) + "/setup_softhsm"
+        args = [script, command]
+        proc = subprocess.Popen(args, stdout=subprocess.PIPE)
+        for line in proc.stdout:
+            if line.startswith(b'keyuri:'):
+                keyuri = line[7:].lstrip().rstrip()
+                if type(keyuri).__name__ == 'bytes':
+                    keyuri = keyuri.decode('utf-8')
+        proc.wait()
+        proc.stdout.close()
+        return keyuri
+
+    @classmethod
+    def setUpClass(cls):
+        PKCS11Tests.runSetupSofthsm('setup')
+
+    @classmethod
+    def tearDownClass(cls):
+        PKCS11Tests.runSetupSofthsm('teardown')
+
+    def _get_keyuri(self):
+        keyuri = PKCS11Tests.runSetupSofthsm('getkeyuri')
+        if keyuri:
+            sys.stderr.write("[Using %s] " % keyuri)
+        else:
+            sys.stderr.write("[No key available] ")
+        return keyuri
+
+    def _load_jwk(self):
+        p11uri = self._get_keyuri()
+        if not p11uri:
+            return None, None
+        try:
+            jwkey = jwk.JWK.from_uri(p11uri, pin='1234')
+        except ImportError as ex:
+            sys.stderr.write("[error: %s] " % ex)
+            return None, None
+        return jwkey, p11uri
+
+    def test_jwk(self):
+        test = A2_example
+
+        jwkey, p11uri = self._load_jwk()
+        if not jwkey:
+            return
+
+        jwk_json = jwkey.export()
+        self.assertEqual(json_decode(jwk_json)['p11'], p11uri)
+
+        pem = jwkey.export_to_pem()
+        self.assertTrue(pem.find(b'-----BEGIN') >= 0)
+
+        s = jws.JWSCore(test['alg'],
+                        jwkey,
+                        test['protected'],
+                        test['payload'],
+                        test.get('allowed_algs', None))
+        sig = s.sign()
+        decsig = base64url_decode(sig['signature'])
+        s.verify(decsig)
+
+    def test_jwt(self):
+        jwkey, _ = self._load_jwk()
+        if not jwkey:
+            return
+
+        token = jwt.JWT(header={"alg": "RS256", "typ": "JWT",
+                                "key": jwkey.key_id},
+                        claims={"foo": "bar"})
+        token.make_signed_token(jwkey)
+        rawjwt = token.serialize()
+        token.deserialize(rawjwt, key=jwkey)
+
+    def test_jwe(self):
+        jwkey, _ = self._load_jwk()
+        if not jwkey:
+            return
+
+        plaintext = "plain"
+        protected = '{"alg": "RSA-OAEP", "enc": "A256GCM"}'
+        e = jwe.JWE(plaintext, protected)
+        e.add_recipient(jwkey)
+
+        enc = e.serialize()
+        e.deserialize(enc, jwkey)
+        self.assertEqual(e.payload, plaintext.encode('utf-8'))
