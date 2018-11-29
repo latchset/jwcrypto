@@ -1426,3 +1426,17 @@ class PKCS11Tests(unittest.TestCase):
         enc = e.serialize()
         e.deserialize(enc, jwkey)
         self.assertEqual(e.payload, plaintext.encode('utf-8'))
+
+    def test_jwe_recipient_header(self):
+        jwkey, p11uri = self._load_jwk()
+        if not jwkey:
+            return
+
+        plaintext = "plain"
+        protected = '{"alg": "RSA-OAEP", "enc": "A256GCM"}'
+        e = jwe.JWE(plaintext, protected)
+        e.add_recipient(jwkey, header=json_encode({'p11': p11uri}))
+
+        enc = e.serialize()
+        e.deserialize(enc, try_pkcs11=True)
+        self.assertEqual(e.payload, plaintext.encode('utf-8'))

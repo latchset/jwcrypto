@@ -11,7 +11,8 @@ try:
         GNUTLS_DIG_SHA384, GNUTLS_DIG_SHA512
     from gnutls.crypto import PrivateKey
     from gnutls.callbacks import gnutls_set_pin_for_keyuri, \
-        gnutls_remove_pin_for_keyuri
+        gnutls_remove_pin_for_keyuri, gnutls_register_pin_for_keyuri_callback,\
+        gnutls_deregister_pin_for_keyuri_callback
     found_gnutls = True
 except ImportError:
     found_gnutls = False
@@ -46,6 +47,14 @@ class PKCS11Key(object):
             if pin:
                 gnutls_remove_pin_for_keyuri(uri)
         return pk.get_private_key()
+
+    @classmethod
+    def register_keyuri_pin_callback(cls, cb, data):
+        gnutls_register_pin_for_keyuri_callback(cb, data)
+
+    @classmethod
+    def deregister_keyuri_pin_callback(cls, cb):
+        gnutls_deregister_pin_for_keyuri_callback(cb)
 
     def get_uri(self):
         return self.gnutls_key.get_uri()

@@ -7,6 +7,7 @@ from jwcrypto.common import JWException
 from jwcrypto.common import base64url_decode, base64url_encode
 from jwcrypto.common import json_decode, json_encode
 from jwcrypto.jwa import JWA
+from jwcrypto.jwk import JWK
 
 
 # RFC 7516 - 4.1
@@ -346,8 +347,18 @@ class JWE(object):
                     raise InvalidJWEData('Unsupported critical header: '
                                          '"%s"' % k)
 
+    def _get_p11_key(self, ppe):
+        header = ppe.get('header')
+        if not header:
+            raise ValueError('No header element found')
+        p11 = json_decode(header).get('p11')
+        if not p11:
+            raise ValueError('No p11 element found in header')
+        # we may not find the key on this system...
+        return JWK.from_uri(p11)
+
     # FIXME: allow to specify which algorithms to accept as valid
-    def _decrypt(self, key, ppe):
+    def _decrypt(self, key, ppe, try_pkcs11=False):
 
         jh = self._get_jose_header(ppe.get('header', None))
 
@@ -360,6 +371,9 @@ class JWE(object):
         aad = base64url_encode(self.objects.get('protected', ''))
         if 'aad' in self.objects:
             aad += '.' + base64url_encode(self.objects['aad'])
+
+        if not key:
+            key = self._get_p11_key(ppe)
 
         cek = alg.unwrap(key, enc.wrap_key_size,
                          ppe.get('encrypted_key', b''), jh)
@@ -379,12 +393,16 @@ class JWE(object):
         else:
             raise ValueError('Unknown compression')
 
-    def decrypt(self, key):
+    def decrypt(self, key, try_pkcs11=False):
         """Decrypt a JWE token.
 
         :param key: The (:class:`jwcrypto.jwk.JWK`) decryption key.
         :param key: A (:class:`jwcrypto.jwk.JWK`) decryption key or a password
          string (optional).
+        :param try_pkcs11: Try to decrypt the data using pkcs11 keys
+         found in the recipient headers of the JWE; this key is attempted
+         to be used in case the passed key did not work or no key was
+         given
 
         :raises InvalidJWEOperation: if the key is not a JWK object.
         :raises InvalidJWEData: if the ciphertext can't be decrypted or
@@ -400,18 +418,30 @@ class JWE(object):
                 try:
                     self._decrypt(key, rec)
                 except Exception as e:  # pylint: disable=broad-except
-                    self.decryptlog.append('Failed: [%s]' % repr(e))
+                    if not key and try_pkcs11:
+                        try:
+                            self._decrypt(None, rec)
+                        except Exception as e:  # pylint: disable=broad-except
+                            self.decryptlog.append('Failed: [%s]' % repr(e))
+                    else:
+                        self.decryptlog.append('Failed: [%s]' % repr(e))
         else:
             try:
                 self._decrypt(key, self.objects)
             except Exception as e:  # pylint: disable=broad-except
-                self.decryptlog.append('Failed: [%s]' % repr(e))
+                if not key and try_pkcs11:
+                    try:
+                        self._decrypt(None, rec)
+                    except Exception as e:  # pylint: disable=broad-except
+                        self.decryptlog.append('Failed: [%s]' % repr(e))
+                else:
+                    self.decryptlog.append('Failed: [%s]' % repr(e))
 
         if not self.plaintext:
             raise InvalidJWEData('No recipient matched the provided '
                                  'key' + repr(self.decryptlog))
 
-    def deserialize(self, raw_jwe, key=None):
+    def deserialize(self, raw_jwe, key=None, try_pkcs11=False):
         """Deserialize a JWE token.
 
         NOTE: Destroys any current status and tries to import the raw
@@ -423,6 +453,8 @@ class JWE(object):
          string (optional).
          If a key is provided a decryption step will be attempted after
          the object is successfully deserialized.
+        :param try_pkcs11: Try to decrypt the data using pkcs11 keys
+         found in the recipient headers of the JWE
 
         :raises InvalidJWEData: if the raw object is an invaid JWE token.
         :raises InvalidJWEOperation: if the decryption fails.
@@ -481,8 +513,8 @@ class JWE(object):
         except Exception as e:  # pylint: disable=broad-except
             raise InvalidJWEData('Invalid format', repr(e))
 
-        if key:
-            self.decrypt(key)
+        if key or try_pkcs11:
+            self.decrypt(key, try_pkcs11=try_pkcs11)
 
     @property
     def payload(self):

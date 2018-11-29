@@ -910,3 +910,11 @@ class JWKSet(dict):
             if jwk.key_id == kid:
                 return jwk
         return None
+
+    @classmethod
+    def register_keyuri_pin_callback(cls, cb, data):
+        PKCS11Key.register_keyuri_pin_callback(cb, data)
+
+    @classmethod
+    def deregister_keyuri_pin_callback(cls, cb):
+        PKCS11Key.deregister_keyuri_pin_callback(cb)
