@@ -24,6 +24,35 @@ matrix:
       env: TOXENV=pep8py2
     - python: 3.6
       env: TOXENV=pep8py3
+    - python: 3.6
+      env: TOXENV=py36 PYTHONEXE=python3 PATH=/tmp/softhsm/bin:$PATH LD_LIBRARY_PATH=/tmp/softhsm/bin
+      dist: xenial
+      addons:
+        apt:
+          packages:
+          - python3-setuptools
+          - python3-pip
+          - gcc
+          - libssl-dev
+          - gnutls-bin
+          - libgnutls-dev
+      before_script:
+        - if [ -z "$(type -P softhsm2-util)" ]; then
+            wget https://dist.opendnssec.org/source/softhsm-2.5.0.tar.gz
+            && tar -xzf softhsm-2.5.0.tar.gz
+            && cd softhsm-2.5.0
+            && mkdir -p /tmp/softhsm/bin
+            && ./configure --prefix=/tmp/softhsm --libdir=/tmp/softhsm/bin
+            && make -j$(nproc)
+            && sudo make install
+            && cd ..;
+          fi;
+          pip install https://github.com/stefanberger/python-gnutls/archive/privkey.zip
+      script:
+        - tox
+          && $PYTHONEXE setup.py test
+      after_script:
+        - if [ -d /tmp/softhsm ]; then sudo rm -rf /tmp/softhsm; fi
 
 install:
   - pip install --upgrade pip setuptools
