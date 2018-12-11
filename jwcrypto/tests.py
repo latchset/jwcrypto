@@ -1094,20 +1094,35 @@ class TestJWT(unittest.TestCase):
 
     def test_decrypt_keyset(self):
         key = jwk.JWK(kid='testkey', **E_A2_key)
-        keyset = jwk.JWKSet()
-        # decrypt without keyid
-        t = jwt.JWT(A1_header, A1_claims)
-        t.make_encrypted_token(key)
-        token = t.serialize()
-        self.assertRaises(jwt.JWTMissingKeyID, jwt.JWT, jwt=token,
-                          key=keyset)
-        # encrypt a new JWT
+        keyset = jwk.JWKSet.from_json(json_encode(PrivateKeys))
+
+        # encrypt a new JWT with kid
         header = copy.copy(A1_header)
         header['kid'] = 'testkey'
         t = jwt.JWT(header, A1_claims)
         t.make_encrypted_token(key)
         token = t.serialize()
-        # try to decrypt without key
+        # try to decrypt without a matching key
+        self.assertRaises(jwt.JWTMissingKey, jwt.JWT, jwt=token, key=keyset)
+        # now decrypt with key
+        keyset.add(key)
+        jwt.JWT(jwt=token, key=keyset, check_claims={'exp': 1300819380})
+
+        # encrypt a new JWT with wrong kid
+        header = copy.copy(A1_header)
+        header['kid'] = '1'
+        t = jwt.JWT(header, A1_claims)
+        t.make_encrypted_token(key)
+        token = t.serialize()
+        self.assertRaises(jwe.InvalidJWEData, jwt.JWT, jwt=token, key=keyset)
+
+        keyset = jwk.JWKSet.from_json(json_encode(PrivateKeys))
+        # encrypt a new JWT with no kid
+        header = copy.copy(A1_header)
+        t = jwt.JWT(header, A1_claims)
+        t.make_encrypted_token(key)
+        token = t.serialize()
+        # try to decrypt without a matching key
         self.assertRaises(jwt.JWTMissingKey, jwt.JWT, jwt=token, key=keyset)
         # now decrypt with key
         keyset.add(key)

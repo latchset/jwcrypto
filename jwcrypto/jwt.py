@@ -108,6 +108,7 @@ class JWTInvalidClaimFormat(JWException):
         super(JWTInvalidClaimFormat, self).__init__(msg)
 
 
+# deprecated and not used anymore
 class JWTMissingKeyID(JWException):
     """Json Web Token is missing key id.
 
@@ -187,6 +188,7 @@ class JWT(object):
         self._check_claims = None
         self._leeway = 60  # 1 minute clock skew allowed
         self._validity = 600  # 10 minutes validity (up to 11 with leeway)
+        self.deserializelog = None
 
         if header:
             self.header = header
@@ -462,28 +464,37 @@ class JWT(object):
         if self._algs:
             self.token.allowed_algs = self._algs
 
+        self.deserializelog = list()
         # now deserialize and also decrypt/verify (or raise) if we
         # have a key
         if key is None:
             self.token.deserialize(jwt, None)
         elif isinstance(key, JWK):
             self.token.deserialize(jwt, key)
+            self.deserializelog.append("Success")
         elif isinstance(key, JWKSet):
             self.token.deserialize(jwt, None)
-            if 'kid' not in self.token.jose_header:
-                raise JWTMissingKeyID('No key ID in JWT header')
-
-            token_key = key.get_key(self.token.jose_header['kid'])
-            if not token_key:
-                raise JWTMissingKey('Key ID %s not in key set'
-                                    % self.token.jose_header['kid'])
-
-            if isinstance(self.token, JWE):
-                self.token.decrypt(token_key)
-            elif isinstance(self.token, JWS):
-                self.token.verify(token_key)
+            if 'kid' in self.token.jose_header:
+                kid_key = key.get_key(self.token.jose_header['kid'])
+                if not kid_key:
+                    raise JWTMissingKey('Key ID %s not in key set'
+                                        % self.token.jose_header['kid'])
+                self.token.deserialize(jwt, kid_key)
             else:
-                raise RuntimeError("Unknown Token Type")
+                for k in key:
+                    try:
+                        self.token.deserialize(jwt, k)
+                        self.deserializelog.append("Success")
+                        break
+                    except Exception as e:  # pylint: disable=broad-except
+                        keyid = k.key_id
+                        if keyid is None:
+                            keyid = k.thumbprint()
+                        self.deserializelog.append('Key [%s] failed: [%s]' % (
+                            keyid, repr(e)))
+                        continue
+                if "Success" not in self.deserializelog:
+                    raise JWTMissingKey('No working key found in key set')
         else:
             raise ValueError("Unrecognized Key Type")
 
