@@ -10,6 +10,18 @@ from jwcrypto.jwe import JWE
 from jwcrypto.jwk import JWK, JWKSet
 from jwcrypto.jws import JWS
 
+__all__ = [
+    'JWTClaimsRegistry',
+    'JWTExpired',
+    'JWTNotYetValid',
+    'JWTMissingClaim',
+    'JWTInvalidClaimValue',
+    'JWTInvalidClaimFormat',
+    'JWTMissingKeyID',
+    'JWTMissingKey',
+    'JWT',
+]
+
 
 # RFC 7519 - 4.1
 # name: description

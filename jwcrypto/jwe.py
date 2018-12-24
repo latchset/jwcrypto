@@ -8,6 +8,17 @@ from jwcrypto.common import base64url_decode, base64url_encode
 from jwcrypto.common import json_decode, json_encode
 from jwcrypto.jwa import JWA
 
+__all__ = [
+    'JWEHeaderRegistry',
+    'JWE',
+    'jwe_default_allowed_algs',
+    'InvalidJWEData',
+    'InvalidCEKeyLength',
+    'InvalidJWEKeyLength',
+    'InvalidJWEKeyType',
+    'InvalidJWEOperation',
+]
+
 
 # RFC 7516 - 4.1
 # name: (description, supported?)
@@ -27,7 +38,7 @@ JWEHeaderRegistry = {'alg': ('Algorithm', True),
                      'crit': ('Critical', True)}
 """Registry of valid header parameters"""
 
-default_allowed_algs = [
+jwe_default_allowed_algs = [
     # Key Management Algorithms
     'RSA1_5', 'RSA-OAEP', 'RSA-OAEP-256',
     'A128KW', 'A192KW', 'A256KW',
@@ -117,13 +128,13 @@ class JWE(object):
             raise ValueError('Header is allowed only with default recipient')
 
     def _jwa_keymgmt(self, name):
-        allowed = self._allowed_algs or default_allowed_algs
+        allowed = self._allowed_algs or jwe_default_allowed_algs
         if name not in allowed:
             raise InvalidJWEOperation('Algorithm not allowed')
         return JWA.keymgmt_alg(name)
 
     def _jwa_enc(self, name):
-        allowed = self._allowed_algs or default_allowed_algs
+        allowed = self._allowed_algs or jwe_default_allowed_algs
         if name not in allowed:
             raise InvalidJWEOperation('Algorithm not allowed')
         return JWA.encryption_alg(name)
@@ -139,7 +150,7 @@ class JWE(object):
         if self._allowed_algs:
             return self._allowed_algs
         else:
-            return default_allowed_algs
+            return jwe_default_allowed_algs
 
     @allowed_algs.setter
     def allowed_algs(self, algs):

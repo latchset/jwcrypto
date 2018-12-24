@@ -28,6 +28,12 @@ from jwcrypto.common import base64url_decode, base64url_encode
 from jwcrypto.common import json_decode
 from jwcrypto.jwk import JWK
 
+__all__ = [
+    'JWA',
+    'JWAAlgorithm',
+]
+
+
 # Implements RFC 7518 - JSON Web Algorithms (JWA)
 
 
@@ -37,27 +43,22 @@ class JWAAlgorithm(object):
     @abc.abstractproperty
     def name(self):
         """The algorithm Name"""
-        pass
 
     @abc.abstractproperty
     def description(self):
         """A short description"""
-        pass
 
     @abc.abstractproperty
     def keysize(self):
         """The actual/recommended/minimum key size"""
-        pass
 
     @abc.abstractproperty
     def algorithm_usage_location(self):
         """One of 'alg', 'enc' or 'JWK'"""
-        pass
 
     @abc.abstractproperty
     def algorithm_use(self):
         """One of 'sig', 'kex', 'enc'"""
-        pass
 
 
 def _bitsize(x):

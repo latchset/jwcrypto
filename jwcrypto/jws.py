@@ -8,6 +8,17 @@ from jwcrypto.common import json_decode, json_encode
 from jwcrypto.jwa import JWA
 from jwcrypto.jwk import JWK
 
+__all__ = [
+    'JWSHeaderParameter',
+    'JWSHeaderRegistry',
+    'jws_default_allowed_algs',
+    'InvalidJWSSignature',
+    'InvalidJWSObject',
+    'InvalidJWSOperation',
+    'JWSCore',
+    'JWS',
+]
+
 
 # RFC 7515 - 9.1
 # name: (description, supported?)
@@ -31,7 +42,7 @@ JWSHeaderRegistry = {
 }
 """Registry of valid header parameters"""
 
-default_allowed_algs = [
+jws_default_allowed_algs = [
     'HS256', 'HS384', 'HS512',
     'RS256', 'RS384', 'RS512',
     'ES256', 'ES384', 'ES512',
@@ -135,7 +146,7 @@ class JWSCore(object):
 
     def _jwa(self, name, allowed):
         if allowed is None:
-            allowed = default_allowed_algs
+            allowed = jws_default_allowed_algs
         if name not in allowed:
             raise InvalidJWSOperation('Algorithm not allowed')
         return JWA.signing_alg(name)
@@ -200,7 +211,7 @@ class JWS(object):
         if self._allowed_algs:
             return self._allowed_algs
         else:
-            return default_allowed_algs
+            return jws_default_allowed_algs
 
     @allowed_algs.setter
     def allowed_algs(self, algs):

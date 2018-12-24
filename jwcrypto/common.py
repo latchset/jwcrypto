@@ -3,6 +3,19 @@
 import json
 from base64 import urlsafe_b64decode, urlsafe_b64encode
 
+__all__ = [
+    'base64url_decode',
+    'base64url_encode',
+    'json_encode',
+    'json_decode',
+    'JWException',
+    'InvalidCEKeyLength',
+    'InvalidJWAAlgorithm',
+    'InvalidJWEKeyLength',
+    'InvalidJWEKeyType',
+    'InvalidJWEOperation',
+]
+
 
 # Padding stripping versions as described in
 # RFC 7515 Appendix C

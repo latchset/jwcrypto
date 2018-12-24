@@ -17,6 +17,24 @@ from jwcrypto.common import JWException
 from jwcrypto.common import base64url_decode, base64url_encode
 from jwcrypto.common import json_decode, json_encode
 
+__all__ = [
+    'JWKTypesRegistry',
+    'ParmType',
+    'JWKParameter',
+    'JWKValuesRegistry',
+    'JWKParamsRegistry',
+    'JWKEllipticCurveRegistry',
+    'JWKUseRegistry',
+    'JWKOperationsRegistry',
+    'JWKpycaCurveMap',
+    'InvalidJWKType',
+    'InvalidJWKUsage',
+    'InvalidJWKOperation',
+    'InvalidJWKValue',
+    'JWK',
+    'JWKSet',
+]
+
 
 # RFC 7518 - 7.4
 JWKTypesRegistry = {'EC': 'Elliptic Curve',
@@ -182,8 +200,6 @@ class InvalidJWKValue(JWException):
     context of an operation that requires specific values to be used based
     on the key type or other constraints.
     """
-
-    pass
 
 
 class JWK(object):
