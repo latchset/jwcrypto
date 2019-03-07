@@ -9,17 +9,70 @@ from cryptography import x509
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import ec
-from cryptography.hazmat.primitives.asymmetric import ed25519
-from cryptography.hazmat.primitives.asymmetric import ed448
 from cryptography.hazmat.primitives.asymmetric import rsa
-from cryptography.hazmat.primitives.asymmetric import x25519
-from cryptography.hazmat.primitives.asymmetric import x448
 
 from six import iteritems
 
 from jwcrypto.common import JWException
 from jwcrypto.common import base64url_decode, base64url_encode
 from jwcrypto.common import json_decode, json_encode
+
+
+class UnimplementedOKPCurveKey(object):
+    @classmethod
+    def generate(cls):
+        raise NotImplementedError
+
+    @classmethod
+    def from_public_bytes(cls, *args):
+        raise NotImplementedError
+
+    @classmethod
+    def from_private_bytes(cls, *args):
+        raise NotImplementedError
+
+
+ImplementedOkpCurves = []
+
+
+# Handle the best we can older versions of python cryptography that
+# do not yet implement these interfaces properly
+try:
+    from cryptography.hazmat.primitives.asymmetric.ed25519 import (
+        Ed25519PublicKey, Ed25519PrivateKey
+    )
+    ImplementedOkpCurves.append('Ed25519')
+except ImportError:
+    Ed25519PublicKey = UnimplementedOKPCurveKey
+    Ed25519PrivateKey = UnimplementedOKPCurveKey
+try:
+    from cryptography.hazmat.primitives.asymmetric.ed448 import (
+        Ed448PublicKey, Ed448PrivateKey
+    )
+    ImplementedOkpCurves.append('Ed448')
+except ImportError:
+    Ed448PublicKey = UnimplementedOKPCurveKey
+    Ed448PrivateKey = UnimplementedOKPCurveKey
+try:
+    from cryptography.hazmat.primitives.asymmetric.x25519 import (
+        X25519PublicKey, X25519PrivateKey
+    )
+    priv_bytes = getattr(X25519PrivateKey, 'from_private_bytes', None)
+    if priv_bytes is None:
+        raise ImportError
+    print(priv_bytes)
+    ImplementedOkpCurves.append('X25519')
+except ImportError:
+    X25519PublicKey = UnimplementedOKPCurveKey
+    X25519PrivateKey = UnimplementedOKPCurveKey
+try:
+    from cryptography.hazmat.primitives.asymmetric.x448 import (
+        X448PublicKey, X448PrivateKey
+    )
+    ImplementedOkpCurves.append('X448')
+except ImportError:
+    X448PublicKey = UnimplementedOKPCurveKey
+    X448PrivateKey = UnimplementedOKPCurveKey
 
 
 # RFC 7518 - 7.4 , RFC 8037 - 5
@@ -374,13 +427,13 @@ class JWK(object):
         if 'crv' not in params:
             raise InvalidJWKValue('Must specify "crv" for OKP key generation')
         if params['crv'] == 'Ed25519':
-            key = ed25519.Ed25519PrivateKey.generate()
+            key = Ed25519PrivateKey.generate()
         elif params['crv'] == 'Ed448':
-            key = ed448.Ed448PrivateKey.generate()
+            key = Ed448PrivateKey.generate()
         elif params['crv'] == 'X25519':
-            key = x25519.X25519PrivateKey.generate()
+            key = X25519PrivateKey.generate()
         elif params['crv'] == 'X448':
-            key = x448.X448PrivateKey.generate()
+            key = X448PrivateKey.generate()
         else:
             raise InvalidJWKValue('"%s" is not a supported curve for the '
                                   'OKP key type' % params['crv'])
@@ -664,32 +717,32 @@ class JWK(object):
 
     def _okp_pub(self, k):
         if k['crv'] == 'Ed25519':
-            return ed25519.Ed25519PublicKey.from_public_bytes(
+            return Ed25519PublicKey.from_public_bytes(
                 base64url_decode(k['x']))
         elif k['crv'] == 'Ed448':
-            return ed448.Ed448PublicKey.from_public_bytes(
+            return Ed448PublicKey.from_public_bytes(
                 base64url_decode(k['x']))
         elif k['crv'] == 'X25519':
-            return x25519.X25519PublicKey.from_public_bytes(
+            return X25519PublicKey.from_public_bytes(
                 base64url_decode(k['x']))
         elif k['crv'] == 'X448':
-            return x448.X448PublicKey.from_public_bytes(
+            return X448PublicKey.from_public_bytes(
                 base64url_decode(k['x']))
         # No support for other curves
         raise NotImplementedError
 
     def _okp_pri(self, k):
         if k['crv'] == 'Ed25519':
-            return ed25519.Ed25519PrivateKey.from_private_bytes(
+            return Ed25519PrivateKey.from_private_bytes(
                 base64url_decode(k['d']))
         elif k['crv'] == 'Ed448':
-            return ed448.Ed448PrivateKey.from_private_bytes(
+            return Ed448PrivateKey.from_private_bytes(
                 base64url_decode(k['d']))
         elif k['crv'] == 'X25519':
-            return x25519.X25519PrivateKey.from_private_bytes(
+            return X25519PrivateKey.from_private_bytes(
                 base64url_decode(k['d']))
         elif k['crv'] == 'X448':
-            return x448.X448PrivateKey.from_private_bytes(
+            return X448PrivateKey.from_private_bytes(
                 base64url_decode(k['d']))
         # No support for other curves
         raise NotImplementedError
@@ -766,11 +819,9 @@ class JWK(object):
             self._import_pyca_pri_ec(key)
         elif isinstance(key, ec.EllipticCurvePublicKey):
             self._import_pyca_pub_ec(key)
-        elif isinstance(key, ed25519.Ed25519PrivateKey) or \
-                isinstance(key, ed448.Ed448PrivateKey):
+        elif isinstance(key, (Ed25519PrivateKey, Ed448PrivateKey)):
             self._import_pyca_pri_okp(key)
-        elif isinstance(key, ed25519.Ed25519PublicKey) or \
-                isinstance(key, ed448.Ed448PublicKey):
+        elif isinstance(key, (Ed25519PublicKey, Ed448PublicKey)):
             self._import_pyca_pub_okp(key)
         else:
             raise InvalidJWKValue('Unknown key object %r' % key)
