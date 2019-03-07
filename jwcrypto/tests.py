@@ -321,7 +321,7 @@ class TestJWK(unittest.TestCase):
         key.get_curve('P-521')
 
     def test_generate_OKP_keys(self):
-        for crv in ['Ed25519', 'Ed448', 'X25519', 'X448']:
+        for crv in jwk.ImplementedOkpCurves:
             key = jwk.JWK.generate(kty='OKP', crv=crv)
             self.assertEqual(key.get_curve(crv), crv)
 
@@ -767,7 +767,10 @@ class TestJWS(unittest.TestCase):
             jws.JWS(A6_example['payload'], header_registry=newreg)
 
     def test_EdDsa_signing_and_verification(self):
-        for curve_example in [E_Ed25519]:
+        examples = []
+        if 'Ed25519' in jwk.ImplementedOkpCurves:
+            examples = [E_Ed25519]
+        for curve_example in examples:
             key = jwk.JWK.from_json(curve_example['key_json'])
             payload = curve_example['payload']
             protected_header = curve_example['protected_header']
@@ -1095,9 +1098,9 @@ class TestJWE(unittest.TestCase):
             jwe.JWE(header_registry=newreg)
 
     def test_X25519_ECDH(self):
-        plaintext = "plain"
+        plaintext = b"plain"
         protected = json_encode(X25519_Protected_Header_no_epk)
-        with self.assertRaises(NotImplementedError):
+        if 'X25519' in jwk.ImplementedOkpCurves:
             x25519key = jwk.JWK.generate(kty='OKP', crv='X25519')
             e1 = jwe.JWE(plaintext, protected)
             e1.add_recipient(x25519key)
