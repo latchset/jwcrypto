@@ -1,5 +1,6 @@
 # Copyright (C) 2015 JWCrypto Project Contributors - see LICENSE file
 
+from collections import namedtuple
 import zlib
 
 from jwcrypto import common
@@ -10,22 +11,27 @@ from jwcrypto.jwa import JWA
 
 
 # RFC 7516 - 4.1
-# name: (description, supported?)
-JWEHeaderRegistry = {'alg': ('Algorithm', True),
-                     'enc': ('Encryption Algorithm', True),
-                     'zip': ('Compression Algorithm', True),
-                     'jku': ('JWK Set URL', False),
-                     'jwk': ('JSON Web Key', False),
-                     'kid': ('Key ID', True),
-                     'x5u': ('X.509 URL', False),
-                     'x5c': ('X.509 Certificate Chain', False),
-                     'x5t': ('X.509 Certificate SHA-1 Thumbprint', False),
-                     'x5t#S256': ('X.509 Certificate SHA-256 Thumbprint',
-                                  False),
-                     'typ': ('Type', True),
-                     'cty': ('Content Type', True),
-                     'crit': ('Critical', True)}
-"""Registry of valid header parameters"""
+# name: (description, must be protected boolean, is supported boolean)
+JWEHeaderParameter = namedtuple('Parameter',
+                                'description mustprotect supported')
+JWEHeaderRegistry = {
+    'alg': JWEHeaderParameter('Algorithm', False, True),
+    'enc': JWEHeaderParameter('Encryption Algorithm', False, True),
+    'zip': JWEHeaderParameter('Compression Algorithm', True, True),
+    'jku': JWEHeaderParameter('JWK Set URL', False, False),
+    'jwk': JWEHeaderParameter('JSON Web Key', False, False),
+    'kid': JWEHeaderParameter('Key ID', False, True),
+    'x5u': JWEHeaderParameter('X.509 URL', False, False),
+    'x5c': JWEHeaderParameter('X.509 Certificate Chain', False, False),
+    'x5t': JWEHeaderParameter('X.509 Certificate SHA-1 Thumbprint',
+                              False, False),
+    'x5t#S256': JWEHeaderParameter('X.509 Certificate SHA-256 Thumbprint',
+                                   False, False),
+    'typ': JWEHeaderParameter('Type', False, True),
+    'cty': JWEHeaderParameter('Content Type', False, True),
+    'crit': JWEHeaderParameter('Critical', False, True)
+}
+"""Registry of valid JWE header parameters"""
 
 default_allowed_algs = [
     # Key Management Algorithms
@@ -342,9 +348,21 @@ class JWE(object):
             if k not in JWEHeaderRegistry:
                 raise InvalidJWEData('Unknown critical header: "%s"' % k)
             else:
-                if not JWEHeaderRegistry[k][1]:
+                if not JWEHeaderRegistry[k].supported:
                     raise InvalidJWEData('Unsupported critical header: '
                                          '"%s"' % k)
+
+    def _check_protected(self, header):
+        p = []
+        for k in header:
+            if k in JWEHeaderRegistry and JWEHeaderRegistry[k].mustprotect:
+                p.append(k)
+        if len(p) > 0:
+            protected = json_decode(self.objects.get('protected', '{}'))
+            for k in p:
+                if k not in protected:
+                    raise InvalidJWEData('Header "{}" is allowed only in '
+                                         'protected header'.format(k))
 
     # FIXME: allow to specify which algorithms to accept as valid
     def _decrypt(self, key, ppe):
@@ -353,6 +371,7 @@ class JWE(object):
 
         # TODO: allow caller to specify list of headers it understands
         self._check_crit(jh.get('crit', dict()))
+        self._check_protected(jh)
 
         alg = self._jwa_keymgmt(jh.get('alg', None))
         enc = self._jwa_enc(jh.get('enc', None))
