@@ -10,7 +10,7 @@ from jwcrypto.jwk import JWK
 
 
 # RFC 7515 - 9.1
-# name: (description, supported?)
+# name: (description, must be protected boolean, is supported boolean)
 JWSHeaderParameter = namedtuple('Parameter',
                                 'description mustprotect supported')
 JWSHeaderRegistry = {
@@ -225,7 +225,7 @@ class JWS(object):
                         raise InvalidJWSObject(
                             'Unknown critical header: "%s"' % k)
                     else:
-                        if not JWSHeaderRegistry[k][1]:
+                        if not JWSHeaderRegistry[k].supported:
                             raise InvalidJWSObject(
                                 'Unsupported critical header: "%s"' % k)
             header = protected
