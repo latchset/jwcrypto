@@ -4,6 +4,7 @@ import zlib
 
 from jwcrypto import common
 from jwcrypto.common import JWException
+from jwcrypto.common import JWSEHeaderParameter, JWSEHeaderRegistry
 from jwcrypto.common import base64url_decode, base64url_encode
 from jwcrypto.common import json_decode, json_encode
 from jwcrypto.jwa import JWA
@@ -11,20 +12,23 @@ from jwcrypto.jwa import JWA
 
 # RFC 7516 - 4.1
 # name: (description, supported?)
-JWEHeaderRegistry = {'alg': ('Algorithm', True),
-                     'enc': ('Encryption Algorithm', True),
-                     'zip': ('Compression Algorithm', True),
-                     'jku': ('JWK Set URL', False),
-                     'jwk': ('JSON Web Key', False),
-                     'kid': ('Key ID', True),
-                     'x5u': ('X.509 URL', False),
-                     'x5c': ('X.509 Certificate Chain', False),
-                     'x5t': ('X.509 Certificate SHA-1 Thumbprint', False),
-                     'x5t#S256': ('X.509 Certificate SHA-256 Thumbprint',
-                                  False),
-                     'typ': ('Type', True),
-                     'cty': ('Content Type', True),
-                     'crit': ('Critical', True)}
+JWEHeaderRegistry = {
+    'alg': JWSEHeaderParameter('Algorithm', False, True, None),
+    'enc': JWSEHeaderParameter('Encryption Algorithm', False, True, None),
+    'zip': JWSEHeaderParameter('Compression Algorithm', False, True, None),
+    'jku': JWSEHeaderParameter('JWK Set URL', False, False, None),
+    'jwk': JWSEHeaderParameter('JSON Web Key', False, False, None),
+    'kid': JWSEHeaderParameter('Key ID', False, True, None),
+    'x5u': JWSEHeaderParameter('X.509 URL', False, False, None),
+    'x5c': JWSEHeaderParameter('X.509 Certificate Chain', False, False, None),
+    'x5t': JWSEHeaderParameter('X.509 Certificate SHA-1 Thumbprint', False,
+                               False, None),
+    'x5t#S256': JWSEHeaderParameter('X.509 Certificate SHA-256 Thumbprint',
+                                    False, False, None),
+    'typ': JWSEHeaderParameter('Type', False, True, None),
+    'cty': JWSEHeaderParameter('Content Type', False, True, None),
+    'crit': JWSEHeaderParameter('Critical', True, True, None),
+}
 """Registry of valid header parameters"""
 
 default_allowed_algs = [
@@ -73,7 +77,8 @@ class JWE(object):
     """
 
     def __init__(self, plaintext=None, protected=None, unprotected=None,
-                 aad=None, algs=None, recipient=None, header=None):
+                 aad=None, algs=None, recipient=None, header=None,
+                 header_registry=None):
         """Creates a JWE token.
 
         :param plaintext(bytes): An arbitrary plaintext to be encrypted.
@@ -83,10 +88,14 @@ class JWE(object):
         :param algs: An optional list of allowed algorithms
         :param recipient: An optional, default recipient key
         :param header: An optional header for the default recipient
+        :param header_registry: Optional additions to the header registry
         """
         self._allowed_algs = None
         self.objects = dict()
         self.plaintext = None
+        self.header_registry = JWSEHeaderRegistry(JWEHeaderRegistry)
+        if header_registry:
+            self.header_registry.update(header_registry)
         if plaintext is not None:
             if isinstance(plaintext, bytes):
                 self.plaintext = plaintext
@@ -339,10 +348,10 @@ class JWE(object):
 
     def _check_crit(self, crit):
         for k in crit:
-            if k not in JWEHeaderRegistry:
+            if k not in self.header_registry:
                 raise InvalidJWEData('Unknown critical header: "%s"' % k)
             else:
-                if not JWEHeaderRegistry[k][1]:
+                if not self.header_registry[k].supported:
                     raise InvalidJWEData('Unsupported critical header: '
                                          '"%s"' % k)
 
@@ -353,6 +362,11 @@ class JWE(object):
 
         # TODO: allow caller to specify list of headers it understands
         self._check_crit(jh.get('crit', dict()))
+
+        for hdr in jh:
+            if hdr in self.header_registry:
+                if not self.header_registry.check_header(hdr, self):
+                    raise InvalidJWEData('Failed header check')
 
         alg = self._jwa_keymgmt(jh.get('alg', None))
         enc = self._jwa_enc(jh.get('enc', None))
