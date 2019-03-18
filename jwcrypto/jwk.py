@@ -31,7 +31,7 @@ JWKTypesRegistry = {'EC': 'Elliptic Curve',
 class ParmType(Enum):
     name = 'A string with a name'
     b64 = 'Base64url Encoded'
-    b64U = 'Base64urlUint Encoded'
+    b64u = 'Base64urlUint Encoded'
     unsupported = 'Unsupported Parameter'
 
 
@@ -45,16 +45,16 @@ JWKValuesRegistry = {
     },
     'RSA': {
         'n': JWKParameter('Modulus', True, True, ParmType.b64),
-        'e': JWKParameter('Exponent', True, True, ParmType.b64U),
-        'd': JWKParameter('Private Exponent', False, False, ParmType.b64U),
-        'p': JWKParameter('First Prime Factor', False, False, ParmType.b64U),
-        'q': JWKParameter('Second Prime Factor', False, False, ParmType.b64U),
+        'e': JWKParameter('Exponent', True, True, ParmType.b64u),
+        'd': JWKParameter('Private Exponent', False, False, ParmType.b64u),
+        'p': JWKParameter('First Prime Factor', False, False, ParmType.b64u),
+        'q': JWKParameter('Second Prime Factor', False, False, ParmType.b64u),
         'dp': JWKParameter('First Factor CRT Exponent',
-                           False, False, ParmType.b64U),
+                           False, False, ParmType.b64u),
         'dq': JWKParameter('Second Factor CRT Exponent',
-                           False, False, ParmType.b64U),
+                           False, False, ParmType.b64u),
         'qi': JWKParameter('First CRT Coefficient',
-                           False, False, ParmType.b64U),
+                           False, False, ParmType.b64u),
         'oth': JWKParameter('Other Primes Info',
                             False, False, ParmType.unsupported),
     },
@@ -385,7 +385,7 @@ class JWK(object):
                     raise InvalidJWKValue(
                         '"%s" is not base64url encoded' % name
                     )
-            if val[3] == ParmType.b64U and name in self._key:
+            if val[3] == ParmType.b64u and name in self._key:
                 # Check that the value is Base64urlUInt encoded
                 try:
                     self._decode_int(self._key[name])
