@@ -70,7 +70,7 @@ def _inbytes(x):
 
 def _randombits(x):
     if x % 8 != 0:
-        raise ValueError("lenght must be a multiple of 8")
+        raise ValueError("length must be a multiple of 8")
     return os.urandom(_inbytes(x))
 
 
