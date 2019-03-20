@@ -56,7 +56,7 @@ class InvalidCEKeyLength(JWException):
     """Invalid CEK Key Length.
 
     This exception is raised when a Content Encryption Key does not match
-    the required lenght.
+    the required length.
     """
 
     def __init__(self, expected, obtained):
@@ -98,9 +98,9 @@ class InvalidJWEKeyLength(JWException):
     """Invalid JWE Key Length.
 
     This exception is raised when the provided JWK Key does not match
-    the lenght required by the sepcified algorithm.
+    the length required by the sepcified algorithm.
     """
 
     def __init__(self, expected, obtained):
-        msg = 'Expected key of lenght %d, got %d' % (expected, obtained)
+        msg = 'Expected key of length %d, got %d' % (expected, obtained)
         super(InvalidJWEKeyLength, self).__init__(msg)
