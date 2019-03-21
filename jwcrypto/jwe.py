@@ -492,7 +492,7 @@ class JWE(object):
 
     @property
     def jose_header(self):
-        jh = self._get_jose_header()
+        jh = self._get_jose_header(self.objects.get('header'))
         if len(jh) == 0:
             raise InvalidJWEOperation("JOSE Header not available")
         return jh
