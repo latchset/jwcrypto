@@ -22,7 +22,7 @@ from jwcrypto.common import json_decode, json_encode
 
 
 # RFC 7518 - 7.4
-# 'OKP' from RFC 8037 for representing ECDH (a.k.a. Edwards curve)
+# 'OKP' from RFC 8037 for representing EdDSA (a.k.a. Edwards curve)
 JWKTypesRegistry = {'EC': 'Elliptic Curve',
                     'RSA': 'RSA',
                     'oct': 'Octet sequence',
