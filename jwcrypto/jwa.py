@@ -11,6 +11,10 @@ from cryptography.hazmat.primitives import constant_time, hashes, hmac
 from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.hazmat.primitives.asymmetric import padding
 from cryptography.hazmat.primitives.asymmetric import utils as ec_utils
+from cryptography.hazmat.primitives.asymmetric import ed25519
+from cryptography.hazmat.primitives.asymmetric import ed448
+from cryptography.hazmat.primitives.asymmetric import x25519
+from cryptography.hazmat.primitives.asymmetric import x448
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.primitives.kdf.concatkdf import ConcatKDFHash
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
@@ -693,8 +697,12 @@ class _EcdhEs(_RawKeyMgmt, JWAAlgorithm):
     def _check_key(self, key):
         if not isinstance(key, JWK):
             raise ValueError('key is not a JWK object')
-        if key.key_type != 'EC':
-            raise InvalidJWEKeyType('EC', key.key_type)
+        if key.key_type not in ['EC', 'OKP']:
+            raise InvalidJWEKeyType('EC or OKP', key.key_type)
+        if key.key_type == 'OKP':
+            if key.key_curve not in ['Ed25519', 'Ed448', 'X25519', 'X448']:
+                raise InvalidJWEKeyType('Ed25519, Ed448, X25519 or X448', key.key_curve)
+
 
     def _derive(self, privkey, pubkey, alg, bitsize, headers):
         # OtherInfo is defined in NIST SP 56A 5.8.1.2.1
@@ -718,7 +726,16 @@ class _EcdhEs(_RawKeyMgmt, JWAAlgorithm):
 
         # no SuppPrivInfo
 
-        shared_key = privkey.exchange(ec.ECDH(), pubkey)
+        if isinstance(privkey, ec.EllipticCurvePrivateKey):
+            shared_key = privkey.exchange(ec.ECDH(), pubkey)
+        elif isinstance(privkey, ed25519.Ed25519PrivateKey) or \
+            isinstance(privkey, ed448.Ed448PrivateKey) or \
+            isinstance(privkey, x25519.X25519PrivateKey) or \
+            isinstance(privkey, x448.X448PrivateKey):
+            shared_key = privkey.exchange(pubkey)
+        else:
+            # Not implemented yet
+            raise NotImplementedError
         ckdf = ConcatKDFHash(algorithm=hashes.SHA256(),
                              length=_inbytes(bitsize),
                              otherinfo=otherinfo,
@@ -995,6 +1012,27 @@ class _A256Gcm(_AesGcm, JWAAlgorithm):
     algorithm_use = 'enc'
 
 
+class _EdDsa(_RawJWS, JWAAlgorithm):
+
+    name = 'EdDSA'
+    description = 'EdDSA using Ed25519 or Ed448 algorithms'
+    algorithm_usage_location = 'alg'
+    algorithm_use = 'sig'
+    keysize = None
+
+    def sign(self, key, payload):
+        if key._key['crv'] in ['Ed25519', 'Ed448']:
+            skey = key.get_op_key('sign')
+            return skey.sign(payload)
+        raise NotImplementedError
+
+    def verify(self, key, data, signature):
+        if key._key['crv'] in ['Ed25519', 'Ed448']:
+            pkey = key.get_op_key('verify')
+            return pkey.verify(signature, data)
+        raise NotImplementedError
+
+
 class JWA(object):
     """JWA Signing Algorithms.
 
@@ -1037,7 +1075,8 @@ class JWA(object):
         'A256CBC-HS512': _A256CbcHs512,
         'A128GCM': _A128Gcm,
         'A192GCM': _A192Gcm,
-        'A256GCM': _A256Gcm
+        'A256GCM': _A256Gcm,
+        'EdDSA': _EdDsa
     }
 
     @classmethod

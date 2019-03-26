@@ -687,13 +687,20 @@ class JWK(object):
         raise NotImplementedError
 
     def _okp_pri(self, k):
-        if k['crv'] == 'X25519':
-            return x25519.X25519PrivateKey._from_public_bytes(
+        if k['crv'] == 'Ed25519':
+            return ed25519.Ed25519PrivateKey.from_private_bytes(
                     base64url_decode(k['x']))
-        # No support for Ed25519 or Ed448 in pyca yet:
-        # https://github.com/pyca/cryptography/issues/3509
+        if k['crv'] == 'Ed448':
+            return ed448.Ed448PrivateKey.from_private_bytes(
+                    base64url_decode(k['x']))
+        if k['crv'] == 'X25519':
+            return x25519.X25519PrivateKey.from_private_bytes(
+                    base64url_decode(k['x']))
+        if k['crv'] == 'X448':
+            return x448.X448PrivateKey.from_private_bytes(
+                    base64url_decode(k['x']))
+        # No support for other curves
         raise NotImplementedError
-
 
     def _get_public_key(self, arg=None):
         if self._params['kty'] == 'oct':
