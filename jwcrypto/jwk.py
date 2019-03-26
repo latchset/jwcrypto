@@ -14,6 +14,8 @@ from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives.asymmetric import ed25519
 from cryptography.hazmat.primitives.asymmetric import ed448
+from cryptography.hazmat.primitives.asymmetric import x25519
+from cryptography.hazmat.primitives.asymmetric import x448
 
 from six import iteritems
 
@@ -22,8 +24,7 @@ from jwcrypto.common import base64url_decode, base64url_encode
 from jwcrypto.common import json_decode, json_encode
 
 
-# RFC 7518 - 7.4
-# 'OKP' from RFC 8037 for representing EdDSA (a.k.a. Edwards curve)
+# RFC 7518 - 7.4 , RFC 8037 - 5
 JWKTypesRegistry = {'EC': 'Elliptic Curve',
                     'RSA': 'RSA',
                     'oct': 'Octet sequence',
@@ -69,8 +70,8 @@ JWKValuesRegistry = {
     },
     'OKP': {
         'crv': JWKParameter('Curve', True, True, ParmType.name),
-        'x': JWKParameter('The public key (base64url encoding)', True, True, ParmType.b64),
-        'd': JWKParameter('The private key (base64url encoding)', False, False, ParmType.b64),
+        'x': JWKParameter('Public Key', True, True, ParmType.b64),
+        'd': JWKParameter('Private Key', False, False, ParmType.b64),
     }
 }
 """Registry of valid key values"""
@@ -90,13 +91,14 @@ JWKParamsRegistry = {
 }
 """Regstry of valid key parameters"""
 
-# RFC 7518 - 7.6
-# RFC 8037 - 5 (which also specifies Ed448, X25519 and X448, none of which are currently supported here)
+# RFC 7518 - 7.6 , RFC 8037 - 5
 JWKEllipticCurveRegistry = {'P-256': 'P-256 curve',
                             'P-384': 'P-384 curve',
                             'P-521': 'P-521 curve',
                             'Ed25519': 'Ed25519 signature algorithm key pairs',
-                            'Ed448': 'Ed448 signature algorithm key pairs'}
+                            'Ed448': 'Ed448 signature algorithm key pairs',
+                            'X25519': 'X25519 function key pairs',
+                            'X448': 'X448 function key pairs'}
 """Registry of allowed Elliptic Curves"""
 
 # RFC 7517 - 8.2
@@ -226,8 +228,8 @@ class JWK(object):
         Valid options per type, when generating new keys:
          * oct: size(int)
          * RSA: public_exponent(int), size(int)
-         * EC: curve(str) (one of P-256, P-384, P-521)
-         * OKP (Edwards Curve): Ed25519, Ed448
+         * EC: crv(str) (one of P-256, P-384, P-521)
+         * OKP: crv(str) (one of Ed25519, Ed448, X25519, X448)
 
         Deprecated:
         Alternatively if the 'generate' parameter is provided, with a
@@ -332,6 +334,8 @@ class JWK(object):
             return ec.SECP384R1()
         elif name == 'P-521':
             return ec.SECP521R1()
+        elif name in ['Ed25519', 'Ed448', 'X25519', 'X448']:
+            raise InvalidJWKValue('Curve information is unavailable for %s' % name)
         else:
             raise InvalidJWKValue('Unknown Elliptic Curve Type')
 
@@ -382,9 +386,12 @@ class JWK(object):
             key = ed25519.Ed25519PrivateKey.generate()
         elif curve == 'Ed448':
             key = ed448.Ed448PrivateKey.generate()
+        elif curve == 'X25519':
+            key = x25519.X25519PrivateKey.generate()
+        elif curve == 'X448':
+            key = x448.X448PrivateKey.generate()
         else:
-            raise InvalidJWKValue('Ed25519 and Ed448 are the only OKP \
-            curve types supported')
+            raise InvalidJWKValue('%s is not a supported curve for the OKP key type' % curve)
         self._import_pyca_pri_okp(key, **params)
 
     def _import_pyca_pri_okp(self, key, **params):
@@ -663,6 +670,31 @@ class JWK(object):
         return ec.EllipticCurvePrivateNumbers(self._decode_int(k['d']),
                                               self._ec_pub(k, curve))
 
+    def _okp_pub(self, k):
+        if k['crv'] == 'Ed25519':
+            return ed25519.Ed25519PublicKey.from_public_bytes(
+                base64url_decode(k['x']))
+        elif k['crv'] == 'Ed448':
+            return ed448.Ed448PublicKey.from_public_bytes(
+                base64url_decode(k['x']))
+        elif k['crv'] == 'X25519':
+            return x25519.X25519PublicKey.from_public_bytes(
+                base64url_decode(k['x']))
+        elif k['crv'] == 'X448':
+            return x448.X448PublicKey.from_public_bytes(
+                base64url_decode(k['x']))
+        # No support for other curves
+        raise NotImplementedError
+
+    def _okp_pri(self, k):
+        if k['crv'] == 'X25519':
+            return x25519.X25519PrivateKey._from_public_bytes(
+                    base64url_decode(k['x']))
+        # No support for Ed25519 or Ed448 in pyca yet:
+        # https://github.com/pyca/cryptography/issues/3509
+        raise NotImplementedError
+
+
     def _get_public_key(self, arg=None):
         if self._params['kty'] == 'oct':
             return self._key['k']
@@ -671,7 +703,7 @@ class JWK(object):
         elif self._params['kty'] == 'EC':
             return self._ec_pub(self._key, arg).public_key(default_backend())
         elif self._params['kty'] == 'OKP':
-            return self._key['x']
+            return self._okp_pri(self._key).public_key()
         else:
             raise NotImplementedError
 
@@ -683,7 +715,7 @@ class JWK(object):
         elif self._params['kty'] == 'EC':
             return self._ec_pri(self._key, arg).private_key(default_backend())
         elif self._params['kty'] == 'OKP':
-            return self._key['d']
+            return self._okp_pri(self._key)
         else:
             raise NotImplementedError
 
@@ -735,9 +767,15 @@ class JWK(object):
             self._import_pyca_pri_ec(key)
         elif isinstance(key, ec.EllipticCurvePublicKey):
             self._import_pyca_pub_ec(key)
-        elif isinstance(key, ed25519.Ed25519PrivateKey) or isinstance(key, ed448.Ed448PrivateKey):
+        elif isinstance(key, ed25519.Ed25519PrivateKey) or \
+                isinstance(key, ed448.Ed448PrivateKey) or \
+                isinstance(key, x25519.X25519PrivateKey) or \
+                isinstance(key, x448.X448PrivateKey):
             self._import_pyca_pri_okp(key)
-        elif isinstance(key, ed25519.Ed25519PublicKey) or isinstance(key, ed448.Ed448PublicKey):
+        elif isinstance(key, ed25519.Ed25519PublicKey) or \
+                isinstance(key, ed448.Ed448PublicKey) or \
+                isinstance(key, x25519.X25519PublicKey) or \
+                isinstance(key, x448.X448PublicKey):
             self._import_pyca_pub_okp(key)
         else:
             raise InvalidJWKValue('Unknown key object %r' % key)
