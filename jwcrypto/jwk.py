@@ -605,8 +605,8 @@ class JWK(object):
     @property
     def key_curve(self):
         """The Curve Name."""
-        if self._params['kty'] != 'EC':
-            raise InvalidJWKType('Not an EC key')
+        if self._params['kty'] not in ['EC', 'OKP']:
+            raise InvalidJWKType('Not an EC or OKP key')
         return self._key['crv']
 
     def get_curve(self, arg):
@@ -618,8 +618,8 @@ class JWK(object):
         :raises InvalidJWKValue: if the curve names is invalid.
         """
         k = self._key
-        if self._params['kty'] != 'EC':
-            raise InvalidJWKType('Not an EC key')
+        if self._params['kty'] not in ['EC', 'OKP']:
+            raise InvalidJWKType('Not an EC or OKP key')
         if arg and k['crv'] != arg:
             raise InvalidJWKValue('Curve requested is "%s", but '
                                   'key curve is "%s"' % (arg, k['crv']))
@@ -663,23 +663,6 @@ class JWK(object):
         return ec.EllipticCurvePrivateNumbers(self._decode_int(k['d']),
                                               self._ec_pub(k, curve))
 
-    def _okp_pub(self, k, curve):
-        if curve == 'Ed25519':
-            return ed25519.Ed25519PublicKey.from_public_bytes(k['x'])
-        if curve == 'Ed2448':
-            return ed448.Ed448PublicKey.from_public_bytes(k['x'])
-        else:
-            raise NotImplementedError
-
-
-    def _okp_pri(self, k, curve='Ed25519'):
-        if curve != 'Ed25519':
-            return ed25519.Ed25519PrivateKey.from_private_bytes(k['d'])
-        if curve != 'Ed448':
-            return ed448.Ed448PrivateKey.from_private_bytes(k['d'])
-        else:
-            raise NotImplementedError
-
     def _get_public_key(self, arg=None):
         if self._params['kty'] == 'oct':
             return self._key['k']
@@ -688,7 +671,7 @@ class JWK(object):
         elif self._params['kty'] == 'EC':
             return self._ec_pub(self._key, arg).public_key(default_backend())
         elif self._params['kty'] == 'OKP':
-            return self._okp_pub(self._key, arg).public_key(default_backend())
+            return self._key['x']
         else:
             raise NotImplementedError
 
@@ -700,7 +683,7 @@ class JWK(object):
         elif self._params['kty'] == 'EC':
             return self._ec_pri(self._key, arg).private_key(default_backend())
         elif self._params['kty'] == 'OKP':
-            return self._okp_pri(self._key, arg).private_key(default_backend())
+            return self._key['d']
         else:
             raise NotImplementedError
 
