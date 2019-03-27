@@ -728,9 +728,7 @@ class _EcdhEs(_RawKeyMgmt, JWAAlgorithm):
 
         if isinstance(privkey, ec.EllipticCurvePrivateKey):
             shared_key = privkey.exchange(ec.ECDH(), pubkey)
-        elif isinstance(privkey, ed25519.Ed25519PrivateKey) or \
-            isinstance(privkey, ed448.Ed448PrivateKey) or \
-            isinstance(privkey, x25519.X25519PrivateKey) or \
+        elif isinstance(privkey, x25519.X25519PrivateKey) or \
             isinstance(privkey, x448.X448PrivateKey):
             shared_key = privkey.exchange(pubkey)
         else:
