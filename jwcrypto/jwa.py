@@ -724,11 +724,7 @@ class _EcdhEs(_RawKeyMgmt, JWAAlgorithm):
 
         # no SuppPrivInfo
 
-        if isinstance(privkey, ec.EllipticCurvePrivateKey):
-            shared_key = privkey.exchange(ec.ECDH(), pubkey)
-        else:
-            # Not implemented yet
-            raise NotImplementedError
+        shared_key = privkey.exchange(ec.ECDH(), pubkey)
         ckdf = ConcatKDFHash(algorithm=hashes.SHA256(),
                              length=_inbytes(bitsize),
                              otherinfo=otherinfo,
