@@ -11,8 +11,6 @@ from cryptography.hazmat.primitives import constant_time, hashes, hmac
 from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.hazmat.primitives.asymmetric import padding
 from cryptography.hazmat.primitives.asymmetric import utils as ec_utils
-from cryptography.hazmat.primitives.asymmetric import ed25519
-from cryptography.hazmat.primitives.asymmetric import ed448
 from cryptography.hazmat.primitives.asymmetric import x25519
 from cryptography.hazmat.primitives.asymmetric import x448
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
