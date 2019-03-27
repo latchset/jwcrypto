@@ -1,8 +1,6 @@
 # Copyright (C) 2015  JWCrypto Project Contributors - see LICENSE file
 
 import os
-import six
-import abc
 from binascii import hexlify, unhexlify
 from collections import namedtuple
 from enum import Enum
@@ -11,9 +9,9 @@ from cryptography import x509
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import ec
-from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives.asymmetric import ed25519
 from cryptography.hazmat.primitives.asymmetric import ed448
+from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives.asymmetric import x25519
 from cryptography.hazmat.primitives.asymmetric import x448
 
@@ -335,7 +333,8 @@ class JWK(object):
         elif name == 'P-521':
             return ec.SECP521R1()
         elif name in ['Ed25519', 'Ed448', 'X25519', 'X448']:
-            raise InvalidJWKValue('Curve information is unavailable for %s' % name)
+            raise InvalidJWKValue('Curve information is unavailable for %s' \
+                                  % name)
         else:
             raise InvalidJWKValue('Unknown Elliptic Curve Type')
 
@@ -373,7 +372,7 @@ class JWK(object):
         self.import_key(**params)
 
     def _generate_OKP(self, params):
-        curve = 'Ed25519' # Ed25519 is the default Edwards curve
+        curve = 'Ed25519'  # Ed25519 is the default Edwards curve
         if 'curve' in params:
             curve = params.pop('curve')
         # 'curve' is for backwards compat, if 'crv' is defined it takes
@@ -391,30 +390,31 @@ class JWK(object):
         elif curve == 'X448':
             key = x448.X448PrivateKey.generate()
         else:
-            raise InvalidJWKValue('%s is not a supported curve for the OKP key type' % curve)
+            raise InvalidJWKValue('%s is not a supported curve for the \
+            OKP key type' % curve)
         self._import_pyca_pri_okp(key, **params)
 
     def _import_pyca_pri_okp(self, key, **params):
         params.update(
             kty='OKP',
-            crv = params['crv'],
+            crv=params['crv'],
             d=base64url_encode(key.private_bytes(
-                                serialization.Encoding.Raw,
-                                serialization.PrivateFormat.Raw,
-                                serialization.NoEncryption())),
+                serialization.Encoding.Raw,
+                serialization.PrivateFormat.Raw,
+                serialization.NoEncryption())),
             x=base64url_encode(key.public_key().public_bytes(
-                                serialization.Encoding.Raw,
-                                serialization.PublicFormat.Raw))
+                serialization.Encoding.Raw,
+                serialization.PublicFormat.Raw))
         )
         self.import_key(**params)
 
     def _import_pyca_pub_okp(self, key, **params):
         params.update(
             kty='OKP',
-            crv = params['crv'],
+            crv=params['crv'],
             x=base64url_encode(key.public_bytes(
-                                serialization.Encoding.Raw,
-                                serialization.PrivateFormat.Raw))
+                serialization.Encoding.Raw,
+                serialization.PrivateFormat.Raw))
         )
         self.import_key(**params)
 
