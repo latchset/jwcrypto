@@ -700,7 +700,6 @@ class _EcdhEs(_RawKeyMgmt, JWAAlgorithm):
                 raise InvalidJWEKeyType('Ed25519, Ed448, X25519 or X448',
                                         key.key_curve)
 
-
     def _derive(self, privkey, pubkey, alg, bitsize, headers):
         # OtherInfo is defined in NIST SP 56A 5.8.1.2.1
 

@@ -333,7 +333,7 @@ class JWK(object):
         elif name == 'P-521':
             return ec.SECP521R1()
         elif name in ['Ed25519', 'Ed448', 'X25519', 'X448']:
-            raise InvalidJWKValue('Curve information is unavailable for %s' \
+            raise InvalidJWKValue('Curve information is unavailable for %s'
                                   % name)
         else:
             raise InvalidJWKValue('Unknown Elliptic Curve Type')
@@ -689,16 +689,16 @@ class JWK(object):
     def _okp_pri(self, k):
         if k['crv'] == 'Ed25519':
             return ed25519.Ed25519PrivateKey.from_private_bytes(
-                    base64url_decode(k['x']))
+                base64url_decode(k['x']))
         if k['crv'] == 'Ed448':
             return ed448.Ed448PrivateKey.from_private_bytes(
-                    base64url_decode(k['x']))
+                base64url_decode(k['x']))
         if k['crv'] == 'X25519':
             return x25519.X25519PrivateKey.from_private_bytes(
-                    base64url_decode(k['x']))
+                base64url_decode(k['x']))
         if k['crv'] == 'X448':
             return x448.X448PrivateKey.from_private_bytes(
-                    base64url_decode(k['x']))
+                base64url_decode(k['x']))
         # No support for other curves
         raise NotImplementedError
 

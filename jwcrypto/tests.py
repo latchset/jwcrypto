@@ -1337,6 +1337,8 @@ class JWATests(unittest.TestCase):
             self.assertIn(cls.algorithm_usage_location, {'alg', 'enc'})
             if name == 'ECDH-ES':
                 self.assertIs(cls.keysize, None)
+            elif name == 'EdDSA':
+                self.assertIs(cls.keysize, None)
             else:
                 self.assertIsInstance(cls.keysize, int)
                 self.assertGreaterEqual(cls.keysize, 0)
