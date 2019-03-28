@@ -19,7 +19,7 @@ from jwcrypto.common import JWSEHeaderParameter
 from jwcrypto.common import base64url_decode, base64url_encode
 from jwcrypto.common import json_decode, json_encode
 
-# RFC 7517, RFC 8037 - A.1
+# RFC 7517 - A1
 PublicKeys = {"keys": [
               {"kty": "EC",
                "crv": "P-256",
@@ -27,9 +27,6 @@ PublicKeys = {"keys": [
                "y": "4Etl6SRW2YiLUrN5vfvVHuhp7x8PxltmWWlbbM4IFyM",
                "use": "enc",
                "kid": "1"},
-              {"kty": "OKP",
-               "crv": "Ed25519",
-               "x": "11qYAYKxCrfVS_7TyWQHOg7hcvPapiMlrwIaaPcHURo"},
               {"kty": "RSA",
                "n": "0vx7agoebGcQSuuPiLJXZptN9nndrQmbXEps2aiAFbWhM78LhWx4cbbf"
                     "AAtVT86zwu1RK7aPFFxuhDR1L6tSoc_BJECPebWKRXjBZCiFV4n3oknj"
@@ -42,10 +39,9 @@ PublicKeys = {"keys": [
                "alg": "RS256",
                "kid": "2011-04-29"}],
               "thumbprints": ["cn-I_WNMClehiVp51i_0VpOENW1upEerA8sEam5hn-s",
-                              "kPrK_qmxVWaYVA9wwBF6Iuo3vVzz7TxHCTwXBygrS4k",
                               "NzbLsXh8uDCcd-6MNwXF4W_7noWXFZAfHkxZsRGC9Xs"]}
 
-# RFC 7517, RFC 8037 - A.2
+# RFC 7517 - A.2
 PrivateKeys = {"keys": [
                {"kty": "EC",
                 "crv": "P-256",
@@ -54,10 +50,6 @@ PrivateKeys = {"keys": [
                 "d": "870MB6gfuTJ4HtUnUvYMyJpr5eUZNP4Bk43bVdj3eAE",
                 "use": "enc",
                 "kid": "1"},
-               {"kty": "OKP",
-                "crv": "Ed25519",
-                "d": "nWGxne_9WmC6hEr0kuwsxERJxWl7MmkZcDusAxyuf2A",
-                "x": "11qYAYKxCrfVS_7TyWQHOg7hcvPapiMlrwIaaPcHURo"},
                {"kty": "RSA",
                 "n": "0vx7agoebGcQSuuPiLJXZptN9nndrQmbXEps2aiAFbWhM78LhWx4cbb"
                      "fAAtVT86zwu1RK7aPFFxuhDR1L6tSoc_BJECPebWKRXjBZCiFV4n3ok"
@@ -244,6 +236,24 @@ zl9HYIMxATFyqSiD9jsx
 
 PublicCertThumbprint = u'7KITkGJF74IZ9NKVvHfuJILbuIZny6j-roaNjB1vgiA'
 
+# RFC 8037 - A.1
+PublicKeys_EdDsa = {"keys": [
+              {"kty": "OKP",
+               "crv": "Ed25519",
+               "x": "11qYAYKxCrfVS_7TyWQHOg7hcvPapiMlrwIaaPcHURo"},
+              ],
+              "thumbprints": [
+                  "kPrK_qmxVWaYVA9wwBF6Iuo3vVzz7TxHCTwXBygrS4k"]
+              }
+
+# RFC 8037 - A.1
+PrivateKeys_EdDsa = {"keys": [
+               {"kty": "OKP",
+                "crv": "Ed25519",
+                "d": "nWGxne_9WmC6hEr0kuwsxERJxWl7MmkZcDusAxyuf2A",
+                "x": "11qYAYKxCrfVS_7TyWQHOg7hcvPapiMlrwIaaPcHURo"},
+               ]}
+
 
 class TestJWK(unittest.TestCase):
     def test_create_pubKeys(self):
@@ -306,7 +316,7 @@ class TestJWK(unittest.TestCase):
         key.get_curve('P-521')
 
     def test_generate_OKP_keys(self):
-        for crv in ['Ed25519', 'Ed448', 'X25519', 'X448']:
+        for crv in ['Ed25519', 'Ed448']:
             key = jwk.JWK.generate(kty='OKP', crv=crv)
             self.assertEqual(key.get_curve(crv), crv)
 
@@ -425,6 +435,24 @@ class TestJWK(unittest.TestCase):
     def test_invalid_value(self):
         with self.assertRaises(jwk.InvalidJWKValue):
             jwk.JWK(kty='oct', k=b'\x01')
+
+    def test_create_pubKeys_eddsa(self):
+        keylist = PublicKeys_EdDsa['keys']
+        for key in keylist:
+            jwk.JWK(**key)
+
+    def test_create_priKeys_eddsa(self):
+        keylist = PrivateKeys_EdDsa['keys']
+        for key in keylist:
+            jwk.JWK(**key)
+
+    def test_thumbprint_eddsa(self):
+        for i in range(0, len(PublicKeys_EdDsa['keys'])):
+            k = jwk.JWK(**PublicKeys_EdDsa['keys'][i])
+            self.assertEqual(
+                k.thumbprint(),
+                PublicKeys_EdDsa['thumbprints'][i])
+
 
 
 # RFC 7515 - A.1

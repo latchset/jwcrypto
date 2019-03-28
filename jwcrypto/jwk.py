@@ -12,8 +12,6 @@ from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.hazmat.primitives.asymmetric import ed25519
 from cryptography.hazmat.primitives.asymmetric import ed448
 from cryptography.hazmat.primitives.asymmetric import rsa
-from cryptography.hazmat.primitives.asymmetric import x25519
-from cryptography.hazmat.primitives.asymmetric import x448
 
 from six import iteritems
 
@@ -94,9 +92,7 @@ JWKEllipticCurveRegistry = {'P-256': 'P-256 curve',
                             'P-384': 'P-384 curve',
                             'P-521': 'P-521 curve',
                             'Ed25519': 'Ed25519 signature algorithm key pairs',
-                            'Ed448': 'Ed448 signature algorithm key pairs',
-                            'X25519': 'X25519 function key pairs',
-                            'X448': 'X448 function key pairs'}
+                            'Ed448': 'Ed448 signature algorithm key pairs'}
 """Registry of allowed Elliptic Curves"""
 
 # RFC 7517 - 8.2
@@ -227,7 +223,7 @@ class JWK(object):
          * oct: size(int)
          * RSA: public_exponent(int), size(int)
          * EC: crv(str) (one of P-256, P-384, P-521)
-         * OKP: crv(str) (one of Ed25519, Ed448, X25519, X448)
+         * OKP: crv(str) (one of Ed25519, Ed448)
 
         Deprecated:
         Alternatively if the 'generate' parameter is provided, with a
@@ -332,7 +328,7 @@ class JWK(object):
             return ec.SECP384R1()
         elif name == 'P-521':
             return ec.SECP521R1()
-        elif name in ['Ed25519', 'Ed448', 'X25519', 'X448']:
+        elif name in ['Ed25519', 'Ed448']:
             return name
         else:
             raise InvalidJWKValue('Unknown Elliptic Curve Type')
@@ -384,10 +380,6 @@ class JWK(object):
             key = ed25519.Ed25519PrivateKey.generate()
         elif curve == 'Ed448':
             key = ed448.Ed448PrivateKey.generate()
-        elif curve == 'X25519':
-            key = x25519.X25519PrivateKey.generate()
-        elif curve == 'X448':
-            key = x448.X448PrivateKey.generate()
         else:
             raise InvalidJWKValue('%s is not a supported curve for the '
                                   'OKP key type' % curve)
@@ -676,12 +668,6 @@ class JWK(object):
         elif k['crv'] == 'Ed448':
             return ed448.Ed448PublicKey.from_public_bytes(
                 base64url_decode(k['x']))
-        elif k['crv'] == 'X25519':
-            return x25519.X25519PublicKey.from_public_bytes(
-                base64url_decode(k['x']))
-        elif k['crv'] == 'X448':
-            return x448.X448PublicKey.from_public_bytes(
-                base64url_decode(k['x']))
         # No support for other curves
         raise NotImplementedError
 
@@ -691,12 +677,6 @@ class JWK(object):
                 base64url_decode(k['d']))
         if k['crv'] == 'Ed448':
             return ed448.Ed448PrivateKey.from_private_bytes(
-                base64url_decode(k['d']))
-        if k['crv'] == 'X25519':
-            return x25519.X25519PrivateKey.from_private_bytes(
-                base64url_decode(k['d']))
-        if k['crv'] == 'X448':
-            return x448.X448PrivateKey.from_private_bytes(
                 base64url_decode(k['d']))
         # No support for other curves
         raise NotImplementedError
@@ -774,14 +754,10 @@ class JWK(object):
         elif isinstance(key, ec.EllipticCurvePublicKey):
             self._import_pyca_pub_ec(key)
         elif isinstance(key, ed25519.Ed25519PrivateKey) or \
-                isinstance(key, ed448.Ed448PrivateKey) or \
-                isinstance(key, x25519.X25519PrivateKey) or \
-                isinstance(key, x448.X448PrivateKey):
+                isinstance(key, ed448.Ed448PrivateKey):
             self._import_pyca_pri_okp(key)
         elif isinstance(key, ed25519.Ed25519PublicKey) or \
-                isinstance(key, ed448.Ed448PublicKey) or \
-                isinstance(key, x25519.X25519PublicKey) or \
-                isinstance(key, x448.X448PublicKey):
+                isinstance(key, ed448.Ed448PublicKey):
             self._import_pyca_pub_okp(key)
         else:
             raise InvalidJWKValue('Unknown key object %r' % key)

@@ -696,8 +696,8 @@ class _EcdhEs(_RawKeyMgmt, JWAAlgorithm):
         if key.key_type not in ['EC', 'OKP']:
             raise InvalidJWEKeyType('EC or OKP', key.key_type)
         if key.key_type == 'OKP':
-            if key.key_curve not in ['Ed25519', 'Ed448', 'X25519', 'X448']:
-                raise InvalidJWEKeyType('Ed25519, Ed448, X25519 or X448',
+            if key.key_curve not in ['Ed25519', 'Ed448']:
+                raise InvalidJWEKeyType('Ed25519 or Ed448',
                                         key.key_curve)
 
     def _derive(self, privkey, pubkey, alg, bitsize, headers):
