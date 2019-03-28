@@ -1,0 +1,35 @@
+sudo: false
+
+language: python
+
+cache: pip
+
+matrix:
+  include:
+    - python: 2.7
+      env: TOXENV=py27
+    - python: 3.4
+      env: TOXENV=py34
+    - python: 3.5
+      env: TOXENV=py35
+    - python: 3.6
+      env: TOXENV=py36
+    - python: 3.6
+      env: TOXENV=doc
+    - python: 3.6
+      env: TOXENV=sphinx
+    - python: 3.6
+      env: TOXENV=lint
+    - python: 2.7
+      env: TOXENV=pep8py2
+    - python: 3.6
+      env: TOXENV=pep8py3
+
+install:
+  - pip install --upgrade pip setuptools
+  - pip --version
+  - pip install tox
+  - tox --version
+
+script:
+  - tox
