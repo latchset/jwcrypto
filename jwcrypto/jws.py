@@ -497,7 +497,13 @@ class JWS(object):
         if alg is None:
             raise ValueError('"alg" not specified')
 
-        c = JWSCore(alg, key, protected, self.objects['payload'], self._allowed_algs)
+        c = JWSCore(
+            alg, 
+            key, 
+            protected, 
+            self.objects['payload'], 
+            self._allowed_algs
+        )
         sig = c.sign()
 
         o = dict()
