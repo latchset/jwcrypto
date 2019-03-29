@@ -17,7 +17,7 @@ Classes
 Variables
 ---------
 
-.. autodata:: jwcrypto.jwe.jwe_default_allowed_algs
+.. autodata:: jwcrypto.jwe.default_allowed_algs
 
 Exceptions
 ----------

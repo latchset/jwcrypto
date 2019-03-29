@@ -14,6 +14,8 @@ from jwcrypto import jwe
 from jwcrypto import jwk
 from jwcrypto import jws
 from jwcrypto import jwt
+from jwcrypto.common import InvalidJWSERegOperation
+from jwcrypto.common import JWSEHeaderParameter
 from jwcrypto.common import base64url_decode, base64url_encode
 from jwcrypto.common import json_decode, json_encode
 
@@ -613,6 +615,20 @@ E_negative = \
     'ZJTkVEIl0sDQogImh0dHA6Ly9leGFtcGxlLmNvbS9VTkRFRklORUQiOnRydWUNCn0.' + \
     'RkFJTA.'
 
+customhdr_jws_example = \
+    '{' + \
+    '"payload":' + \
+    '"eyJpc3MiOiJqb2UiLA0KICJleHAiOjEzMDA4MTkzODAsDQogImh0dHA6Ly9leGF' + \
+    'tcGxlLmNvbS9pc19yb290Ijp0cnVlfQ",' + \
+    '"protected":"eyJhbGciOiJFUzI1NiJ9",' + \
+    '"header":' + \
+    '{"kid":"e9bc097a-ce51-4036-9562-d2ade882db0d", ' + \
+    '"custom1":"custom_val"},' + \
+    '"signature":' + \
+    '"DtEhU3ljbEg8L38VWAfUAqOyKAM6-Xx-F4GawxaepmXFCgfTjDxw5djxLa8IS' + \
+    'lSApmWQxfKTUJqPP3-Kg6NU1Q"' + \
+    '}'
+
 
 class TestJWS(unittest.TestCase):
     def check_sign(self, test):
@@ -678,6 +694,32 @@ class TestJWS(unittest.TestCase):
         with self.assertRaises(jws.InvalidJWSSignature):
             jws.InvalidJWSSignature(s.deserialize, E_negative)
             s.verify(None)
+
+    def test_customhdr_jws(self):
+        # Test pass header check
+        def jws_chk1(jwobj):
+            return jwobj.jose_header['custom1'] == 'custom_val'
+
+        newhdr = JWSEHeaderParameter('Custom header 1', False, True, jws_chk1)
+        newreg = {'custom1': newhdr}
+        s = jws.JWS(A6_example['payload'], header_registry=newreg)
+        s.deserialize(customhdr_jws_example, A6_example['key2'])
+
+        # Test fail header check
+        def jws_chk2(jwobj):
+            return jwobj.jose_header['custom1'] == 'custom_not'
+
+        newhdr = JWSEHeaderParameter('Custom header 1', False, True, jws_chk2)
+        newreg = {'custom1': newhdr}
+        s = jws.JWS(A6_example['payload'], header_registry=newreg)
+        with self.assertRaises(jws.InvalidJWSSignature):
+            s.deserialize(customhdr_jws_example, A6_example['key2'])
+
+    def test_customhdr_jws_exists(self):
+        newhdr = JWSEHeaderParameter('Custom header 1', False, True, None)
+        newreg = {'alg': newhdr}
+        with self.assertRaises(InvalidJWSERegOperation):
+            jws.JWS(A6_example['payload'], header_registry=newreg)
 
 
 E_A1_plaintext = \
@@ -839,6 +881,16 @@ E_A5_ex = \
     '"ciphertext":"KDlTtXchhZTGufMYmOYGS4HffxPSUrfmqCHXaI9wOGY",' \
     '"tag":"Mz-VPPyU4RlcuYv1IwIvzw"}'
 
+customhdr_jwe_ex = \
+    '{"protected":"eyJlbmMiOiJBMTI4Q0JDLUhTMjU2In0",' \
+    '"unprotected":{"jku":"https://server.example.com/keys.jwks"},' \
+    '"header":{"alg":"A128KW","kid":"7", "custom1":"custom_val"},' \
+    '"encrypted_key":' \
+    '"6KB707dM9YTIgHtLvtgWQ8mKwboJW3of9locizkDTHzBC2IlrT1oOQ",' \
+    '"iv":"AxY8DCtDaGlsbGljb3RoZQ",' \
+    '"ciphertext":"KDlTtXchhZTGufMYmOYGS4HffxPSUrfmqCHXaI9wOGY",' \
+    '"tag":"Mz-VPPyU4RlcuYv1IwIvzw"}'
+
 Issue_136_Protected_Header_no_epk = {
     "alg": "ECDH-ES+A256KW",
     "enc": "A256CBC-HS512"}
@@ -937,6 +989,30 @@ class TestJWE(unittest.TestCase):
         e = jwe.JWE()
         e.deserialize(Issue_136_Contributed_JWE,
                       jwk.JWK(**Issue_136_Contributed_Key))
+
+    def test_customhdr_jwe(self):
+        def jwe_chk1(jwobj):
+            return jwobj.jose_header['custom1'] == 'custom_val'
+
+        newhdr = JWSEHeaderParameter('Custom header 1', False, True, jwe_chk1)
+        newreg = {'custom1': newhdr}
+        e = jwe.JWE(header_registry=newreg)
+        e.deserialize(customhdr_jwe_ex, E_A4_ex['key2'])
+
+        def jwe_chk2(jwobj):
+            return jwobj.jose_header['custom1'] == 'custom_not'
+
+        newhdr = JWSEHeaderParameter('Custom header 1', False, True, jwe_chk2)
+        newreg = {'custom1': newhdr}
+        e = jwe.JWE(header_registry=newreg)
+        with self.assertRaises(jwe.InvalidJWEData):
+            e.deserialize(customhdr_jwe_ex, E_A4_ex['key2'])
+
+    def test_customhdr_jwe_exists(self):
+        newhdr = JWSEHeaderParameter('Custom header 1', False, True, None)
+        newreg = {'alg': newhdr}
+        with self.assertRaises(InvalidJWSERegOperation):
+            jwe.JWE(header_registry=newreg)
 
 
 MMA_vector_key = jwk.JWK(**E_A2_key)
