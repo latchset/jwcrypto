@@ -3,7 +3,8 @@
 import copy
 import json
 from base64 import urlsafe_b64decode, urlsafe_b64encode
-<<<<<<< HEAD
+from collections import MutableMapping
+from collections import namedtuple
 
 __all__ = [
     'base64url_decode',
@@ -18,10 +19,6 @@ __all__ = [
     'InvalidJWEOperation',
 ]
 
-=======
-from collections import MutableMapping
-from collections import namedtuple
->>>>>>> 061c654cd5a299bc864b1dec852fb13f33842ca1
 
 # Padding stripping versions as described in
 # RFC 7515 Appendix C
