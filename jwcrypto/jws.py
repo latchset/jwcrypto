@@ -1,5 +1,7 @@
 # Copyright (C) 2015 JWCrypto Project Contributors - see LICENSE file
 
+from collections import namedtuple
+
 from jwcrypto.common import JWException
 from jwcrypto.common import JWSEHeaderParameter, JWSEHeaderRegistry
 from jwcrypto.common import base64url_decode, base64url_encode
