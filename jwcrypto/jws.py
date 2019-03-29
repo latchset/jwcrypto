@@ -498,10 +498,10 @@ class JWS(object):
             raise ValueError('"alg" not specified')
 
         c = JWSCore(
-            alg, 
-            key, 
-            protected, 
-            self.objects['payload'], 
+            alg,
+            key,
+            protected,
+            self.objects['payload'],
             self._allowed_algs
         )
         sig = c.sign()
