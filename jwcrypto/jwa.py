@@ -693,8 +693,12 @@ class _EcdhEs(_RawKeyMgmt, JWAAlgorithm):
     def _check_key(self, key):
         if not isinstance(key, JWK):
             raise ValueError('key is not a JWK object')
-        if key.key_type != 'EC':
-            raise InvalidJWEKeyType('EC', key.key_type)
+        if key.key_type not in ['EC', 'OKP']:
+            raise InvalidJWEKeyType('EC or OKP', key.key_type)
+        if key.key_type == 'OKP':
+            if key.key_curve not in ['Ed25519', 'Ed448']:
+                raise InvalidJWEKeyType('Ed25519 or Ed448',
+                                        key.key_curve)
 
     def _derive(self, privkey, pubkey, alg, bitsize, headers):
         # OtherInfo is defined in NIST SP 56A 5.8.1.2.1
@@ -800,6 +804,28 @@ class _EcdhEsAes256Kw(_EcdhEs):
     keysize = 256
     algorithm_usage_location = 'alg'
     algorithm_use = 'kex'
+
+
+class _EdDsa(_RawJWS, JWAAlgorithm):
+
+    name = 'EdDSA'
+    description = 'EdDSA using Ed25519 or Ed448 algorithms'
+    algorithm_usage_location = 'alg'
+    algorithm_use = 'sig'
+    keysize = None
+
+    def sign(self, key, payload):
+
+        if key.key_curve in ['Ed25519', 'Ed448']:
+            skey = key.get_op_key('sign')
+            return skey.sign(payload)
+        raise NotImplementedError
+
+    def verify(self, key, payload, signature):
+        if key.key_curve in ['Ed25519', 'Ed448']:
+            pkey = key.get_op_key('verify')
+            return pkey.verify(signature, payload)
+        raise NotImplementedError
 
 
 class _RawJWE(object):
@@ -1026,6 +1052,7 @@ class JWA(object):
         'ECDH-ES+A128KW': _EcdhEsAes128Kw,
         'ECDH-ES+A192KW': _EcdhEsAes192Kw,
         'ECDH-ES+A256KW': _EcdhEsAes256Kw,
+        'EdDSA': _EdDsa,
         'A128GCMKW': _A128GcmKw,
         'A192GCMKW': _A192GcmKw,
         'A256GCMKW': _A256GcmKw,

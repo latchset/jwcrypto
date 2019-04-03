@@ -236,6 +236,29 @@ zl9HYIMxATFyqSiD9jsx
 
 PublicCertThumbprint = u'7KITkGJF74IZ9NKVvHfuJILbuIZny6j-roaNjB1vgiA'
 
+# RFC 8037 - A.1
+PublicKeys_EdDsa = {
+    "keys": [
+        {
+            "kty": "OKP",
+            "crv": "Ed25519",
+            "x": "11qYAYKxCrfVS_7TyWQHOg7hcvPapiMlrwIaaPcHURo"
+        },
+    ],
+    "thumbprints": ["kPrK_qmxVWaYVA9wwBF6Iuo3vVzz7TxHCTwXBygrS4k"]
+}
+
+# RFC 8037 - A.1
+PrivateKeys_EdDsa = {
+    "keys": [
+        {
+            "kty": "OKP",
+            "crv": "Ed25519",
+            "d": "nWGxne_9WmC6hEr0kuwsxERJxWl7MmkZcDusAxyuf2A",
+            "x": "11qYAYKxCrfVS_7TyWQHOg7hcvPapiMlrwIaaPcHURo"},
+    ]
+}
+
 
 class TestJWK(unittest.TestCase):
     def test_create_pubKeys(self):
@@ -296,6 +319,11 @@ class TestJWK(unittest.TestCase):
         # New param prevails
         key = jwk.JWK.generate(kty='EC', curve='P-256', crv='P-521')
         key.get_curve('P-521')
+
+    def test_generate_OKP_keys(self):
+        for crv in ['Ed25519', 'Ed448']:
+            key = jwk.JWK.generate(kty='OKP', crv=crv)
+            self.assertEqual(key.get_curve(crv), crv)
 
     def test_import_pyca_keys(self):
         rsa1 = rsa.generate_private_key(65537, 1024, default_backend())
@@ -412,6 +440,23 @@ class TestJWK(unittest.TestCase):
     def test_invalid_value(self):
         with self.assertRaises(jwk.InvalidJWKValue):
             jwk.JWK(kty='oct', k=b'\x01')
+
+    def test_create_pubKeys_eddsa(self):
+        keylist = PublicKeys_EdDsa['keys']
+        for key in keylist:
+            jwk.JWK(**key)
+
+    def test_create_priKeys_eddsa(self):
+        keylist = PrivateKeys_EdDsa['keys']
+        for key in keylist:
+            jwk.JWK(**key)
+
+    def test_thumbprint_eddsa(self):
+        for i in range(0, len(PublicKeys_EdDsa['keys'])):
+            k = jwk.JWK(**PublicKeys_EdDsa['keys'][i])
+            self.assertEqual(
+                k.thumbprint(),
+                PublicKeys_EdDsa['thumbprints'][i])
 
 
 # RFC 7515 - A.1
@@ -721,6 +766,24 @@ class TestJWS(unittest.TestCase):
         with self.assertRaises(InvalidJWSERegOperation):
             jws.JWS(A6_example['payload'], header_registry=newreg)
 
+    def test_EdDsa_signing_and_verification(self):
+        for curve_example in [E_Ed25519]:
+            key = jwk.JWK.from_json(curve_example['key_json'])
+            payload = curve_example['payload']
+            protected_header = curve_example['protected_header']
+            jws_test = jws.JWS(payload)
+            jws_test.add_signature(key, None,
+                                   json_encode(protected_header), None)
+            jws_test_serialization_compact = \
+                jws_test.serialize(compact=True)
+            self.assertEqual(jws_test_serialization_compact,
+                             curve_example['jws_serialization_compact'])
+            jws_verify = jws.JWS()
+            jws_verify.deserialize(jws_test_serialization_compact)
+            jws_verify.verify(key.public())
+            self.assertEqual(jws_verify.payload.decode('utf-8'),
+                             curve_example['payload'])
+
 
 E_A1_plaintext = \
     [84, 104, 101, 32, 116, 114, 117, 101, 32, 115, 105, 103, 110, 32,
@@ -913,6 +976,19 @@ Issue_136_Contributed_Key = {
     "kty": "EC",
     "x": "FPrb_xwxe8SBP3kO-e-WsofFp7n5-yc_tGgfAvqAP8g",
     "y": "lM3HuyKMYUVsYdGqiWlkwTZbGO3Fh-hyadq8lfkTgBc"}
+
+# RFC 8037 A.1
+E_Ed25519 = {
+    'key_json': '{"kty": "OKP",'
+                '"crv": "Ed25519", '
+                '"d": "nWGxne_9WmC6hEr0kuwsxERJxWl7MmkZcDusAxyuf2A", '
+                '"x": "11qYAYKxCrfVS_7TyWQHOg7hcvPapiMlrwIaaPcHURo"}',
+    'payload': 'Example of Ed25519 signing',
+    'protected_header': {"alg": "EdDSA"},
+    'jws_serialization_compact': 'eyJhbGciOiJFZERTQSJ9.RXhhbXBsZSBvZiBF'
+                                 'ZDI1NTE5IHNpZ25pbmc.hgyY0il_MGCjP0Jzl'
+                                 'nLWG1PPOt7-09PGcvMg3AIbQR6dWbhijcNR4ki'
+                                 '4iylGjg5BhVsPt9g7sVvpAr_MuM0KAg'}
 
 
 class TestJWE(unittest.TestCase):
@@ -1336,6 +1412,8 @@ class JWATests(unittest.TestCase):
             self.assertEqual(cls.name, name)
             self.assertIn(cls.algorithm_usage_location, {'alg', 'enc'})
             if name == 'ECDH-ES':
+                self.assertIs(cls.keysize, None)
+            elif name == 'EdDSA':
                 self.assertIs(cls.keysize, None)
             else:
                 self.assertIsInstance(cls.keysize, int)
