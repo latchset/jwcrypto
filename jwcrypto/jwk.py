@@ -367,22 +367,15 @@ class JWK(object):
         self.import_key(**params)
 
     def _generate_OKP(self, params):
-        crv = 'Ed25519'  # Ed25519 is the default Edwards curve
-        if 'curve' in params:
-            crv = params.pop('curve')
-        # 'curve' is for backwards compat, if 'crv' is defined it takes
-        # precedence
-        if 'crv' in params:
-            crv = params['crv']
-        # Make crv available in params for _import_pyca_*_okp() methods
-        params['crv'] = crv
-        if crv == 'Ed25519':
+        if 'crv' not in params:
+            raise InvalidJWKValue('Must specify "crv" for OKP key generation')
+        if params['crv'] == 'Ed25519':
             key = ed25519.Ed25519PrivateKey.generate()
-        elif crv == 'Ed448':
+        elif params['crv'] == 'Ed448':
             key = ed448.Ed448PrivateKey.generate()
         else:
-            raise InvalidJWKValue('%s is not a supported curve for the '
-                                  'OKP key type' % crv)
+            raise InvalidJWKValue('"%s" is not a supported curve for the '
+                                  'OKP key type' % params['crv'])
         self._import_pyca_pri_okp(key, **params)
 
     def _import_pyca_pri_okp(self, key, **params):
