@@ -75,6 +75,15 @@ except ImportError:
     X448PrivateKey = UnimplementedOKPCurveKey
 
 
+_OKP_CURVE = namedtuple('Name', 'pubkey privkey')
+_OKP_CURVES_TABLE = {
+    'Ed25519': _OKP_CURVE(Ed25519PublicKey, Ed25519PrivateKey),
+    'Ed448': _OKP_CURVE(Ed448PublicKey, Ed448PrivateKey),
+    'X25519': _OKP_CURVE(X25519PublicKey, X25519PrivateKey),
+    'X448': _OKP_CURVE(X448PublicKey, X448PrivateKey)
+}
+
+
 # RFC 7518 - 7.4 , RFC 8037 - 5
 JWKTypesRegistry = {'EC': 'Elliptic Curve',
                     'RSA': 'RSA',
@@ -385,7 +394,7 @@ class JWK(object):
             return ec.SECP384R1()
         elif name == 'P-521':
             return ec.SECP521R1()
-        elif name in ['Ed25519', 'Ed448', 'X25519', 'X448']:
+        elif name in _OKP_CURVES_TABLE:
             return name
         else:
             raise InvalidJWKValue('Unknown Elliptic Curve Type')
@@ -426,15 +435,9 @@ class JWK(object):
     def _generate_OKP(self, params):
         if 'crv' not in params:
             raise InvalidJWKValue('Must specify "crv" for OKP key generation')
-        if params['crv'] == 'Ed25519':
-            key = Ed25519PrivateKey.generate()
-        elif params['crv'] == 'Ed448':
-            key = Ed448PrivateKey.generate()
-        elif params['crv'] == 'X25519':
-            key = X25519PrivateKey.generate()
-        elif params['crv'] == 'X448':
-            key = X448PrivateKey.generate()
-        else:
+        try:
+            key = _OKP_CURVES_TABLE[params['crv']].privkey.generate()
+        except KeyError:
             raise InvalidJWKValue('"%s" is not a supported curve for the '
                                   'OKP key type' % params['crv'])
         self._import_pyca_pri_okp(key, **params)
@@ -716,36 +719,20 @@ class JWK(object):
                                               self._ec_pub(k, curve))
 
     def _okp_pub(self, k):
-        if k['crv'] == 'Ed25519':
-            return Ed25519PublicKey.from_public_bytes(
-                base64url_decode(k['x']))
-        elif k['crv'] == 'Ed448':
-            return Ed448PublicKey.from_public_bytes(
-                base64url_decode(k['x']))
-        elif k['crv'] == 'X25519':
-            return X25519PublicKey.from_public_bytes(
-                base64url_decode(k['x']))
-        elif k['crv'] == 'X448':
-            return X448PublicKey.from_public_bytes(
-                base64url_decode(k['x']))
-        # No support for other curves
-        raise NotImplementedError
+        try:
+            pubkey = _OKP_CURVES_TABLE[k['crv']].pubkey
+        except KeyError:
+            raise InvalidJWKValue('Unknown curve "%s"' % k['crv'])
+
+        return pubkey.from_public_bytes(base64url_decode(k['x']))
 
     def _okp_pri(self, k):
-        if k['crv'] == 'Ed25519':
-            return Ed25519PrivateKey.from_private_bytes(
-                base64url_decode(k['d']))
-        elif k['crv'] == 'Ed448':
-            return Ed448PrivateKey.from_private_bytes(
-                base64url_decode(k['d']))
-        elif k['crv'] == 'X25519':
-            return X25519PrivateKey.from_private_bytes(
-                base64url_decode(k['d']))
-        elif k['crv'] == 'X448':
-            return X448PrivateKey.from_private_bytes(
-                base64url_decode(k['d']))
-        # No support for other curves
-        raise NotImplementedError
+        try:
+            privkey = _OKP_CURVES_TABLE[k['crv']].privkey
+        except KeyError:
+            raise InvalidJWKValue('Unknown curve "%s"' % k['crv'])
+
+        return privkey.from_private_bytes(base64url_decode(k['d']))
 
     def _get_public_key(self, arg=None):
         if self._params['kty'] == 'oct':
