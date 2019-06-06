@@ -285,9 +285,17 @@ class JWK(object):
         params['k'] = base64url_encode(key)
         self.import_key(**params)
 
-    def _encode_int(self, i):
-        intg = hex(i).rstrip("L").lstrip("0x")
-        return base64url_encode(unhexlify((len(intg) % 2) * '0' + intg))
+    def _encode_int(self, i, bit_size=None):
+        extend = 0
+        if bit_size is not None:
+            extend = ((bit_size + 7) // 8) * 2
+        hexi = hex(i).rstrip("L").lstrip("0x")
+        hexl = len(hexi)
+        if extend > hexl:
+            extend -= hexl
+        else:
+            extend = hexl % 2
+        return base64url_encode(unhexlify(extend * '0' + hexi))
 
     def _generate_RSA(self, params):
         pubexp = 65537
@@ -347,12 +355,13 @@ class JWK(object):
 
     def _import_pyca_pri_ec(self, key, **params):
         pn = key.private_numbers()
+        key_size = pn.public_numbers.curve.key_size
         params.update(
             kty='EC',
             crv=JWKpycaCurveMap[key.curve.name],
-            x=self._encode_int(pn.public_numbers.x),
-            y=self._encode_int(pn.public_numbers.y),
-            d=self._encode_int(pn.private_value)
+            x=self._encode_int(pn.public_numbers.x, key_size),
+            y=self._encode_int(pn.public_numbers.y, key_size),
+            d=self._encode_int(pn.private_value, key_size)
         )
         self.import_key(**params)
 
