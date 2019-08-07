@@ -424,7 +424,7 @@ class JWS(object):
         :param alg: An optional algorithm name. If already provided as an
          element of the protected or unprotected header it can be safely
          omitted.
-        :param potected: The Protected Header (optional)
+        :param protected: The Protected Header (optional)
         :param header: The Unprotected Header (optional)
 
         :raises InvalidJWSObject: if no payload has been set on the object,
