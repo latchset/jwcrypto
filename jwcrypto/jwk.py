@@ -60,7 +60,6 @@ try:
     priv_bytes = getattr(X25519PrivateKey, 'from_private_bytes', None)
     if priv_bytes is None:
         raise ImportError
-    print(priv_bytes)
     ImplementedOkpCurves.append('X25519')
 except ImportError:
     X25519PublicKey = UnimplementedOKPCurveKey
