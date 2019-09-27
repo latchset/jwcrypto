@@ -161,7 +161,8 @@ class _RawNone(_RawJWS):
         return ''
 
     def verify(self, key, payload, signature):
-        raise InvalidSignature('The "none" signature cannot be verified')
+        if key.key_type != 'oct' or key.get_op_key() != '':
+            raise InvalidSignature('The "none" signature cannot be verified')
 
 
 class _HS256(_RawHMAC, JWAAlgorithm):
