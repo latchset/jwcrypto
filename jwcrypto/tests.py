@@ -712,8 +712,7 @@ class TestJWS(unittest.TestCase):
                           self.check_sign, A5_example)
         a5_bis = {'allowed_algs': ['none']}
         a5_bis.update(A5_example)
-        with self.assertRaises(jws.InvalidJWSSignature):
-            self.check_sign(a5_bis)
+        self.check_sign(a5_bis)
 
     def test_A6(self):
         s = jws.JWS(A6_example['payload'])
@@ -1404,6 +1403,19 @@ class ConformanceTests(unittest.TestCase):
         check = jwe.JWE()
         check.deserialize(enc, key)
         self.assertEqual(b'plain', check.payload)
+
+    def test_none_key(self):
+        e = "eyJhbGciOiJub25lIn0." + \
+            "eyJpc3MiOiJqb2UiLCJodHRwOi8vZXhhbXBsZS5jb20vaXNfcm9vdCI6dHJ1ZX0."
+        token = jwt.JWT(algs=['none'])
+        k = jwk.JWK(generate='oct', size=0)
+        token.deserialize(jwt=e, key=k)
+        self.assertEqual(json_decode(token.claims),
+                         {"iss": "joe", "http://example.com/is_root": True})
+        with self.assertRaises(KeyError):
+            token = jwt.JWT()
+            token.deserialize(jwt=e)
+            json_decode(token.claims)
 
 
 class JWATests(unittest.TestCase):
