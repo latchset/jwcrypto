@@ -3,8 +3,11 @@
 import copy
 import json
 from base64 import urlsafe_b64decode, urlsafe_b64encode
-from collections import MutableMapping
 from collections import namedtuple
+try:
+    from collections.abc import MutableMapping
+except ImportError:
+    from collections import MutableMapping
 
 # Padding stripping versions as described in
 # RFC 7515 Appendix C
