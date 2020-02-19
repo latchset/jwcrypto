@@ -6,7 +6,7 @@ from setuptools import setup
 
 setup(
     name = 'jwcrypto',
-    version = '0.7',
+    version = '0.8.dev1',
     license = 'LGPLv3+',
     maintainer = 'JWCrypto Project Contributors',
     maintainer_email = 'simo@redhat.com',
