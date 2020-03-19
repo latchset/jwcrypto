@@ -249,6 +249,18 @@ class _ES256(_RawEC, JWAAlgorithm):
         super(_ES256, self).__init__('P-256', hashes.SHA256())
 
 
+class _ES256K(_RawEC, JWAAlgorithm):
+
+    name = "ES256K"
+    description = "ECDSA using secp256k1 curve and SHA-256"
+    keysize = 256
+    algorithm_usage_location = 'alg'
+    algorithm_use = 'sig'
+
+    def __init__(self):
+        super(_ES256K, self).__init__('secp256k1', hashes.SHA256())
+
+
 class _ES384(_RawEC, JWAAlgorithm):
 
     name = "ES384"
@@ -1042,6 +1054,7 @@ class JWA(object):
         'RS384': _RS384,
         'RS512': _RS512,
         'ES256': _ES256,
+        'ES256K': _ES256K,
         'ES384': _ES384,
         'ES512': _ES512,
         'PS256': _PS256,

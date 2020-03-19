@@ -424,6 +424,8 @@ class JWT(object):
         """
 
         t = JWS(self.claims)
+        if self._algs:
+            t.allowed_algs = self._algs
         t.add_signature(key, protected=self.header)
         self.token = t
 
