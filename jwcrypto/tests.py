@@ -259,6 +259,29 @@ PrivateKeys_EdDsa = {
     ]
 }
 
+PublicKeys_secp256k1 = {
+    "keys": [
+        {
+            "kty": "EC",
+            "crv": "secp256k1",
+            "x": "Ss6na3mcci8Ud4lQrjaB_T40sfKApEcl2RLIWOJdjow",
+            "y": "7l9qIKtKPW6oEiOYBt7r22Sm0mtFJU-yBkkvMvpscd8"
+        }
+    ]
+}
+
+PrivateKeys_secp256k1 = {
+    "keys": [
+        {
+            "kty": "EC",
+            "crv": "secp256k1",
+            "x": "Ss6na3mcci8Ud4lQrjaB_T40sfKApEcl2RLIWOJdjow",
+            "y": "7l9qIKtKPW6oEiOYBt7r22Sm0mtFJU-yBkkvMvpscd8",
+            "d": "GYhU2vrYGZrjLZn71Xniqm54Mi53xiYtaTLawzaf9dA"
+        },
+    ]
+}
+
 
 class TestJWK(unittest.TestCase):
     def test_create_pubKeys(self):
@@ -319,6 +342,9 @@ class TestJWK(unittest.TestCase):
         # New param prevails
         key = jwk.JWK.generate(kty='EC', curve='P-256', crv='P-521')
         key.get_curve('P-521')
+        # New secp256k curve
+        key = jwk.JWK.generate(kty='EC', curve='secp256k1')
+        key.get_curve('secp256k1')
 
     def test_generate_OKP_keys(self):
         for crv in jwk.ImplementedOkpCurves:
@@ -448,6 +474,16 @@ class TestJWK(unittest.TestCase):
 
     def test_create_priKeys_eddsa(self):
         keylist = PrivateKeys_EdDsa['keys']
+        for key in keylist:
+            jwk.JWK(**key)
+
+    def test_create_pubKeys_secp256k1(self):
+        keylist = PublicKeys_secp256k1['keys']
+        for key in keylist:
+            jwk.JWK(**key)
+
+    def test_create_priKeys_secp256k1(self):
+        keylist = PrivateKeys_secp256k1['keys']
         for key in keylist:
             jwk.JWK(**key)
 
@@ -785,6 +821,19 @@ class TestJWS(unittest.TestCase):
             jws_verify.verify(key.public())
             self.assertEqual(jws_verify.payload.decode('utf-8'),
                              curve_example['payload'])
+
+    def test_secp256k1_signing_and_verification(self):
+        key = jwk.JWK(**PrivateKeys_secp256k1['keys'][0])
+        payload = bytes(bytearray(A1_payload))
+        jws_test = jws.JWS(payload)
+        jws_test.allowed_algs = ['ES256K']
+        jws_test.add_signature(key, None, json_encode({"alg": "ES256K"}), None)
+        jws_test_serialization_compact = jws_test.serialize(compact=True)
+        jws_verify = jws.JWS()
+        jws_verify.allowed_algs = ['ES256K']
+        jws_verify.deserialize(jws_test_serialization_compact)
+        jws_verify.verify(key.public())
+        self.assertEqual(jws_verify.payload, payload)
 
 
 E_A1_plaintext = \

@@ -151,9 +151,11 @@ JWKParamsRegistry = {
 """Regstry of valid key parameters"""
 
 # RFC 7518 - 7.6 , RFC 8037 - 5
+# secp256k1 - https://tools.ietf.org/html/draft-ietf-cose-webauthn-algorithms
 JWKEllipticCurveRegistry = {'P-256': 'P-256 curve',
                             'P-384': 'P-384 curve',
                             'P-521': 'P-521 curve',
+                            'secp256k1': 'SECG secp256k1 curve',
                             'Ed25519': 'Ed25519 signature algorithm key pairs',
                             'Ed448': 'Ed448 signature algorithm key pairs',
                             'X25519': 'X25519 function key pairs',
@@ -180,7 +182,8 @@ JWKOperationsRegistry = {'sign': 'Compute digital Signature or MAC',
 
 JWKpycaCurveMap = {'secp256r1': 'P-256',
                    'secp384r1': 'P-384',
-                   'secp521r1': 'P-521'}
+                   'secp521r1': 'P-521',
+                   'secp256k1': 'secp256k1'}
 
 
 class InvalidJWKType(JWException):
@@ -287,7 +290,7 @@ class JWK(object):
         Valid options per type, when generating new keys:
          * oct: size(int)
          * RSA: public_exponent(int), size(int)
-         * EC: crv(str) (one of P-256, P-384, P-521)
+         * EC: crv(str) (one of P-256, P-384, P-521, secp256k1)
          * OKP: crv(str) (one of Ed25519, Ed448, X25519, X448)
 
         Deprecated:
@@ -401,6 +404,8 @@ class JWK(object):
             return ec.SECP384R1()
         elif name == 'P-521':
             return ec.SECP521R1()
+        elif name == 'secp256k1':
+            return ec.SECP256K1()
         elif name in _OKP_CURVES_TABLE:
             return name
         else:
