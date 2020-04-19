@@ -810,19 +810,19 @@ class JWK(object):
         else:
             raise NotImplementedError
 
-    def import_from_pyca(self, key):
+    def import_from_pyca(self, key, **params):
         if isinstance(key, rsa.RSAPrivateKey):
-            self._import_pyca_pri_rsa(key)
+            self._import_pyca_pri_rsa(key, **params)
         elif isinstance(key, rsa.RSAPublicKey):
-            self._import_pyca_pub_rsa(key)
+            self._import_pyca_pub_rsa(key, **params)
         elif isinstance(key, ec.EllipticCurvePrivateKey):
-            self._import_pyca_pri_ec(key)
+            self._import_pyca_pri_ec(key, **params)
         elif isinstance(key, ec.EllipticCurvePublicKey):
-            self._import_pyca_pub_ec(key)
+            self._import_pyca_pub_ec(key, **params)
         elif isinstance(key, (Ed25519PrivateKey, Ed448PrivateKey)):
-            self._import_pyca_pri_okp(key)
+            self._import_pyca_pri_okp(key, **params)
         elif isinstance(key, (Ed25519PublicKey, Ed448PublicKey)):
-            self._import_pyca_pub_okp(key)
+            self._import_pyca_pub_okp(key, **params)
         else:
             raise InvalidJWKValue('Unknown key object %r' % key)
 
