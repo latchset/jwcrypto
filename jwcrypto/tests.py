@@ -282,6 +282,16 @@ PrivateKeys_secp256k1 = {
     ]
 }
 
+Ed25519PrivatePEM = b"""-----BEGIN PRIVATE KEY-----
+MC4CAQAwBQYDK2VwBCIEIEh4ImJiiZgSNg9J9I+Z5toHKh6LDO2MCbSYNZTkMXDU
+-----END PRIVATE KEY-----
+"""
+
+Ed25519PublicPEM = b"""-----BEGIN PUBLIC KEY-----
+MCowBQYDK2VwAyEAlsRcb1mVVIUcDjNqZU27N+iPXihH1EQDa/O3utHLtqc=
+-----END PUBLIC KEY-----
+"""
+
 
 class TestJWK(unittest.TestCase):
     def test_create_pubKeys(self):
@@ -493,6 +503,22 @@ class TestJWK(unittest.TestCase):
             self.assertEqual(
                 k.thumbprint(),
                 PublicKeys_EdDsa['thumbprints'][i])
+
+    def test_pem_okp(self):
+        payload = b'Imported private Ed25519'
+        prikey = jwk.JWK.from_pem(Ed25519PrivatePEM)
+        self.assertTrue(prikey.has_private)
+        self.assertTrue(prikey.has_public)
+        s = jws.JWS(payload)
+        s.add_signature(prikey, None, {'alg': 'EdDSA'}, None)
+        sig = s.serialize()
+        pubkey = jwk.JWK.from_pem(Ed25519PublicPEM)
+        self.assertTrue(pubkey.has_public)
+        self.assertFalse(pubkey.has_private)
+        c = jws.JWS()
+        c.deserialize(sig, pubkey, alg="EdDSA")
+        self.assertTrue(c.objects['valid'])
+        self.assertEqual(c.payload, payload)
 
 
 # RFC 7515 - A.1
