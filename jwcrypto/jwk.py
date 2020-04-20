@@ -455,10 +455,16 @@ class JWK(object):
                                   'OKP key type' % params['crv'])
         self._import_pyca_pri_okp(key, **params)
 
+    def _okp_curve_from_pyca_key(self, key):
+        for name, val in iteritems(_OKP_CURVES_TABLE):
+            if isinstance(key, (val.pubkey, val.privkey)):
+                return name
+        raise InvalidJWKValue('Invalid OKP Key object %r' % key)
+
     def _import_pyca_pri_okp(self, key, **params):
         params.update(
             kty='OKP',
-            crv=params['crv'],
+            crv=self._okp_curve_from_pyca_key(key),
             d=base64url_encode(key.private_bytes(
                 serialization.Encoding.Raw,
                 serialization.PrivateFormat.Raw,
@@ -472,10 +478,10 @@ class JWK(object):
     def _import_pyca_pub_okp(self, key, **params):
         params.update(
             kty='OKP',
-            crv=params['crv'],
+            crv=self._okp_curve_from_pyca_key(key),
             x=base64url_encode(key.public_bytes(
                 serialization.Encoding.Raw,
-                serialization.PrivateFormat.Raw))
+                serialization.PublicFormat.Raw))
         )
         self.import_key(**params)
 
