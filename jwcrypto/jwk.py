@@ -576,7 +576,7 @@ class JWK(object):
         obj.import_key(**jkey)
         return obj
 
-    def export(self, private_key=True):
+    def export(self, private_key=True, as_dict=False):
         """Exports the key in the standard JSON format.
         Exports the key regardless of type, if private_key is False
         and the key is_symmetric an exceptionis raised.
@@ -587,16 +587,20 @@ class JWK(object):
         if private_key is True:
             # Use _export_all for backwards compatibility, as this
             # function allows to export symmetrict keys too
-            return self._export_all()
-        else:
-            return self.export_public()
+            return self._export_all(as_dict)
 
-    def export_public(self):
+        return self.export_public(as_dict)
+
+    def export_public(self, as_dict=False):
         """Exports the public key in the standard JSON format.
         It fails if one is not available like when this function
         is called on a symmetric key.
+
+        :param as_dict(bool): If set to True export as python dict not JSON
         """
         pub = self._public_params()
+        if as_dict is True:
+            return pub
         return json_encode(pub)
 
     def _public_params(self):
@@ -614,24 +618,28 @@ class JWK(object):
                 pub[param] = self._key[param]
         return pub
 
-    def _export_all(self):
+    def _export_all(self, as_dict=False):
         d = dict()
         d.update(self._params)
         d.update(self._key)
         d.update(self._unknown)
+        if as_dict is True:
+            return d
         return json_encode(d)
 
-    def export_private(self):
+    def export_private(self, as_dict=False):
         """Export the private key in the standard JSON format.
         It fails for a JWK that has only a public key or is symmetric.
+
+        :param as_dict(bool): If set to True export as python dict not JSON
         """
         if self.has_private:
-            return self._export_all()
+            return self._export_all(as_dict)
         raise InvalidJWKType("No private key available")
 
-    def export_symmetric(self):
+    def export_symmetric(self, as_dict=False):
         if self.is_symmetric:
-            return self._export_all()
+            return self._export_all(as_dict)
         raise InvalidJWKType("Not a symmetric key")
 
     def public(self):
@@ -975,20 +983,25 @@ class JWKSet(dict):
     def add(self, elem):
         self['keys'].add(elem)
 
-    def export(self, private_keys=True):
-        """Exports a RFC 7517 keyset using the standard JSON format
+    def export(self, private_keys=True, as_dict=False):
+        """Exports a RFC 7517 keyset.
+           Exports as json by default, or as dict if requested.
 
         :param private_key(bool): Whether to export private keys.
                                   Defaults to True.
+        :param as_dict(bool): Whether to retun a dict instead of
+                              a JSON object
         """
         exp_dict = dict()
         for k, v in iteritems(self):
             if k == 'keys':
                 keys = list()
                 for jwk in v:
-                    keys.append(json_decode(jwk.export(private_keys)))
+                    keys.append(jwk.export(private_keys, as_dict=True))
                 v = keys
             exp_dict[k] = v
+        if as_dict is True:
+            return exp_dict
         return json_encode(exp_dict)
 
     def import_keyset(self, keyset):

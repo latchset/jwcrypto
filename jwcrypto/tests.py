@@ -458,6 +458,21 @@ class TestJWK(unittest.TestCase):
         self.assertFalse(pubkey.has_private)
         self.assertEqual(prikey.key_id, pubkey.key_id)
 
+    def test_export_as_dict(self):
+        key = jwk.JWK(**SymmetricKeys['keys'][1])
+        k = key.export_symmetric(as_dict=True)
+        self.assertEqual(k['kid'], SymmetricKeys['keys'][1]['kid'])
+        key = jwk.JWK.from_pem(PublicCert)
+        k = key.export_public(as_dict=True)
+        self.assertEqual(k['kid'], PublicCertThumbprint)
+        key = jwk.JWK.from_pem(RSAPrivatePEM, password=RSAPrivatePassword)
+        k = key.export_private(as_dict=True)
+        self.assertEqual(k['kid'],
+                         u'x31vrbZceU2qOPLtrUwPkLa3PNakMn9tOsq_ntFVrJc')
+        keyset = jwk.JWKSet.from_json(json_encode(PrivateKeys))
+        ks = keyset.export(as_dict=True)
+        self.assertTrue('keys' in ks)
+
     def test_public(self):
         key = jwk.JWK.from_pem(RSAPrivatePEM, password=RSAPrivatePassword)
         self.assertTrue(key.has_public)
