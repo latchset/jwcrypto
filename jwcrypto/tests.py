@@ -321,7 +321,7 @@ class TestJWK(unittest.TestCase):
         jwk.JWK.generate(kty='RSA', size=4096)
         jwk.JWK.generate(kty='EC', curve='P-521')
         k = jwk.JWK.generate(kty='oct', alg='A192KW', kid='MySymmetricKey')
-        self.assertEqual(k.key_id, 'MySymmetricKey')
+        self.assertEqual(k['kid'], 'MySymmetricKey')
         self.assertEqual(len(base64url_decode(k.get_op_key('encrypt'))), 24)
         jwk.JWK.generate(kty='RSA', alg='RS256')
         k = jwk.JWK.generate(kty='RSA', size=4096, alg='RS256')
@@ -332,7 +332,7 @@ class TestJWK(unittest.TestCase):
         jk = k.export_public()
         self.assertFalse('d' in json_decode(jk))
         k2 = jwk.JWK(**json_decode(jk))
-        self.assertEqual(k.key_id, k2.key_id)
+        self.assertEqual(k['kid'], k2['kid'])
 
     def test_generate_oct_key(self):
         key = jwk.JWK.generate(kty='oct', size=128)
@@ -364,13 +364,13 @@ class TestJWK(unittest.TestCase):
     def test_import_pyca_keys(self):
         rsa1 = rsa.generate_private_key(65537, 1024, default_backend())
         krsa1 = jwk.JWK.from_pyca(rsa1)
-        self.assertEqual(krsa1.key_type, 'RSA')
+        self.assertEqual(krsa1['kty'], 'RSA')
         krsa2 = jwk.JWK.from_pyca(rsa1.public_key())
         self.assertEqual(krsa1.get_op_key('verify').public_numbers().n,
                          krsa2.get_op_key('verify').public_numbers().n)
         ec1 = ec.generate_private_key(ec.SECP256R1(), default_backend())
         kec1 = jwk.JWK.from_pyca(ec1)
-        self.assertEqual(kec1.key_type, 'EC')
+        self.assertEqual(kec1['kty'], 'EC')
         kec2 = jwk.JWK.from_pyca(ec1.public_key())
         self.assertEqual(kec1.get_op_key('verify').public_numbers().x,
                          kec2.get_op_key('verify').public_numbers().x)
@@ -392,10 +392,8 @@ class TestJWK(unittest.TestCase):
         self.assertEqual(len(ks), 1)
         k1 = ks.get_key(RSAPrivateKey['kid'])
         k2 = ks2.get_key(RSAPrivateKey['kid'])
-        # pylint: disable=protected-access
-        self.assertEqual(k1._key, k2._key)
-        # pylint: disable=protected-access
-        self.assertEqual(k1._key['d'], RSAPrivateKey['d'])
+        self.assertEqual(k1, k2)
+        self.assertEqual(k1['d'], RSAPrivateKey['d'])
         # test class method import too
         ks3 = jwk.JWKSet.from_json(ks.export())
         self.assertEqual(len(ks), len(ks3))
@@ -427,7 +425,7 @@ class TestJWK(unittest.TestCase):
                          rsapub.public_numbers().n)
 
         pubc = jwk.JWK.from_pem(PublicCert)
-        self.assertEqual(pubc.key_id, PublicCertThumbprint)
+        self.assertEqual(pubc['kid'], PublicCertThumbprint)
 
     def test_export_symmetric(self):
         key = jwk.JWK(**SymmetricKeys['keys'][0])
@@ -456,7 +454,7 @@ class TestJWK(unittest.TestCase):
         pub = key.export_public()
         pubkey = jwk.JWK(**json_decode(pub))
         self.assertFalse(pubkey.has_private)
-        self.assertEqual(prikey.key_id, pubkey.key_id)
+        self.assertEqual(prikey['kid'], pubkey['kid'])
 
     def test_export_as_dict(self):
         key = jwk.JWK(**SymmetricKeys['keys'][1])
@@ -1453,7 +1451,7 @@ class ConformanceTests(unittest.TestCase):
     def test_unknown_key_params(self):
         key = jwk.JWK(kty='oct', k='secret', unknown='mystery')
         # pylint: disable=protected-access
-        self.assertEqual('mystery', key._unknown['unknown'])
+        self.assertEqual('mystery', key._params['unknown'])
 
     def test_key_ops_values(self):
         self.assertRaises(jwk.InvalidJWKValue, jwk.JWK,
