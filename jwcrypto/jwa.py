@@ -161,7 +161,7 @@ class _RawNone(_RawJWS):
         return ''
 
     def verify(self, key, payload, signature):
-        if key.key_type != 'oct' or key.get_op_key() != '':
+        if key['kty'] != 'oct' or key.get_op_key() != '':
             raise InvalidSignature('The "none" signature cannot be verified')
 
 
@@ -353,8 +353,8 @@ class _RSA(_RawKeyMgmt):
     def _check_key(self, key):
         if not isinstance(key, JWK):
             raise ValueError('key is not a JWK object')
-        if key.key_type != 'RSA':
-            raise InvalidJWEKeyType('RSA', key.key_type)
+        if key['kty'] != 'RSA':
+            raise InvalidJWEKeyType('RSA', key['kty'])
 
     # FIXME: get key size and insure > 2048 bits
     def wrap(self, key, bitsize, cek, headers):
@@ -441,8 +441,8 @@ class _AesKw(_RawKeyMgmt):
     def _get_key(self, key, op):
         if not isinstance(key, JWK):
             raise ValueError('key is not a JWK object')
-        if key.key_type != 'oct':
-            raise InvalidJWEKeyType('oct', key.key_type)
+        if key['kty'] != 'oct':
+            raise InvalidJWEKeyType('oct', key['kty'])
         rk = base64url_decode(key.get_op_key(op))
         if _bitsize(rk) != self.keysize:
             raise InvalidJWEKeyLength(self.keysize, _bitsize(rk))
@@ -503,8 +503,8 @@ class _AesGcmKw(_RawKeyMgmt):
     def _get_key(self, key, op):
         if not isinstance(key, JWK):
             raise ValueError('key is not a JWK object')
-        if key.key_type != 'oct':
-            raise InvalidJWEKeyType('oct', key.key_type)
+        if key['kty'] != 'oct':
+            raise InvalidJWEKeyType('oct', key['kty'])
         rk = base64url_decode(key.get_op_key(op))
         if _bitsize(rk) != self.keysize:
             raise InvalidJWEKeyLength(self.keysize, _bitsize(rk))
@@ -669,8 +669,8 @@ class _Direct(_RawKeyMgmt, JWAAlgorithm):
     def _check_key(self, key):
         if not isinstance(key, JWK):
             raise ValueError('key is not a JWK object')
-        if key.key_type != 'oct':
-            raise InvalidJWEKeyType('oct', key.key_type)
+        if key['kty'] != 'oct':
+            raise InvalidJWEKeyType('oct', key['kty'])
 
     def wrap(self, key, bitsize, cek, headers):
         self._check_key(key)
@@ -706,12 +706,12 @@ class _EcdhEs(_RawKeyMgmt, JWAAlgorithm):
     def _check_key(self, key):
         if not isinstance(key, JWK):
             raise ValueError('key is not a JWK object')
-        if key.key_type not in ['EC', 'OKP']:
-            raise InvalidJWEKeyType('EC or OKP', key.key_type)
-        if key.key_type == 'OKP':
-            if key.key_curve not in ['X25519', 'X448']:
+        if key['kty'] not in ['EC', 'OKP']:
+            raise InvalidJWEKeyType('EC or OKP', key['kty'])
+        if key['kty'] == 'OKP':
+            if key['crv'] not in ['X25519', 'X448']:
                 raise InvalidJWEKeyType('X25519 or X448',
-                                        key.key_curve)
+                                        key['crv'])
 
     def _derive(self, privkey, pubkey, alg, bitsize, headers):
         # OtherInfo is defined in NIST SP 56A 5.8.1.2.1
@@ -759,7 +759,7 @@ class _EcdhEs(_RawKeyMgmt, JWAAlgorithm):
         else:
             alg = headers['alg']
 
-        epk = JWK.generate(kty=key.key_type, crv=key.key_curve)
+        epk = JWK.generate(kty=key['kty'], crv=key['crv'])
         dk = self._derive(epk.get_op_key('unwrapKey'),
                           key.get_op_key('wrapKey'),
                           alg, dk_size, headers)
@@ -835,13 +835,13 @@ class _EdDsa(_RawJWS, JWAAlgorithm):
 
     def sign(self, key, payload):
 
-        if key.key_curve in ['Ed25519', 'Ed448']:
+        if key['crv'] in ['Ed25519', 'Ed448']:
             skey = key.get_op_key('sign')
             return skey.sign(payload)
         raise NotImplementedError
 
     def verify(self, key, payload, signature):
-        if key.key_curve in ['Ed25519', 'Ed448']:
+        if key['crv'] in ['Ed25519', 'Ed448']:
             pkey = key.get_op_key('verify')
             return pkey.verify(signature, payload)
         raise NotImplementedError
