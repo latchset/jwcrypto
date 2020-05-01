@@ -1029,6 +1029,29 @@ class JWK(dict):
     def __hash__(self):
         return self._decode_int(self.thumbprint())
 
+    def __getattr__(self, item):
+        try:
+            if item in JWKParamsRegistry.keys():
+                return self._params[item]
+            kty = self._params.get('kty', None)
+            if kty is not None:
+                if item in list(JWKValuesRegistry[kty].keys()):
+                    return self._params[item]
+            raise KeyError
+        except KeyError:
+            raise AttributeError
+
+    def __setattr__(self, item, value):
+        try:
+            if item in JWKParamsRegistry.keys():
+                self[item] = value
+            for name in list(JWKTypesRegistry.keys()):
+                if item in list(JWKValuesRegistry[name].keys()):
+                    self[item] = value
+            super(JWK, self).__setattr__(item, value)
+        except KeyError:
+            raise AttributeError
+
 
 class _JWKkeys(set):
 
