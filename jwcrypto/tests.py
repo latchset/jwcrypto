@@ -533,6 +533,28 @@ class TestJWK(unittest.TestCase):
         self.assertTrue(c.objects['valid'])
         self.assertEqual(c.payload, payload)
 
+    def test_jwk_as_dict(self):
+        key = jwk.JWK(**PublicKeys['keys'][0])
+        self.assertEqual(key['kty'], 'EC')
+        self.assertEqual(key.kty, 'EC')
+        self.assertEqual(key.x, key['x'])
+        self.assertEqual(key.kid, '1')
+        key = jwk.JWK(**PublicKeys['keys'][1])
+        self.assertEqual(key['kty'], 'RSA')
+        self.assertEqual(key.n, key['n'])
+        with self.assertRaises(AttributeError):
+            # pylint: disable=pointless-statement
+            key.d
+        with self.assertRaises(AttributeError):
+            key.x = 'xyz'
+        with self.assertRaises(jwk.InvalidJWKValue):
+            key['n'] = '!!!'
+        with self.assertRaises(jwk.InvalidJWKValue):
+            key.e = '3'
+        key.unknown = '1'
+        key['unknown'] = 2
+        self.assertFalse(key.unknown == key['unknown'])
+
 
 # RFC 7515 - A.1
 A1_protected = \
