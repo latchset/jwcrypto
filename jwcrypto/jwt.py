@@ -258,8 +258,8 @@ class JWT(object):
         return self._leeway
 
     @leeway.setter
-    def leeway(self, l):
-        self._leeway = int(l)
+    def leeway(self, lwy):
+        self._leeway = int(lwy)
 
     @property
     def validity(self):
