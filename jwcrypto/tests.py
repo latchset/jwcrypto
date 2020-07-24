@@ -400,7 +400,7 @@ class TestJWK(unittest.TestCase):
         ks3 = jwk.JWKSet.from_json(ks.export())
         self.assertEqual(len(ks), len(ks3))
 
-        # Test Keyset with mutiple keys
+        # Test key set with mutiple keys
         ksm = jwk.JWKSet.from_json(json_encode(PrivateKeys))
         num = 0
         for item in ksm:

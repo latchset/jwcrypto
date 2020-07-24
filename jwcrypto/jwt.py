@@ -162,7 +162,7 @@ class JWT(object):
          the token. A (:class:`jwcrypto.jwk.JWKSet`) can also be used.
         :param algs: An optional list of allowed algorithms
         :param default_claims: An optional dict with default values for
-         registred claims. A None value for NumericDate type claims
+         registered claims. A None value for NumericDate type claims
          will cause generation according to system time. Only the values
          from RFC 7519 - 4.1 are evaluated.
         :param check_claims: An optional dict of claims that must be
@@ -171,7 +171,7 @@ class JWT(object):
 
         Note: either the header,claims or jwt,key parameters should be
         provided as a deserialization operation (which occurs if the jwt
-        is provided will wipe any header os claim provided by setting
+        is provided) will wipe any header or claim provided by setting
         those obtained from the deserialization of the jwt token.
 
         Note: if check_claims is not provided the 'exp' and 'nbf' claims
@@ -418,7 +418,7 @@ class JWT(object):
 
         Creates a JWS token with the header as the JWS protected header and
         the claims as the payload. See (:class:`jwcrypto.jws.JWS`) for
-        details on the exceptions that may be reaised.
+        details on the exceptions that may be raised.
 
         :param key: A (:class:`jwcrypto.jwk.JWK`) key.
         """
@@ -434,7 +434,7 @@ class JWT(object):
 
         Creates a JWE token with the header as the JWE protected header and
         the claims as the plaintext. See (:class:`jwcrypto.jwe.JWE`) for
-        details on the exceptions that may be reaised.
+        details on the exceptions that may be raised.
 
         :param key: A (:class:`jwcrypto.jwk.JWK`) key.
         """
@@ -513,7 +513,7 @@ class JWT(object):
         Note: the compact parameter is provided for general compatibility
         with the serialize() functions of :class:`jwcrypto.jws.JWS` and
         :class:`jwcrypto.jwe.JWE` so that these objects can all be used
-        interchangeably. However the only valid JWT representtion is the
+        interchangeably. However the only valid JWT representation is the
         compact representation.
         """
         return self.token.serialize(compact)
