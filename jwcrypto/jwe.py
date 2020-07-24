@@ -284,13 +284,13 @@ class JWE(object):
                         "is set" % invalid)
             if 'protected' not in self.objects:
                 raise InvalidJWEOperation(
-                    "Can't use compat encoding without protected headers")
+                    "Can't use compact encoding without protected headers")
             else:
                 ph = json_decode(self.objects['protected'])
                 for required in 'alg', 'enc':
                     if required not in ph:
                         raise InvalidJWEOperation(
-                            "Can't use compat encoding, '%s' must be in the "
+                            "Can't use compact encoding, '%s' must be in the "
                             "protected header" % required)
             if 'recipients' in self.objects:
                 if len(self.objects['recipients']) != 1:
@@ -438,7 +438,7 @@ class JWE(object):
          If a key is provided a decryption step will be attempted after
          the object is successfully deserialized.
 
-        :raises InvalidJWEData: if the raw object is an invaid JWE token.
+        :raises InvalidJWEData: if the raw object is an invalid JWE token.
         :raises InvalidJWEOperation: if the decryption fails.
         """
 

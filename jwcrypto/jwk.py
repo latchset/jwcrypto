@@ -148,7 +148,7 @@ JWKParamsRegistry = {
     'x5t#S256': JWKParameter('X.509 Certificate SHA-256 Thumbprint',
                              True, None, None)
 }
-"""Regstry of valid key parameters"""
+"""Registry of valid key parameters"""
 
 # RFC 7518 - 7.6 , RFC 8037 - 5
 # secp256k1 - https://tools.ietf.org/html/draft-ietf-cose-webauthn-algorithms
@@ -281,7 +281,7 @@ class JWK(object):
         always be provided and its value must be a valid one as defined
         by the 'IANA JSON Web Key Types registry' and specified in the
         :data:`JWKTypesRegistry` variable. The valid key parameters per
-        key type are defined in the :data:`JWKValuesregistry` variable.
+        key type are defined in the :data:`JWKValuesRegistry` variable.
 
         To generate a new random key call the class method generate() with
         the appropriate 'kty' parameter, and other parameters as needed (key
@@ -296,7 +296,7 @@ class JWK(object):
         Deprecated:
         Alternatively if the 'generate' parameter is provided, with a
         valid key type as value then a new key will be generated according
-        to the defaults or provided key strenght options (type specific).
+        to the defaults or provided key strength options (type specific).
 
         :raises InvalidJWKType: if the key type is invalid
         :raises InvalidJWKValue: if incorrect or inconsistent parameters
@@ -579,7 +579,7 @@ class JWK(object):
     def export(self, private_key=True, as_dict=False):
         """Exports the key in the standard JSON format.
         Exports the key regardless of type, if private_key is False
-        and the key is_symmetric an exceptionis raised.
+        and the key is_symmetric an exception is raised.
 
         :param private_key(bool): Whether to export the private key.
                                   Defaults to True.
@@ -786,12 +786,12 @@ class JWK(object):
             raise NotImplementedError
 
     def get_op_key(self, operation=None, arg=None):
-        """Get the key object associated to the requested opration.
+        """Get the key object associated to the requested operation.
         For example the public RSA key for the 'verify' operation or
         the private EC key for the 'decrypt' operation.
 
         :param operation: The requested operation.
-         The valid set of operations is availble in the
+         The valid set of operations is available in the
          :data:`JWKOperationsRegistry` registry.
         :param arg: an optional, context specific, argument
          For example a curve name.
@@ -955,7 +955,7 @@ class _JWKkeys(set):
 class JWKSet(dict):
     """A set of JWK objects.
 
-    Inherits from the standard 'dict' bultin type.
+    Inherits from the standard 'dict' builtin type.
     Creates a special key 'keys' that is of a type derived from 'set'
     The 'keys' attribute accepts only :class:`jwcrypto.jwk.JWK` elements.
     """
@@ -984,12 +984,12 @@ class JWKSet(dict):
         self['keys'].add(elem)
 
     def export(self, private_keys=True, as_dict=False):
-        """Exports a RFC 7517 keyset.
+        """Exports a RFC 7517 key set.
            Exports as json by default, or as dict if requested.
 
         :param private_key(bool): Whether to export private keys.
                                   Defaults to True.
-        :param as_dict(bool): Whether to retun a dict instead of
+        :param as_dict(bool): Whether to return a dict instead of
                               a JSON object
         """
         exp_dict = dict()
@@ -1005,9 +1005,9 @@ class JWKSet(dict):
         return json_encode(exp_dict)
 
     def import_keyset(self, keyset):
-        """Imports a RFC 7517 keyset using the standard JSON format.
+        """Imports a RFC 7517 key set using the standard JSON format.
 
-        :param keyset: The RFC 7517 representation of a JOSE Keyset.
+        :param keyset: The RFC 7517 representation of a JOSE key set.
         """
         try:
             jwkset = json_decode(keyset)
@@ -1026,9 +1026,9 @@ class JWKSet(dict):
 
     @classmethod
     def from_json(cls, keyset):
-        """Creates a RFC 7517 keyset from the standard JSON format.
+        """Creates a RFC 7517 key set from the standard JSON format.
 
-        :param keyset: The RFC 7517 representation of a JOSE Keyset.
+        :param keyset: The RFC 7517 representation of a JOSE key set.
         """
         obj = cls()
         obj.import_keyset(keyset)

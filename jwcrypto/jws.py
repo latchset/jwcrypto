@@ -326,7 +326,7 @@ class JWS(object):
                 except Exception as e:  # pylint: disable=broad-except
                     self.verifylog.append('Failed: [%s]' % repr(e))
         else:
-            raise InvalidJWSSignature('No signatures availble')
+            raise InvalidJWSSignature('No signatures available')
 
         if not self.is_valid:
             raise InvalidJWSSignature('Verification failed for all '
@@ -373,7 +373,7 @@ class JWS(object):
         :param alg: The signing algorithm (optional). usually the algorithm
          is known as it is provided with the JOSE Headers of the token.
 
-        :raises InvalidJWSObject: if the raw object is an invaid JWS token.
+        :raises InvalidJWSObject: if the raw object is an invalid JWS token.
         :raises InvalidJWSSignature: if the verification fails.
         """
         self.objects = dict()
@@ -518,7 +518,7 @@ class JWS(object):
          representation, otherwise generates a standard JSON format.
 
         :raises InvalidJWSOperation: if the object cannot serialized
-         with the compact representation and `compat` is True.
+         with the compact representation and `compact` is True.
         :raises InvalidJWSSignature: if no signature has been added
          to the object, or no valid signature can be found.
         """

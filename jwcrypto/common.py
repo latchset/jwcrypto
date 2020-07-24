@@ -91,7 +91,7 @@ class InvalidJWEKeyType(JWException):
     """Invalid JWE Key Type.
 
     This exception is raised when the provided JWK Key does not match
-    the type required by the sepcified algorithm.
+    the type required by the specified algorithm.
     """
 
     def __init__(self, expected, obtained):
@@ -103,7 +103,7 @@ class InvalidJWEKeyLength(JWException):
     """Invalid JWE Key Length.
 
     This exception is raised when the provided JWK Key does not match
-    the length required by the sepcified algorithm.
+    the length required by the specified algorithm.
     """
 
     def __init__(self, expected, obtained):
