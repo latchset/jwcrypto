@@ -1421,6 +1421,34 @@ class TestJWT(unittest.TestCase):
         jwt.JWT(jwt=token, key=key, check_claims={"iss": "test", "exp": None,
                                                   "string_claim": "test"})
 
+    def test_empty_claims(self):
+        key = jwk.JWK().generate(kty='oct')
+
+        # empty dict is valid
+        t = jwt.JWT('{"alg":"HS256"}', {})
+        self.assertEqual('{}', t.claims)
+        t.make_signed_token(key)
+        token = t.serialize()
+
+        c = jwt.JWT()
+        c.deserialize(token, key)
+        self.assertEqual('{}', c.claims)
+
+        # empty string is not valid
+        t = jwt.JWT('{"alg":"HS256"}', '')
+        self.assertEqual('', t.claims)
+        self.assertRaises(jws.InvalidJWSObject, t.make_signed_token, key)
+
+        # but a space is fine
+        t = jwt.JWT('{"alg":"HS256"}', ' ')
+        self.assertEqual(' ', t.claims)
+        t.make_signed_token(key)
+        token = t.serialize()
+
+        c = jwt.JWT()
+        c.deserialize(token, key)
+        self.assertEqual(' ', c.claims)
+
 
 class ConformanceTests(unittest.TestCase):
 
