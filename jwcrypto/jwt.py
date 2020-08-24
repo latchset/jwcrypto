@@ -199,7 +199,7 @@ class JWT(object):
         if check_claims is not None:
             self._check_claims = check_claims
 
-        if claims:
+        if claims is not None:
             self.claims = claims
 
         if jwt is not None:
