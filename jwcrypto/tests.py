@@ -867,11 +867,9 @@ class TestJWS(unittest.TestCase):
         key = jwk.JWK(**PrivateKeys_secp256k1['keys'][0])
         payload = bytes(bytearray(A1_payload))
         jws_test = jws.JWS(payload)
-        jws_test.allowed_algs = ['ES256K']
         jws_test.add_signature(key, None, json_encode({"alg": "ES256K"}), None)
         jws_test_serialization_compact = jws_test.serialize(compact=True)
         jws_verify = jws.JWS()
-        jws_verify.allowed_algs = ['ES256K']
         jws_verify.deserialize(jws_test_serialization_compact)
         jws_verify.verify(key.public())
         self.assertEqual(jws_verify.payload, payload)
