@@ -151,7 +151,7 @@ JWKParamsRegistry = {
 """Registry of valid key parameters"""
 
 # RFC 7518 - 7.6 , RFC 8037 - 5
-# secp256k1 - https://tools.ietf.org/html/draft-ietf-cose-webauthn-algorithms
+# RFC 8812 - 4.4
 JWKEllipticCurveRegistry = {'P-256': 'P-256 curve',
                             'P-384': 'P-384 curve',
                             'P-521': 'P-521 curve',
