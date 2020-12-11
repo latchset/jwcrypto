@@ -440,6 +440,8 @@ class JWT(object):
         """
 
         t = JWE(self.claims, self.header)
+        if self._algs:
+            t.allowed_algs = self._algs
         t.add_recipient(key)
         self.token = t
 

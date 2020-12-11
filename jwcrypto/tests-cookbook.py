@@ -1110,7 +1110,8 @@ class Cookbook08JWETests(unittest.TestCase):
         plaintext = Payload_plaintext_5
         protected = base64url_decode(JWE_Protected_Header_5_1_4)
         rsa_key = jwk.JWK(**RSA_key_5_1_1)
-        e = jwe.JWE(plaintext, protected)
+        e = jwe.JWE(plaintext, protected,
+                    algs=jwe.default_allowed_algs + ['RSA1_5'])
         e.add_recipient(rsa_key)
         enc = e.serialize()
         e.deserialize(enc, rsa_key)
