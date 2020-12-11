@@ -33,7 +33,7 @@ JWEHeaderRegistry = {
 
 default_allowed_algs = [
     # Key Management Algorithms
-    'RSA1_5', 'RSA-OAEP', 'RSA-OAEP-256',
+    'RSA-OAEP', 'RSA-OAEP-256',
     'A128KW', 'A192KW', 'A256KW',
     'dir',
     'ECDH-ES', 'ECDH-ES+A128KW', 'ECDH-ES+A192KW', 'ECDH-ES+A256KW',

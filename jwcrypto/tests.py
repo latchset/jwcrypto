@@ -19,6 +19,9 @@ from jwcrypto.common import JWSEHeaderParameter
 from jwcrypto.common import base64url_decode, base64url_encode
 from jwcrypto.common import json_decode, json_encode
 
+jwe_algs_and_rsa1_5 = jwe.default_allowed_algs + ['RSA1_5']
+jws_algs_and_rsa1_5 = jws.default_allowed_algs + ['RSA1_5']
+
 # RFC 7517 - A.1
 PublicKeys = {"keys": [
               {"kty": "EC",
@@ -1107,7 +1110,7 @@ X25519_Protected_Header_no_epk = {
 
 class TestJWE(unittest.TestCase):
     def check_enc(self, plaintext, protected, key, vector):
-        e = jwe.JWE(plaintext, protected)
+        e = jwe.JWE(plaintext, protected, algs=jwe_algs_and_rsa1_5)
         e.add_recipient(key)
         # Encrypt and serialize using compact
         enc = e.serialize()
@@ -1129,7 +1132,8 @@ class TestJWE(unittest.TestCase):
                        E_A3_ex['key'], E_A3_ex['vector'])
 
     def test_A4(self):
-        e = jwe.JWE(E_A4_ex['plaintext'], E_A4_ex['protected'])
+        e = jwe.JWE(E_A4_ex['plaintext'], E_A4_ex['protected'],
+                    algs=jwe_algs_and_rsa1_5)
         e.add_recipient(E_A4_ex['key1'], E_A4_ex['header1'])
         e.add_recipient(E_A4_ex['key2'], E_A4_ex['header2'])
         enc = e.serialize()
@@ -1140,7 +1144,7 @@ class TestJWE(unittest.TestCase):
         e.deserialize(E_A4_ex['vector'], E_A4_ex['key2'])
 
     def test_A5(self):
-        e = jwe.JWE()
+        e = jwe.JWE(algs=jwe_algs_and_rsa1_5)
         e.deserialize(E_A5_ex, E_A4_ex['key2'])
         with self.assertRaises(jwe.InvalidJWEData):
             e = jwe.JWE(algs=['A256KW'])
@@ -1264,10 +1268,10 @@ class TestMMA(unittest.TestCase):
             print('Testing MMA timing attacks')
 
             ok_cek = 0
-            ok_e = jwe.JWE()
+            ok_e = jwe.JWE(algs=jwe_algs_and_rsa1_5)
             ok_e.deserialize(MMA_vector_ok_cek)
             ko_cek = 0
-            ko_e = jwe.JWE()
+            ko_e = jwe.JWE(algs=jwe_algs_and_rsa1_5)
             ko_e.deserialize(MMA_vector_ko_cek)
 
             import time
@@ -1349,26 +1353,31 @@ class TestJWT(unittest.TestCase):
     def test_A1(self):
         key = jwk.JWK(**E_A2_key)
         # first encode/decode ourselves
-        t = jwt.JWT(A1_header, A1_claims)
+        t = jwt.JWT(A1_header, A1_claims,
+                    algs=jwe_algs_and_rsa1_5)
         t.make_encrypted_token(key)
         token = t.serialize()
         t.deserialize(token)
         # then try the test vector
-        t = jwt.JWT(jwt=A1_token, key=key, check_claims=False)
+        t = jwt.JWT(jwt=A1_token, key=key, check_claims=False,
+                    algs=jwe_algs_and_rsa1_5)
         # then try the test vector with explicit expiration date
-        t = jwt.JWT(jwt=A1_token, key=key, check_claims={'exp': 1300819380})
+        t = jwt.JWT(jwt=A1_token, key=key, check_claims={'exp': 1300819380},
+                    algs=jwe_algs_and_rsa1_5)
         # Finally check it raises for expired tokens
-        self.assertRaises(jwt.JWTExpired, jwt.JWT, jwt=A1_token, key=key)
+        self.assertRaises(jwt.JWTExpired, jwt.JWT, jwt=A1_token, key=key,
+                          algs=jwe_algs_and_rsa1_5)
 
     def test_A2(self):
         sigkey = jwk.JWK(**A2_example['key'])
-        touter = jwt.JWT(jwt=A2_token, key=E_A2_ex['key'])
+        touter = jwt.JWT(jwt=A2_token, key=E_A2_ex['key'],
+                         algs=jwe_algs_and_rsa1_5)
         tinner = jwt.JWT(jwt=touter.claims, key=sigkey, check_claims=False)
         self.assertEqual(A1_claims, json_decode(tinner.claims))
 
         with self.assertRaises(jwe.InvalidJWEData):
             jwt.JWT(jwt=A2_token, key=E_A2_ex['key'],
-                    algs=['RSA_1_5', 'AES256GCM'])
+                    algs=jws_algs_and_rsa1_5)
 
     def test_decrypt_keyset(self):
         key = jwk.JWK(kid='testkey', **E_A2_key)
@@ -1377,19 +1386,20 @@ class TestJWT(unittest.TestCase):
         # encrypt a new JWT with kid
         header = copy.copy(A1_header)
         header['kid'] = 'testkey'
-        t = jwt.JWT(header, A1_claims)
+        t = jwt.JWT(header, A1_claims, algs=jwe_algs_and_rsa1_5)
         t.make_encrypted_token(key)
         token = t.serialize()
         # try to decrypt without a matching key
         self.assertRaises(jwt.JWTMissingKey, jwt.JWT, jwt=token, key=keyset)
         # now decrypt with key
         keyset.add(key)
-        jwt.JWT(jwt=token, key=keyset, check_claims={'exp': 1300819380})
+        jwt.JWT(jwt=token, key=keyset, algs=jwe_algs_and_rsa1_5,
+                check_claims={'exp': 1300819380})
 
         # encrypt a new JWT with wrong kid
         header = copy.copy(A1_header)
         header['kid'] = '1'
-        t = jwt.JWT(header, A1_claims)
+        t = jwt.JWT(header, A1_claims, algs=jwe_algs_and_rsa1_5)
         t.make_encrypted_token(key)
         token = t.serialize()
         self.assertRaises(jwe.InvalidJWEData, jwt.JWT, jwt=token, key=keyset)
@@ -1397,33 +1407,37 @@ class TestJWT(unittest.TestCase):
         keyset = jwk.JWKSet.from_json(json_encode(PrivateKeys))
         # encrypt a new JWT with no kid
         header = copy.copy(A1_header)
-        t = jwt.JWT(header, A1_claims)
+        t = jwt.JWT(header, A1_claims, algs=jwe_algs_and_rsa1_5)
         t.make_encrypted_token(key)
         token = t.serialize()
         # try to decrypt without a matching key
         self.assertRaises(jwt.JWTMissingKey, jwt.JWT, jwt=token, key=keyset)
         # now decrypt with key
         keyset.add(key)
-        jwt.JWT(jwt=token, key=keyset, check_claims={'exp': 1300819380})
+        jwt.JWT(jwt=token, key=keyset, algs=jwe_algs_and_rsa1_5,
+                check_claims={'exp': 1300819380})
 
     def test_invalid_claim_type(self):
         key = jwk.JWK(**E_A2_key)
         claims = {"testclaim": "test"}
         claims.update(A1_claims)
-        t = jwt.JWT(A1_header, claims)
+        t = jwt.JWT(A1_header, claims, algs=jwe_algs_and_rsa1_5)
         t.make_encrypted_token(key)
         token = t.serialize()
 
         # Wrong string
         self.assertRaises(jwt.JWTInvalidClaimValue, jwt.JWT, jwt=token,
-                          key=key, check_claims={"testclaim": "ijgi"})
+                          key=key, algs=jwe_algs_and_rsa1_5,
+                          check_claims={"testclaim": "ijgi"})
 
         # Wrong type
         self.assertRaises(jwt.JWTInvalidClaimValue, jwt.JWT, jwt=token,
-                          key=key, check_claims={"testclaim": 123})
+                          key=key, algs=jwe_algs_and_rsa1_5,
+                          check_claims={"testclaim": 123})
 
         # Correct
-        jwt.JWT(jwt=token, key=key, check_claims={"testclaim": "test"})
+        jwt.JWT(jwt=token, key=key, algs=jwe_algs_and_rsa1_5,
+                check_claims={"testclaim": "test"})
 
     def test_claim_params(self):
         key = jwk.JWK(**E_A2_key)
@@ -1431,13 +1445,15 @@ class TestJWT(unittest.TestCase):
         string_claims = '{"string_claim":"test"}'
         string_header = '{"alg":"RSA1_5","enc":"A128CBC-HS256"}'
         t = jwt.JWT(string_header, string_claims,
-                    default_claims=default_claims)
+                    default_claims=default_claims,
+                    algs=jwe_algs_and_rsa1_5)
         t.make_encrypted_token(key)
         token = t.serialize()
 
         # Check default_claims
-        jwt.JWT(jwt=token, key=key, check_claims={"iss": "test", "exp": None,
-                                                  "string_claim": "test"})
+        jwt.JWT(jwt=token, key=key, algs=jwe_algs_and_rsa1_5,
+                check_claims={"iss": "test", "exp": None,
+                              "string_claim": "test"})
 
     def test_empty_claims(self):
         key = jwk.JWK().generate(kty='oct')
@@ -1571,6 +1587,12 @@ class ConformanceTests(unittest.TestCase):
             token = jwt.JWT()
             token.deserialize(jwt=e)
             json_decode(token.claims)
+
+    def test_no_default_rsa_1_5(self):
+        s = jws.JWS('test')
+        with self.assertRaisesRegexp(jws.InvalidJWSOperation,
+                                     'Algorithm not allowed'):
+            s.add_signature(A2_key, alg="RSA1_5")
 
 
 class JWATests(unittest.TestCase):
