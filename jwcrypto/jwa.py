@@ -583,10 +583,15 @@ class _Pbes2HsAesKw(_RawKeyMgmt):
         self.aeskwmap = {128: _A128KW, 192: _A192KW, 256: _A256KW}
 
     def _get_key(self, alg, key, p2s, p2c):
-        if isinstance(key, bytes):
-            plain = key
+        if not isinstance(key, JWK):
+            # backwards compatiblity for old interface
+            if isinstance(key, bytes):
+                plain = key
+            else:
+                plain = key.encode('utf8')
         else:
-            plain = key.encode('utf8')
+            plain = base64url_decode(key.get_op_key())
+
         salt = bytes(self.name.encode('utf8')) + b'\x00' + p2s
 
         if self.hashsize == 256:
