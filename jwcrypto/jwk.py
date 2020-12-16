@@ -1052,6 +1052,21 @@ class JWK(dict):
         except KeyError:
             raise AttributeError
 
+    @classmethod
+    def from_password(cls, password):
+        """Creates a symmetric JWK key from a user password.
+
+        :param key: A password in utf8 format.
+        """
+        obj = cls()
+        params = {'kty': 'oct'}
+        try:
+            params['k'] = base64url_encode(password.encode('utf8'))
+        except Exception as e:  # pylint: disable=broad-except
+            raise InvalidJWKValue(e)
+        obj.import_key(**params)
+        return obj
+
 
 class _JWKkeys(set):
 

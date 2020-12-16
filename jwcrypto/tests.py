@@ -558,6 +558,11 @@ class TestJWK(unittest.TestCase):
         key['unknown'] = 2
         self.assertFalse(key.unknown == key['unknown'])
 
+    def test_jwk_from_password(self):
+        key = jwk.JWK.from_password('test password')
+        self.assertEqual(key['kty'], 'oct')
+        self.assertEqual(key['k'], 'dGVzdCBwYXNzd29yZA')
+
 
 # RFC 7515 - A.1
 A1_protected = \
@@ -1593,6 +1598,18 @@ class ConformanceTests(unittest.TestCase):
         with self.assertRaisesRegexp(jws.InvalidJWSOperation,
                                      'Algorithm not allowed'):
             s.add_signature(A2_key, alg="RSA1_5")
+
+    def test_pbes2_hs256_aeskw(self):
+        enc = jwe.JWE(plaintext='plain',
+                      protected={"alg": "PBES2-HS256+A128KW",
+                                 "enc": "A256CBC-HS512"})
+        key = jwk.JWK.from_password('password')
+        enc.add_recipient(key)
+        o = enc.serialize()
+        check = jwe.JWE()
+        check.deserialize(o)
+        check.decrypt(key)
+        self.assertEqual(check.payload, b'plain')
 
 
 class JWATests(unittest.TestCase):
