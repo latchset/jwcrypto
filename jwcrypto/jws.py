@@ -531,9 +531,14 @@ class JWS(object):
             if not self.objects.get('valid', False):
                 raise InvalidJWSSignature("No valid signature found")
             if 'protected' in self.objects:
+                p = json_decode(self.objects['protected'])
+                if 'alg' not in p:
+                    raise InvalidJWSOperation("Compact encoding must carry "
+                                              "'alg' in protected header")
                 protected = base64url_encode(self.objects['protected'])
             else:
-                protected = ''
+                raise InvalidJWSOperation("Can't use compact encoding "
+                                          "without protected header")
             if self.objects.get('payload', False):
                 if self.objects.get('b64', True):
                     payload = base64url_encode(self.objects['payload'])
