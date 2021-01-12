@@ -330,12 +330,12 @@ class JWT(object):
                 "Claim %s is not an integer" % (name, ))
 
     def _check_exp(self, claim, limit, leeway):
-        if claim < limit - leeway:
+        if claim < limit + leeway:
             raise JWTExpired('Expired at %d, time: %d(leeway: %d)' % (
                              claim, limit, leeway))
 
     def _check_nbf(self, claim, limit, leeway):
-        if claim > limit + leeway:
+        if claim > limit - leeway:
             raise JWTNotYetValid('Valid from %d, time: %d(leeway: %d)' % (
                                  claim, limit, leeway))
 
