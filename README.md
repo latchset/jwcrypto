@@ -1,3 +1,5 @@
+[![PyPI](https://img.shields.io/pypi/v/jwcrypto.svg)](https://pypi.org/project/jwcrypto/)
+[![Changelog](https://img.shields.io/github/v/release/latchset/jwcrypto?label=changelog)](https://github.com/latchset/jwcrypto/releases)
 [![Build Status](https://travis-ci.org/latchset/jwcrypto.svg?branch=master)](https://travis-ci.org/latchset/jwcrypto)
 
 JWCrypto
@@ -11,6 +13,11 @@ An implementation of the JOSE Working Group documents:
 - RFC 7519 - JSON Web Token (JWT)
 - RFC 7520 - Examples of Protecting Content Using JSON Object Signing and
   Encryption (JOSE)
+
+Installation
+============
+
+    pip install jwcrypto
 
 Documentation
 =============
