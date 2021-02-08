@@ -1,5 +1,6 @@
-sudo: false
+sudo: required
 language: python
+dist: focal
 
 cache: pip
 
@@ -24,14 +25,12 @@ matrix:
     - python: 3.6
       arch: ppc64le
       env: TOXENV=py36
-      dist: Focal
     - python: 3.8
       env: TOXENV=py38
       arch: ppc64le
-      dist: Focal
 
-      
 install:
+  - sudo apt-get install cargo
   - pip install --upgrade pip setuptools
   - pip --version
   - pip install tox
