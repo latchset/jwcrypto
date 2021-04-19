@@ -295,6 +295,20 @@ MCowBQYDK2VwAyEAlsRcb1mVVIUcDjNqZU27N+iPXihH1EQDa/O3utHLtqc=
 -----END PUBLIC KEY-----
 """
 
+ECPublicPEM = b"""-----BEGIN PUBLIC KEY-----
+MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEhvGzt82WMJxqTuXCZxnvwrx4enQj
+6xc+erlhbTq8gTMAJBzNRPbpuj4NOwTCwjohrtY0TAkthwTuixuojpGKmw==
+-----END PUBLIC KEY-----
+"""
+
+ECPublicJWK = {
+    "crv": "P-256",
+    "kid": "MWhDfZyDWdx6Fpk3N00ZMShuKhDRXw1fN4ZSfqzeAWY",
+    "kty": "EC",
+    "x": "hvGzt82WMJxqTuXCZxnvwrx4enQj6xc-erlhbTq8gTM",
+    "y": "ACQczUT26bo-DTsEwsI6Ia7WNEwJLYcE7osbqI6Rips"
+}
+
 
 class TestJWK(unittest.TestCase):
     def test_create_pubKeys(self):
@@ -429,6 +443,11 @@ class TestJWK(unittest.TestCase):
 
         pubc = jwk.JWK.from_pem(PublicCert)
         self.assertEqual(pubc['kid'], PublicCertThumbprint)
+
+    def test_import_ec_from_pem(self):
+        pub_ec = jwk.JWK.from_pem(ECPublicPEM)
+        self.assertEqual(pub_ec.export_to_pem(), ECPublicPEM)
+        self.assertEqual(json_decode(pub_ec.export()), ECPublicJWK)
 
     def test_export_symmetric(self):
         key = jwk.JWK(**SymmetricKeys['keys'][0])

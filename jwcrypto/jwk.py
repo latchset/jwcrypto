@@ -438,11 +438,12 @@ class JWK(dict):
 
     def _import_pyca_pub_ec(self, key, **params):
         pn = key.public_numbers()
+        key_size = pn.curve.key_size
         params.update(
             kty='EC',
             crv=JWKpycaCurveMap[key.curve.name],
-            x=self._encode_int(pn.x),
-            y=self._encode_int(pn.y),
+            x=self._encode_int(pn.x, key_size),
+            y=self._encode_int(pn.y, key_size),
         )
         self.import_key(**params)
 
