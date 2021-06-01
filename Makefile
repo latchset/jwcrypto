@@ -26,9 +26,10 @@ testlong:
 test:
 	rm -f .coverage
 	tox -e py27
-	tox -e py35 --skip-missing-interpreter
 	tox -e py36 --skip-missing-interpreter
 	tox -e py37 --skip-missing-interpreter
+	tox -e py38 --skip-missing-interpreter
+	tox -e py39 --skip-missing-interpreter
 
 DOCS_DIR = docs
 .PHONY: docs

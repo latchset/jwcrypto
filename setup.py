@@ -6,7 +6,7 @@ from setuptools import setup
 
 setup(
     name = 'jwcrypto',
-    version = '0.9.dev1',
+    version = '0.9',
     license = 'LGPLv3+',
     maintainer = 'JWCrypto Project Contributors',
     maintainer_email = 'simo@redhat.com',
@@ -15,11 +15,10 @@ setup(
     description = 'Implementation of JOSE Web standards',
     classifiers = [
         'Programming Language :: Python :: 2.7',
-        'Programming Language :: Python :: 3.4',
-        'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3.9',
         'Intended Audience :: Developers',
         'Topic :: Security',
         'Topic :: Software Development :: Libraries :: Python Modules'
