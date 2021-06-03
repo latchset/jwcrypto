@@ -13,11 +13,10 @@ from cryptography.hazmat.primitives.asymmetric import rsa
 
 from deprecated import deprecated
 
-from six import iteritems
-
 from jwcrypto.common import JWException
 from jwcrypto.common import base64url_decode, base64url_encode
 from jwcrypto.common import json_decode, json_encode
+from jwcrypto.compat import iteritems
 
 
 class UnimplementedOKPCurveKey(object):

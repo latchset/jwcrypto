@@ -3,9 +3,8 @@
 import time
 import uuid
 
-from six import string_types
-
 from jwcrypto.common import JWException, json_decode, json_encode
+from jwcrypto.compat import string_types
 from jwcrypto.jwe import JWE
 from jwcrypto.jwk import JWK, JWKSet
 from jwcrypto.jws import JWS

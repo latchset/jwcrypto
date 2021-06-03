@@ -17,8 +17,6 @@ from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 from cryptography.hazmat.primitives.keywrap import aes_key_unwrap, aes_key_wrap
 from cryptography.hazmat.primitives.padding import PKCS7
 
-import six
-
 from jwcrypto.common import InvalidCEKeyLength
 from jwcrypto.common import InvalidJWAAlgorithm
 from jwcrypto.common import InvalidJWEKeyLength
@@ -26,12 +24,13 @@ from jwcrypto.common import InvalidJWEKeyType
 from jwcrypto.common import InvalidJWEOperation
 from jwcrypto.common import base64url_decode, base64url_encode
 from jwcrypto.common import json_decode
+from jwcrypto.compat import add_metaclass
 from jwcrypto.jwk import JWK
 
 # Implements RFC 7518 - JSON Web Algorithms (JWA)
 
 
-@six.add_metaclass(abc.ABCMeta)
+@add_metaclass(abc.ABCMeta)
 class JWAAlgorithm(object):
 
     @abc.abstractproperty

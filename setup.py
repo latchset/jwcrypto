@@ -27,6 +27,5 @@ setup(
     install_requires = [
         'cryptography >= 2.3',
         'deprecated',
-        'six',
     ],
 )
