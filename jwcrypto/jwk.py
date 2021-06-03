@@ -1033,8 +1033,15 @@ class JWK(dict):
 
         super(JWK, self).__delitem__(item)
 
+    def __eq__(self, other):
+        if not isinstance(other, JWK):
+            return NotImplemented
+
+        return self.thumbprint() == other.thumbprint() and \
+            self.get('kid') == other.get('kid')
+
     def __hash__(self):
-        return self._decode_int(self.thumbprint())
+        return hash((self.thumbprint(), self.get('kid')))
 
     def __getattr__(self, item):
         try:
