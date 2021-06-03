@@ -1183,6 +1183,6 @@ class JWKSet(dict):
         :param kid: the 'kid' key identifier.
         """
         for jwk in self['keys']:
-            if jwk['kid'] == kid:
+            if jwk.get('kid') == kid:
                 return jwk
         return None

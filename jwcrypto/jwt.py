@@ -491,7 +491,7 @@ class JWT(object):
                         self.deserializelog.append("Success")
                         break
                     except Exception as e:  # pylint: disable=broad-except
-                        keyid = k['kid']
+                        keyid = k.get('kid')
                         if keyid is None:
                             keyid = k.thumbprint()
                         self.deserializelog.append('Key [%s] failed: [%s]' % (
