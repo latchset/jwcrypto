@@ -1,0 +1,101 @@
+{
+    "name": "GH CI",
+    "on": { "pull_request": null },
+    "jobs": {
+        "linux": {
+            "runs-on": "ubuntu-latest",
+            "strategy": {
+                "fail-fast": false,
+                "matrix": {
+                    "name": [
+                        "python-27",
+                        "python-36",
+                        "python-37",
+                        "python-38",
+                        "python-39",
+                        "doc",
+                        "sphinx",
+                        "lint",
+                        "pep8py3",
+                    ],
+                    "include": [
+                        {
+                            "name": "python-27",
+                            "python": "2.7",
+                            "toxenv": "py27",
+                            "arch": "x64",
+                        },
+                        {
+                            "name": "python-36",
+                            "python": "3.6",
+                            "toxenv": "py36",
+                            "arch": "x64",
+                        },
+                        {
+                            "name": "python-37",
+                            "python": "3.7",
+                            "toxenv": "py37",
+                            "arch": "x64",
+                        },
+                        {
+                            "name": "python-38",
+                            "python": "3.8",
+                            "toxenv": "py38",
+                            "arch": "x64",
+                        },
+                        {
+                            "name": "python-39",
+                            "python": "3.9",
+                            "toxenv": "py39",
+                            "arch": "x64",
+                        },
+                        {
+                            "name": "doc",
+                            "python": "3.9",
+                            "toxenv": "doc",
+                            "arch": "x64",
+                        },
+                        {
+                            "name": "sphinx",
+                            "python": "3.9",
+                            "toxenv": "sphinx",
+                            "arch": "x64",
+                        },
+                        {
+                            "name": "lint",
+                            "python": "3.9",
+                            "toxenv": "lint",
+                            "arch": "x64",
+                        },
+                        {
+                            "name": "pep8py3",
+                            "python": "3.9",
+                            "toxenv": "pep8py3",
+                            "arch": "x64",
+                        },
+                    ],
+                },
+            },
+            "steps": [
+                { "uses": "actions/checkout@v2" },
+                {
+                    "uses": "actions/setup-python@v2",
+                    "with": {
+                        "python-version": "${{ matrix.python }}",
+                        "architecture": "${{ matrix.arch }}"
+                    },
+                },
+                { "run": "sudo apt-get install cargo" },
+                { "run": "pip --version" },
+                { "run": "pip install tox" },
+                { "run": "tox --version" },
+                {
+                    "env": {
+                          "TOXENV": "${{matrix.toxenv}}"
+                    },
+                    "run": "tox",
+                },
+            ],
+        },
+    },
+}
