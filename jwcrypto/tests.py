@@ -1507,6 +1507,20 @@ class TestJWT(unittest.TestCase):
         c.deserialize(token, key)
         self.assertEqual(' ', c.claims)
 
+    def test_Issue_209(self):
+        key = jwk.JWK(**A3_key)
+        t = jwt.JWT('{"alg":"ES256"}', {})
+        t.make_signed_token(key)
+        token = t.serialize()
+
+        ks = jwk.JWKSet()
+        ks.add(jwk.JWK().generate(kty='oct'))
+        ks.add(key)
+
+        # Make sure this one does not assert when cycling through
+        # the oct key before hitting the ES one
+        jwt.JWT(jwt=token, key=ks)
+
 
 class ConformanceTests(unittest.TestCase):
 
