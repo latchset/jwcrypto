@@ -424,6 +424,19 @@ class TestJWK(unittest.TestCase):
             num += 1
         self.assertEqual(num, len(PrivateKeys['keys']))
 
+    def test_jwkset_issue_208(self):
+        ks = jwk.JWKSet()
+        key1 = RSAPrivateKey.copy()
+        key1['kid'] = 'kid_1'
+        ks.add(jwk.JWK(**key1))
+        key2 = RSAPrivateKey.copy()
+        key2['kid'] = 'kid_2'
+        ks.add(jwk.JWK(**key2))
+        ks2 = jwk.JWKSet()
+        ks2.import_keyset(ks.export())
+        self.assertEqual(len(ks['keys']), 2)
+        self.assertEqual(len(ks['keys']), len(ks2['keys']))
+
     def test_thumbprint(self):
         for i in range(0, len(PublicKeys['keys'])):
             k = jwk.JWK(**PublicKeys['keys'][i])
