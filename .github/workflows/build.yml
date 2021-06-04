@@ -1,6 +1,11 @@
 {
-    "name": "GH CI",
-    "on": { "pull_request": null },
+    "name": "Build",
+    "on": {
+      "push": {
+          "branches": [ "master" ]
+      },
+      "pull_request": null,
+    },
     "jobs": {
         "linux": {
             "name": "CI on x86_64",
