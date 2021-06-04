@@ -1,6 +1,7 @@
 [![PyPI](https://img.shields.io/pypi/v/jwcrypto.svg)](https://pypi.org/project/jwcrypto/)
 [![Changelog](https://img.shields.io/github/v/release/latchset/jwcrypto?label=changelog)](https://github.com/latchset/jwcrypto/releases)
-[![Build Status](https://travis-ci.org/latchset/jwcrypto.svg?branch=master)](https://travis-ci.org/latchset/jwcrypto)
+[![Build Status](https://github.com/latchset/jwcrypto/actions/workflows/build.yml/badge.svg)](https://github.com/latchset/jwcrypto/actions/workflows/build.yml)
+[![ppc64le Build](https://github.com/latchset/jwcrypto/actions/workflows/ppc64le.yml/badge.svg)](https://github.com/latchset/jwcrypto/actions/workflows/ppc64le.yml)
 
 JWCrypto
 ========
