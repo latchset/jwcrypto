@@ -1,0 +1,42 @@
+{
+    "name": "ppc64le CI",
+    "on": {
+        "push": {
+            "branches": [ "master" ]
+        },
+    },
+    "jobs": {
+        "ppc64le": {
+            "name": "CI on ppc64le",
+            "runs-on": "ubuntu-20.04",
+            "strategy": {
+                "fail-fast": false,
+                "matrix": {
+                    "name": [
+                        "fedora-python",
+                    ],
+                    "include": [
+                        {
+                            "name": "fedora-python",
+                            "toxenv": "py38",
+                            "arch": "ppc64le",
+                        },
+                    ],
+                },
+            },
+            "steps": [
+                { "uses": "actions/checkout@v2" },
+                {
+                    "uses": "uraimo/run-on-arch-action@v2.0.5",
+                    "with": {
+                        "arch": "${{matrix.arch}}",
+                        "distro": "fedora_latest",
+                        "install": "dnf install -y openssl-devel cargo python3-pip tox\n",
+                        "env": "TOXENV: ${{matrix.toxenv}}",
+                        "run": "tox",
+                    },
+                },
+            ],
+        },
+    },
+}
