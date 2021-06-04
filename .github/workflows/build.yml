@@ -3,6 +3,7 @@
     "on": { "pull_request": null },
     "jobs": {
         "linux": {
+            "name": "CI on x86_64",
             "runs-on": "ubuntu-latest",
             "strategy": {
                 "fail-fast": false,
