@@ -1083,6 +1083,13 @@ class JWK(dict):
         obj.import_key(**params)
         return obj
 
+    # Prevent accidental disclosure of key material via repr()
+    def __repr__(self):
+        repr_dict = dict()
+        repr_dict['kid'] = self.get('kid', 'Missing Key ID')
+        repr_dict['thumbprint'] = self.thumbprint()
+        return json_encode(repr_dict)
+
 
 class _JWKkeys(set):
 
@@ -1193,3 +1200,14 @@ class JWKSet(dict):
             if jwk.get('kid') == kid:
                 return jwk
         return None
+
+    def __repr__(self):
+        repr_dict = dict()
+        for k, v in iteritems(self):
+            if k == 'keys':
+                keys = list()
+                for jwk in v:
+                    keys.append(repr(jwk))
+                v = keys
+            repr_dict[k] = v
+        return json_encode(repr_dict)
