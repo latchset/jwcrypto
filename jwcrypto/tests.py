@@ -1512,8 +1512,7 @@ class ConformanceTests(unittest.TestCase):
 
     def test_unknown_key_params(self):
         key = jwk.JWK(kty='oct', k='secret', unknown='mystery')
-        # pylint: disable=protected-access
-        self.assertEqual('mystery', key._params['unknown'])
+        self.assertEqual('mystery', key.get('unknown'))
 
     def test_key_ops_values(self):
         self.assertRaises(jwk.InvalidJWKValue, jwk.JWK,

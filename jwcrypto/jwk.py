@@ -305,7 +305,6 @@ class JWK(dict):
             are provided.
         """
         super(JWK, self).__init__()
-        self._params = dict()
 
         if 'generate' in kwargs:
             self.generate_key(**kwargs)
@@ -488,46 +487,45 @@ class JWK(dict):
         self.import_key(**params)
 
     def import_key(self, **kwargs):
-        del self._params
-        self._params = dict()
+        newkey = dict()
         key_vals = 0
 
         names = list(kwargs.keys())
 
         for name in list(JWKParamsRegistry.keys()):
             if name in kwargs:
-                self._params[name] = kwargs[name]
+                newkey[name] = kwargs[name]
                 while name in names:
                     names.remove(name)
 
-        kty = self._params.get('kty', None)
+        kty = newkey.get('kty')
         if kty not in JWKTypesRegistry:
             raise InvalidJWKType(kty)
 
         for name in list(JWKValuesRegistry[kty].keys()):
             if name in kwargs:
-                self._params[name] = kwargs[name]
+                newkey[name] = kwargs[name]
                 key_vals += 1
                 while name in names:
                     names.remove(name)
 
         for name, val in iteritems(JWKValuesRegistry[kty]):
-            if val.required and name not in self._params:
+            if val.required and name not in newkey:
                 raise InvalidJWKValue('Missing required value %s' % name)
-            if val.type == ParmType.unsupported and name in self._params:
+            if val.type == ParmType.unsupported and name in newkey:
                 raise InvalidJWKValue('Unsupported parameter %s' % name)
-            if val.type == ParmType.b64 and name in self._params:
+            if val.type == ParmType.b64 and name in newkey:
                 # Check that the value is base64url encoded
                 try:
-                    base64url_decode(self._params[name])
+                    base64url_decode(newkey[name])
                 except Exception:  # pylint: disable=broad-except
                     raise InvalidJWKValue(
                         '"%s" is not base64url encoded' % name
                     )
-            if val.type == ParmType.b64u and name in self._params:
+            if val.type == ParmType.b64u and name in newkey:
                 # Check that the value is Base64urlUInt encoded
                 try:
-                    self._decode_int(self._params[name])
+                    self._decode_int(newkey[name])
                 except Exception:  # pylint: disable=broad-except
                     raise InvalidJWKValue(
                         '"%s" is not Base64urlUInt encoded' % name
@@ -535,38 +533,43 @@ class JWK(dict):
 
         # Unknown key parameters are allowed
         for name in names:
-            self._params[name] = kwargs[name]
+            newkey[name] = kwargs[name]
 
         if key_vals == 0:
             raise InvalidJWKValue('No Key Values found')
 
         # check key_ops
-        if 'key_ops' in self._params:
-            for ko in self._params['key_ops']:
+        if 'key_ops' in newkey:
+            for ko in newkey['key_ops']:
                 c = 0
-                for cko in self._params['key_ops']:
+                for cko in newkey['key_ops']:
                     if ko == cko:
                         c += 1
                 if c != 1:
                     raise InvalidJWKValue('Duplicate values in "key_ops"')
 
         # check use/key_ops consistency
-        if 'use' in self._params and 'key_ops' in self._params:
+        if 'use' in newkey and 'key_ops' in newkey:
             sigl = ['sign', 'verify']
             encl = ['encrypt', 'decrypt', 'wrapKey', 'unwrapKey',
                     'deriveKey', 'deriveBits']
-            if self._params['use'] == 'sig':
+            if newkey['use'] == 'sig':
                 for op in encl:
-                    if op in self._params['key_ops']:
+                    if op in newkey['key_ops']:
                         raise InvalidJWKValue('Incompatible "use" and'
                                               ' "key_ops" values specified at'
                                               ' the same time')
-            elif self._params['use'] == 'enc':
+            elif newkey['use'] == 'enc':
                 for op in sigl:
-                    if op in self._params['key_ops']:
+                    if op in newkey['key_ops']:
                         raise InvalidJWKValue('Incompatible "use" and'
                                               ' "key_ops" values specified at'
                                               ' the same time')
+
+        self.clear()
+        # must set 'kty' as first item
+        self.__setitem__('kty', newkey['kty'])
+        self.update(newkey)
 
     @classmethod
     def from_json(cls, key):
@@ -616,17 +619,17 @@ class JWK(dict):
         reg = JWKParamsRegistry
         for name in reg:
             if reg[name].public:
-                if name in self._params:
-                    pub[name] = self._params[name]
-        reg = JWKValuesRegistry[self._params['kty']]
+                if name in self.keys():
+                    pub[name] = self.get(name)
+        reg = JWKValuesRegistry[self.get('kty')]
         for name in reg:
             if reg[name].public:
-                pub[name] = self._params[name]
+                pub[name] = self.get(name)
         return pub
 
     def _export_all(self, as_dict=False):
         d = dict()
-        d.update(self._params)
+        d.update(self)
         if as_dict is True:
             return d
         return json_encode(d)
@@ -655,9 +658,9 @@ class JWK(dict):
         """Whether this JWK has an asymmetric Public key value."""
         if self.is_symmetric:
             return False
-        reg = JWKValuesRegistry[self._params['kty']]
+        reg = JWKValuesRegistry[self.get('kty')]
         for name in reg:
-            if reg[name].public and name in self._params:
+            if reg[name].public and name in self.keys():
                 return True
         return False
 
@@ -666,22 +669,22 @@ class JWK(dict):
         """Whether this JWK has an asymmetric Private key value."""
         if self.is_symmetric:
             return False
-        reg = JWKValuesRegistry[self._params['kty']]
+        reg = JWKValuesRegistry[self.get('kty')]
         for name in reg:
-            if not reg[name].public and name in self._params:
+            if not reg[name].public and name in self.keys():
                 return True
         return False
 
     @property
     def is_symmetric(self):
         """Whether this JWK is a symmetric key."""
-        return self._params['kty'] == 'oct'
+        return self.get('kty') == 'oct'
 
     @property
     @deprecated
     def key_type(self):
         """The Key type"""
-        return self._params.get('kty', None)
+        return self.get('kty')
 
     @property
     @deprecated
@@ -689,15 +692,15 @@ class JWK(dict):
         """The Key ID.
         Provided by the kid parameter if present, otherwise returns None.
         """
-        return self._params.get('kid', None)
+        return self.get('kid')
 
     @property
     @deprecated
     def key_curve(self):
         """The Curve Name."""
-        if self._params['kty'] not in ['EC', 'OKP']:
+        if self.get('kty') not in ['EC', 'OKP']:
             raise InvalidJWKType('Not an EC or OKP key')
-        return self._params['crv']
+        return self.get('crv')
 
     def get_curve(self, arg):
         """Gets the Elliptic Curve associated with the key.
@@ -707,8 +710,8 @@ class JWK(dict):
         :raises InvalidJWKType: the key is not an EC or OKP key.
         :raises InvalidJWKValue: if the curve names is invalid.
         """
-        crv = self._params.get('crv', None)
-        if self._params['kty'] not in ['EC', 'OKP']:
+        crv = self.get('crv')
+        if self.get('kty') not in ['EC', 'OKP']:
             raise InvalidJWKType('Not an EC or OKP key')
         if arg and crv != arg:
             raise InvalidJWKValue('Curve requested is "%s", but '
@@ -717,10 +720,10 @@ class JWK(dict):
         return self._get_curve_by_name(crv)
 
     def _check_constraints(self, usage, operation):
-        use = self._params.get('use', None)
+        use = self.get('use')
         if use and use != usage:
             raise InvalidJWKUsage(usage, use)
-        ops = self._params.get('key_ops', None)
+        ops = self.get('key_ops')
         if ops:
             if not isinstance(ops, list):
                 ops = [ops]
@@ -732,68 +735,70 @@ class JWK(dict):
         return int(hexlify(base64url_decode(n)), 16)
 
     def _rsa_pub(self):
-        e = self._decode_int(self._params['e'])
-        n = self._decode_int(self._params['n'])
+        e = self._decode_int(self.get('e'))
+        n = self._decode_int(self.get('n'))
         return rsa.RSAPublicNumbers(e, n)
 
     def _rsa_pri(self):
-        p = self._decode_int(self._params['p'])
-        q = self._decode_int(self._params['q'])
-        d = self._decode_int(self._params['d'])
-        dp = self._decode_int(self._params['dp'])
-        dq = self._decode_int(self._params['dq'])
-        qi = self._decode_int(self._params['qi'])
+        p = self._decode_int(self.get('p'))
+        q = self._decode_int(self.get('q'))
+        d = self._decode_int(self.get('d'))
+        dp = self._decode_int(self.get('dp'))
+        dq = self._decode_int(self.get('dq'))
+        qi = self._decode_int(self.get('qi'))
         return rsa.RSAPrivateNumbers(p, q, d, dp, dq, qi, self._rsa_pub())
 
     def _ec_pub(self, curve):
-        x = self._decode_int(self._params['x'])
-        y = self._decode_int(self._params['y'])
+        x = self._decode_int(self.get('x'))
+        y = self._decode_int(self.get('y'))
         return ec.EllipticCurvePublicNumbers(x, y, self.get_curve(curve))
 
     def _ec_pri(self, curve):
-        d = self._decode_int(self._params['d'])
+        d = self._decode_int(self.get('d'))
         return ec.EllipticCurvePrivateNumbers(d, self._ec_pub(curve))
 
     def _okp_pub(self):
-        crv = self._params.get('crv', None)
+        crv = self.get('crv')
         try:
             pubkey = _OKP_CURVES_TABLE[crv].pubkey
         except KeyError:
             raise InvalidJWKValue('Unknown curve "%s"' % crv)
 
-        x = base64url_decode(self._params['x'])
+        x = base64url_decode(self.get('x'))
         return pubkey.from_public_bytes(x)
 
     def _okp_pri(self):
-        crv = self._params.get('crv', None)
+        crv = self.get('crv')
         try:
             privkey = _OKP_CURVES_TABLE[crv].privkey
         except KeyError:
             raise InvalidJWKValue('Unknown curve "%s"' % crv)
 
-        d = base64url_decode(self._params['d'])
+        d = base64url_decode(self.get('d'))
         return privkey.from_private_bytes(d)
 
     def _get_public_key(self, arg=None):
-        if self._params['kty'] == 'oct':
-            return self._params['k']
-        elif self._params['kty'] == 'RSA':
+        ktype = self.get('kty')
+        if ktype == 'oct':
+            return self.get('k')
+        elif ktype == 'RSA':
             return self._rsa_pub().public_key(default_backend())
-        elif self._params['kty'] == 'EC':
+        elif ktype == 'EC':
             return self._ec_pub(arg).public_key(default_backend())
-        elif self._params['kty'] == 'OKP':
+        elif ktype == 'OKP':
             return self._okp_pub()
         else:
             raise NotImplementedError
 
     def _get_private_key(self, arg=None):
-        if self._params['kty'] == 'oct':
-            return self._params['k']
-        elif self._params['kty'] == 'RSA':
+        ktype = self.get('kty')
+        if ktype == 'oct':
+            return self.get('k')
+        elif ktype == 'RSA':
             return self._rsa_pri().private_key(default_backend())
-        elif self._params['kty'] == 'EC':
+        elif ktype == 'EC':
             return self._ec_pri(arg).private_key(default_backend())
-        elif self._params['kty'] == 'OKP':
+        elif ktype == 'OKP':
             return self._okp_pri()
         else:
             raise NotImplementedError
@@ -814,13 +819,13 @@ class JWK(dict):
         :raises InvalidJWKUsage: if the use constraints do not permit
          the operation.
         """
-        validops = self._params.get('key_ops',
-                                    list(JWKOperationsRegistry.keys()))
+        validops = self.get('key_ops',
+                            list(JWKOperationsRegistry.keys()))
         if validops is not list:
             validops = [validops]
         if operation is None:
-            if self._params['kty'] == 'oct':
-                return self._params['k']
+            if self.get('kty') == 'oct':
+                return self.get('k')
             raise InvalidJWKOperation(operation, validops)
         elif operation == 'sign':
             self._check_constraints('sig', operation)
@@ -853,7 +858,7 @@ class JWK(dict):
         else:
             raise InvalidJWKValue('Unknown key object %r' % key)
 
-    def import_from_pem(self, data, password=None):
+    def import_from_pem(self, data, password=None, kid=None):
         """Imports a key from data loaded from a PEM file.
         The key may be encrypted with a password.
         Private keys (PKCS#8 format), public keys, and X509 certificate's
@@ -881,7 +886,9 @@ class JWK(dict):
                     raise e
 
         self.import_from_pyca(key)
-        self._params['kid'] = self.thumbprint()
+        if kid is None:
+            kid = self.thumbprint()
+        self.__setitem__('kid', kid)
 
     def export_to_pem(self, private_key=False, password=False):
         """Exports keys to a data buffer suitable to be stored as a PEM file.
@@ -942,29 +949,23 @@ class JWK(dict):
         :param hashalg: A hash function (defaults to SHA256)
         """
 
-        t = {'kty': self._params['kty']}
+        t = {'kty': self.get('kty')}
         for name, val in iteritems(JWKValuesRegistry[t['kty']]):
             if val.required:
-                t[name] = self._params[name]
+                t[name] = self.get(name)
         digest = hashes.Hash(hashalg, backend=default_backend())
         digest.update(bytes(json_encode(t).encode('utf8')))
         return base64url_encode(digest.finalize())
 
-    # Methods to make JWK behave like a dictionary
-    def __len__(self):
-        return len(self._params)
-
-    def __getitem__(self, item):
-        return self._params[item]
-
+    # Methods to constrain what this dict allows
     def __setitem__(self, item, value):
-        kty = self._params.get('kty', None)
+        kty = self.get('kty')
 
         if item == 'kty':
             if kty is None:
                 if value not in JWKTypesRegistry:
                     raise InvalidJWKType(value)
-                self._params['kty'] = value
+                super(JWK, self).__setitem__(item, value)
                 return
             elif kty != value:
                 raise ValueError('Cannot change key type')
@@ -974,8 +975,10 @@ class JWK(dict):
             if JWKValuesRegistry[kty][item].type == ParmType.b64:
                 try:
                     v = base64url_decode(value)
-                    # empty values are also invalid
-                    if v == b'':
+                    # empty values are also invalid except for the
+                    # special case of 'oct' key where an empty value
+                    # is used to indicate a 'None' key
+                    if v == b'' and kty != 'oct' and item != 'k':
                         raise ValueError
                 except Exception:  # pylint: disable=broad-except
                     raise InvalidJWKValue(
@@ -988,12 +991,12 @@ class JWK(dict):
                     raise InvalidJWKValue(
                         '"%s" is not Base64urlUInt encoded' % item
                     )
-            self._params[item] = value
+            super(JWK, self).__setitem__(item, value)
             return
 
         # If not a key param check if it is a know parameter
         if item in list(JWKParamsRegistry.keys()):
-            self._params[item] = value
+            super(JWK, self).__setitem__(item, value)
             return
 
         # if neither a key param nor a known parameter, check if we are
@@ -1007,25 +1010,28 @@ class JWK(dict):
                                item, kty))
 
         # ok if we've come this far it means we have an unknown parameter
-        self._params[item] = value
+        super(JWK, self).__setitem__(item, value)
+
+    def update(self, *args, **kwargs):
+        for k, v in iteritems(dict(*args, **kwargs)):
+            self.__setitem__(k, v)
+
+    def setdefault(self, key, default=None):
+        if key not in self.keys():
+            self.__setitem__(key, default)
+        return self.get(key)
 
     def __delitem__(self, item):
-        param = self._params.get(item, None)
+        param = self.get(item)
         if param is None:
             raise KeyError(item)
 
         if item == 'kty':
             for name in list(JWKValuesRegistry[param].keys()):
-                if self._params.get(name, None) is not None:
+                if self.get(name) is not None:
                     raise KeyError("Cannot remove 'kty', values present")
 
-        del self._params[item]
-
-    def __iter__(self):
-        return self._params.__iter__()
-
-    def __contains__(self, item):
-        return item in self._params
+        super(JWK, self).__delitem__(item)
 
     def __hash__(self):
         return self._decode_int(self.thumbprint())
@@ -1033,11 +1039,13 @@ class JWK(dict):
     def __getattr__(self, item):
         try:
             if item in JWKParamsRegistry.keys():
-                return self._params[item]
-            kty = self._params.get('kty', None)
+                if item in self.keys():
+                    return self.get(item)
+            kty = self.get('kty')
             if kty is not None:
                 if item in list(JWKValuesRegistry[kty].keys()):
-                    return self._params[item]
+                    if item in self.keys():
+                        return self.get(item)
             raise KeyError
         except KeyError:
             raise AttributeError
@@ -1045,10 +1053,10 @@ class JWK(dict):
     def __setattr__(self, item, value):
         try:
             if item in JWKParamsRegistry.keys():
-                self[item] = value
+                self.__setitem__(item, value)
             for name in list(JWKTypesRegistry.keys()):
                 if item in list(JWKValuesRegistry[name].keys()):
-                    self[item] = value
+                    self.__setitem__(item, value)
             super(JWK, self).__setattr__(item, value)
         except KeyError:
             raise AttributeError
@@ -1102,7 +1110,7 @@ class JWKSet(dict):
         return self['keys'].__contains__(key)
 
     def __setitem__(self, key, val):
-        if key == 'keys':
+        if key == 'keys' and not isinstance(val, _JWKkeys):
             self['keys'].add(val)
         else:
             super(JWKSet, self).__setitem__(key, val)
@@ -1110,6 +1118,11 @@ class JWKSet(dict):
     def update(self, *args, **kwargs):
         for k, v in iteritems(dict(*args, **kwargs)):
             self.__setitem__(k, v)
+
+    def setdefault(self, key, default=None):
+        if key not in self.keys():
+            self.__setitem__(key, default)
+        return self.get(key)
 
     def add(self, elem):
         self['keys'].add(elem)
