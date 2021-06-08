@@ -261,8 +261,6 @@ class InvalidJWKValue(JWException):
     on the key type or other constraints.
     """
 
-    pass
-
 
 class JWK(dict):
     """JSON Web Key object
@@ -316,8 +314,8 @@ class JWK(dict):
         try:
             kty = kwargs['kty']
             gen = getattr(obj, '_generate_%s' % kty)
-        except (KeyError, AttributeError):
-            raise InvalidJWKType(kty)
+        except (KeyError, AttributeError) as e:
+            raise InvalidJWKType(kty) from e
         gen(kwargs)
         return obj
 
@@ -326,8 +324,8 @@ class JWK(dict):
         try:
             kty = params.pop('generate')
             gen = getattr(self, '_generate_%s' % kty)
-        except (KeyError, AttributeError):
-            raise InvalidJWKType(kty)
+        except (KeyError, AttributeError) as e:
+            raise InvalidJWKType(kty) from e
 
         gen(params)
 
@@ -339,8 +337,8 @@ class JWK(dict):
             try:
                 from jwcrypto.jwa import JWA
                 alg = JWA.instantiate_alg(params['alg'])
-            except KeyError:
-                raise ValueError("Invalid 'alg' parameter")
+            except KeyError as e:
+                raise ValueError("Invalid 'alg' parameter") from e
             size = alg.keysize
         return size
 
@@ -449,9 +447,9 @@ class JWK(dict):
             raise InvalidJWKValue('Must specify "crv" for OKP key generation')
         try:
             key = _OKP_CURVES_TABLE[params['crv']].privkey.generate()
-        except KeyError:
+        except KeyError as e:
             raise InvalidJWKValue('"%s" is not a supported curve for the '
-                                  'OKP key type' % params['crv'])
+                                  'OKP key type' % params['crv']) from e
         self._import_pyca_pri_okp(key, **params)
 
     def _okp_curve_from_pyca_key(self, key):
@@ -516,18 +514,18 @@ class JWK(dict):
                 # Check that the value is base64url encoded
                 try:
                     base64url_decode(newkey[name])
-                except Exception:  # pylint: disable=broad-except
+                except Exception as e:  # pylint: disable=broad-except
                     raise InvalidJWKValue(
                         '"%s" is not base64url encoded' % name
-                    )
+                    ) from e
             if val.type == ParmType.b64u and name in newkey:
                 # Check that the value is Base64urlUInt encoded
                 try:
                     self._decode_int(newkey[name])
-                except Exception:  # pylint: disable=broad-except
+                except Exception as e:  # pylint: disable=broad-except
                     raise InvalidJWKValue(
                         '"%s" is not Base64urlUInt encoded' % name
-                    )
+                    ) from e
 
         # Unknown key parameters are allowed
         for name in names:
@@ -579,7 +577,7 @@ class JWK(dict):
         try:
             jkey = json_decode(key)
         except Exception as e:  # pylint: disable=broad-except
-            raise InvalidJWKValue(e)
+            raise InvalidJWKValue from e
         obj.import_key(**jkey)
         return obj
 
@@ -759,8 +757,8 @@ class JWK(dict):
         crv = self.get('crv')
         try:
             pubkey = _OKP_CURVES_TABLE[crv].pubkey
-        except KeyError:
-            raise InvalidJWKValue('Unknown curve "%s"' % crv)
+        except KeyError as e:
+            raise InvalidJWKValue('Unknown curve "%s"' % crv) from e
 
         x = base64url_decode(self.get('x'))
         return pubkey.from_public_bytes(x)
@@ -769,8 +767,8 @@ class JWK(dict):
         crv = self.get('crv')
         try:
             privkey = _OKP_CURVES_TABLE[crv].privkey
-        except KeyError:
-            raise InvalidJWKValue('Unknown curve "%s"' % crv)
+        except KeyError as e:
+            raise InvalidJWKValue('Unknown curve "%s"' % crv) from e
 
         d = base64url_decode(self.get('d'))
         return privkey.from_private_bytes(d)
@@ -881,6 +879,7 @@ class JWK(dict):
                         data, backend=default_backend())
                     key = cert.public_key()
                 except ValueError:
+                    # pylint: disable=raise-missing-from
                     raise e
 
         self.import_from_pyca(key)
@@ -978,17 +977,17 @@ class JWK(dict):
                     # is used to indicate a 'None' key
                     if v == b'' and kty != 'oct' and item != 'k':
                         raise ValueError
-                except Exception:  # pylint: disable=broad-except
+                except Exception as e:  # pylint: disable=broad-except
                     raise InvalidJWKValue(
                         '"%s" is not base64url encoded' % item
-                    )
+                    ) from e
             elif JWKValuesRegistry[kty][item].type == ParmType.b64u:
                 try:
                     self._decode_int(value)
-                except Exception:  # pylint: disable=broad-except
+                except Exception as e:  # pylint: disable=broad-except
                     raise InvalidJWKValue(
                         '"%s" is not Base64urlUInt encoded' % item
-                    )
+                    ) from e
             super(JWK, self).__setitem__(item, value)
             return
 
@@ -1053,7 +1052,7 @@ class JWK(dict):
                         return self.get(item)
             raise KeyError
         except KeyError:
-            raise AttributeError
+            raise AttributeError(item) from None
 
     def __setattr__(self, item, value):
         try:
@@ -1064,7 +1063,7 @@ class JWK(dict):
                     self.__setitem__(item, value)
             super(JWK, self).__setattr__(item, value)
         except KeyError:
-            raise AttributeError
+            raise AttributeError(item) from None
 
     @classmethod
     def from_password(cls, password):
@@ -1077,7 +1076,7 @@ class JWK(dict):
         try:
             params['k'] = base64url_encode(password.encode('utf8'))
         except Exception as e:  # pylint: disable=broad-except
-            raise InvalidJWKValue(e)
+            raise InvalidJWKValue from e
         obj.import_key(**params)
         return obj
 
@@ -1167,11 +1166,11 @@ class JWKSet(dict):
         """
         try:
             jwkset = json_decode(keyset)
-        except Exception:  # pylint: disable=broad-except
-            raise InvalidJWKValue()
+        except Exception as e:  # pylint: disable=broad-except
+            raise InvalidJWKValue from e
 
         if 'keys' not in jwkset:
-            raise InvalidJWKValue()
+            raise InvalidJWKValue
 
         for k, v in jwkset.items():
             if k == 'keys':

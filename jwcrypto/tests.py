@@ -1640,8 +1640,8 @@ class ConformanceTests(unittest.TestCase):
 
     def test_no_default_rsa_1_5(self):
         s = jws.JWS('test')
-        with self.assertRaisesRegexp(jws.InvalidJWSOperation,
-                                     'Algorithm not allowed'):
+        with self.assertRaisesRegex(jws.InvalidJWSOperation,
+                                    'Algorithm not allowed'):
             s.add_signature(A2_key, alg="RSA1_5")
 
     def test_pbes2_hs256_aeskw(self):

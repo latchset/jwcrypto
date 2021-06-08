@@ -323,9 +323,9 @@ class JWT(object):
             return
         try:
             int(claims[name])
-        except ValueError:
+        except ValueError as e:
             raise JWTInvalidClaimFormat(
-                "Claim %s is not an integer" % (name, ))
+                "Claim %s is not an integer" % (name, )) from e
 
     def _check_exp(self, claim, limit, leeway):
         if claim < limit - leeway:
@@ -361,10 +361,11 @@ class JWT(object):
             claims = json_decode(self.claims)
             if not isinstance(claims, dict):
                 raise ValueError()
-        except ValueError:
+        except ValueError as e:
             if self._check_claims is not None:
-                raise JWTInvalidClaimFormat(
-                    "Claims check requested but claims is not a json dict")
+                raise JWTInvalidClaimFormat("Claims check requested "
+                                            "but claims is not a json "
+                                            "dict") from e
             return
 
         self._check_default_claims(claims)
