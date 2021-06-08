@@ -163,7 +163,7 @@ class JWSCore(object):
             sigin = b'.'.join([self.protected.encode('utf-8'), payload])
             self.engine.verify(self.key, sigin, signature)
         except Exception as e:  # pylint: disable=broad-except
-            raise InvalidJWSSignature('Verification failed', repr(e))
+            raise InvalidJWSSignature('Verification failed') from e
         return True
 
 
@@ -399,7 +399,8 @@ class JWS(object):
             except ValueError:
                 c = raw_jws.split('.')
                 if len(c) != 3:
-                    raise InvalidJWSObject('Unrecognized representation')
+                    raise InvalidJWSObject('Unrecognized'
+                                           ' representation') from None
                 p = base64url_decode(str(c[0]))
                 if len(p) > 0:
                     o['protected'] = p.decode('utf-8')
@@ -410,7 +411,7 @@ class JWS(object):
             self.objects = o
 
         except Exception as e:  # pylint: disable=broad-except
-            raise InvalidJWSObject('Invalid format', repr(e))
+            raise InvalidJWSObject('Invalid format') from e
 
         if key:
             self.verify(key, alg)

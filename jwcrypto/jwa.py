@@ -35,31 +35,26 @@ class JWAAlgorithm(metaclass=ABCMeta):
     @abstractmethod
     def name(self):
         """The algorithm Name"""
-        pass
 
     @property
     @abstractmethod
     def description(self):
         """A short description"""
-        pass
 
     @property
     @abstractmethod
     def keysize(self):
         """The actual/recommended/minimum key size"""
-        pass
 
     @property
     @abstractmethod
     def algorithm_usage_location(self):
         """One of 'alg', 'enc' or 'JWK'"""
-        pass
 
     @property
     @abstractmethod
     def algorithm_use(self):
         """One of 'sig', 'kex', 'enc'"""
-        pass
 
 
 def _bitsize(x):
@@ -1106,21 +1101,21 @@ class JWA(object):
         try:
             return cls.instantiate_alg(name, use='sig')
         except KeyError:
-            raise InvalidJWAAlgorithm(
-                '%s is not a valid Signign algorithm name' % name)
+            raise InvalidJWAAlgorithm('%s is not a valid Signign algorithm'
+                                      ' name' % name) from None
 
     @classmethod
     def keymgmt_alg(cls, name):
         try:
             return cls.instantiate_alg(name, use='kex')
         except KeyError:
-            raise InvalidJWAAlgorithm(
-                '%s is not a valid Key Management algorithm name' % name)
+            raise InvalidJWAAlgorithm('%s is not a valid Key Management'
+                                      ' algorithm name' % name) from None
 
     @classmethod
     def encryption_alg(cls, name):
         try:
             return cls.instantiate_alg(name, use='enc')
         except KeyError:
-            raise InvalidJWAAlgorithm(
-                '%s is not a valid Encryption algorithm name' % name)
+            raise InvalidJWAAlgorithm('%s is not a valid Encryption'
+                                      ' algorithm name' % name) from None

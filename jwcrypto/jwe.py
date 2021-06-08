@@ -477,10 +477,10 @@ class JWE(object):
                     if 'header' in djwe:
                         o['header'] = json_encode(djwe['header'])
 
-            except ValueError:
+            except ValueError as e:
                 c = raw_jwe.split('.')
                 if len(c) != 5:
-                    raise InvalidJWEData()
+                    raise InvalidJWEData() from e
                 p = base64url_decode(c[0])
                 o['protected'] = p.decode('utf-8')
                 ekey = base64url_decode(c[1])
@@ -493,7 +493,7 @@ class JWE(object):
             self.objects = o
 
         except Exception as e:  # pylint: disable=broad-except
-            raise InvalidJWEData('Invalid format', repr(e))
+            raise InvalidJWEData('Invalid format', repr(e)) from e
 
         if key:
             self.decrypt(key)
