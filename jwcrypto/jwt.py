@@ -3,8 +3,6 @@
 import time
 import uuid
 
-from six import string_types
-
 from jwcrypto.common import JWException, json_decode, json_encode
 from jwcrypto.jwe import JWE
 from jwcrypto.jwk import JWK, JWKSet
@@ -306,17 +304,17 @@ class JWT(object):
     def _check_string_claim(self, name, claims):
         if name not in claims:
             return
-        if not isinstance(claims[name], string_types):
+        if not isinstance(claims[name], str):
             raise JWTInvalidClaimFormat("Claim %s is not a StringOrURI type")
 
     def _check_array_or_string_claim(self, name, claims):
         if name not in claims:
             return
         if isinstance(claims[name], list):
-            if any(not isinstance(claim, string_types) for claim in claims):
+            if any(not isinstance(claim, str) for claim in claims):
                 raise JWTInvalidClaimFormat(
                     "Claim %s contains non StringOrURI types" % (name, ))
-        elif not isinstance(claims[name], string_types):
+        elif not isinstance(claims[name], str):
             raise JWTInvalidClaimFormat(
                 "Claim %s is not a StringOrURI type" % (name, ))
 

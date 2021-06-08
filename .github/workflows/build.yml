@@ -14,7 +14,6 @@
                 "fail-fast": false,
                 "matrix": {
                     "name": [
-                        "python-27",
                         "python-36",
                         "python-37",
                         "python-38",
@@ -22,15 +21,9 @@
                         "doc",
                         "sphinx",
                         "lint",
-                        "pep8py3",
+                        "pep8",
                     ],
                     "include": [
-                        {
-                            "name": "python-27",
-                            "python": "2.7",
-                            "toxenv": "py27",
-                            "arch": "x64",
-                        },
                         {
                             "name": "python-36",
                             "python": "3.6",
@@ -74,9 +67,9 @@
                             "arch": "x64",
                         },
                         {
-                            "name": "pep8py3",
+                            "name": "pep8",
                             "python": "3.9",
-                            "toxenv": "pep8py3",
+                            "toxenv": "pep8",
                             "arch": "x64",
                         },
                     ],

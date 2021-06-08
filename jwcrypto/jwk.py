@@ -13,8 +13,6 @@ from cryptography.hazmat.primitives.asymmetric import rsa
 
 from deprecated import deprecated
 
-from six import iteritems
-
 from jwcrypto.common import JWException
 from jwcrypto.common import base64url_decode, base64url_encode
 from jwcrypto.common import json_decode, json_encode
@@ -457,7 +455,7 @@ class JWK(dict):
         self._import_pyca_pri_okp(key, **params)
 
     def _okp_curve_from_pyca_key(self, key):
-        for name, val in iteritems(_OKP_CURVES_TABLE):
+        for name, val in _OKP_CURVES_TABLE.items():
             if isinstance(key, (val.pubkey, val.privkey)):
                 return name
         raise InvalidJWKValue('Invalid OKP Key object %r' % key)
@@ -509,7 +507,7 @@ class JWK(dict):
                 while name in names:
                     names.remove(name)
 
-        for name, val in iteritems(JWKValuesRegistry[kty]):
+        for name, val in JWKValuesRegistry[kty].items():
             if val.required and name not in newkey:
                 raise InvalidJWKValue('Missing required value %s' % name)
             if val.type == ParmType.unsupported and name in newkey:
@@ -950,7 +948,7 @@ class JWK(dict):
         """
 
         t = {'kty': self.get('kty')}
-        for name, val in iteritems(JWKValuesRegistry[t['kty']]):
+        for name, val in JWKValuesRegistry[t['kty']].items():
             if val.required:
                 t[name] = self.get(name)
         digest = hashes.Hash(hashalg, backend=default_backend())
@@ -1013,7 +1011,7 @@ class JWK(dict):
         super(JWK, self).__setitem__(item, value)
 
     def update(self, *args, **kwargs):
-        for k, v in iteritems(dict(*args, **kwargs)):
+        for k, v in dict(*args, **kwargs).items():
             self.__setitem__(k, v)
 
     def setdefault(self, key, default=None):
@@ -1130,7 +1128,7 @@ class JWKSet(dict):
             super(JWKSet, self).__setitem__(key, val)
 
     def update(self, *args, **kwargs):
-        for k, v in iteritems(dict(*args, **kwargs)):
+        for k, v in dict(*args, **kwargs).items():
             self.__setitem__(k, v)
 
     def setdefault(self, key, default=None):
@@ -1151,7 +1149,7 @@ class JWKSet(dict):
                               a JSON object
         """
         exp_dict = dict()
-        for k, v in iteritems(self):
+        for k, v in self.items():
             if k == 'keys':
                 keys = list()
                 for jwk in v:
@@ -1175,7 +1173,7 @@ class JWKSet(dict):
         if 'keys' not in jwkset:
             raise InvalidJWKValue()
 
-        for k, v in iteritems(jwkset):
+        for k, v in jwkset.items():
             if k == 'keys':
                 for jwk in v:
                     self['keys'].add(JWK(**jwk))
@@ -1203,7 +1201,7 @@ class JWKSet(dict):
 
     def __repr__(self):
         repr_dict = dict()
-        for k, v in iteritems(self):
+        for k, v in self.items():
             if k == 'keys':
                 keys = list()
                 for jwk in v:

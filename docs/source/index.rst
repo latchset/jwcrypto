@@ -10,8 +10,7 @@ JWCrypto is an implementation of the Javascript Object Signing and
 Encryption (JOSE) Web Standards as they are being developed in the
 JOSE_ IETF Working Group and related technology.
 
-JWCrypto is Python2 and Python3 compatible and uses the Cryptography_
-package for all the crypto functions.
+JWCrypto uses the Cryptography_ package for all the crypto functions.
 
 .. _JOSE: https://datatracker.ietf.org/wg/jose/charter/
 .. _Cryptography: https://cryptography.io/
