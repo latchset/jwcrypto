@@ -14,7 +14,6 @@ setup(
     packages = ['jwcrypto'],
     description = 'Implementation of JOSE Web standards',
     classifiers = [
-        'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
@@ -27,6 +26,5 @@ setup(
     install_requires = [
         'cryptography >= 2.3',
         'deprecated',
-        'six',
     ],
 )

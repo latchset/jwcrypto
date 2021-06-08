@@ -1,8 +1,8 @@
 # Copyright (C) 2016 JWCrypto Project Contributors - see LICENSE file
 
-import abc
 import os
 import struct
+from abc import ABCMeta, abstractmethod
 from binascii import hexlify, unhexlify
 
 from cryptography.exceptions import InvalidSignature
@@ -17,8 +17,6 @@ from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 from cryptography.hazmat.primitives.keywrap import aes_key_unwrap, aes_key_wrap
 from cryptography.hazmat.primitives.padding import PKCS7
 
-import six
-
 from jwcrypto.common import InvalidCEKeyLength
 from jwcrypto.common import InvalidJWAAlgorithm
 from jwcrypto.common import InvalidJWEKeyLength
@@ -31,30 +29,34 @@ from jwcrypto.jwk import JWK
 # Implements RFC 7518 - JSON Web Algorithms (JWA)
 
 
-@six.add_metaclass(abc.ABCMeta)
-class JWAAlgorithm(object):
+class JWAAlgorithm(metaclass=ABCMeta):
 
-    @abc.abstractproperty
+    @property
+    @abstractmethod
     def name(self):
         """The algorithm Name"""
         pass
 
-    @abc.abstractproperty
+    @property
+    @abstractmethod
     def description(self):
         """A short description"""
         pass
 
-    @abc.abstractproperty
+    @property
+    @abstractmethod
     def keysize(self):
         """The actual/recommended/minimum key size"""
         pass
 
-    @abc.abstractproperty
+    @property
+    @abstractmethod
     def algorithm_usage_location(self):
         """One of 'alg', 'enc' or 'JWK'"""
         pass
 
-    @abc.abstractproperty
+    @property
+    @abstractmethod
     def algorithm_use(self):
         """One of 'sig', 'kex', 'enc'"""
         pass

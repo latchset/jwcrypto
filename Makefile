@@ -7,8 +7,7 @@ lint:
 
 pep8:
 	# Check style consistency
-	tox -e pep8py2
-	tox -e pep8py3
+	tox -e pep8
 
 clean:
 	rm -fr build dist *.egg-info
@@ -25,7 +24,6 @@ testlong:
 
 test:
 	rm -f .coverage
-	tox -e py27
 	tox -e py36 --skip-missing-interpreter
 	tox -e py37 --skip-missing-interpreter
 	tox -e py38 --skip-missing-interpreter
