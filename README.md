@@ -2,6 +2,7 @@
 [![Changelog](https://img.shields.io/github/v/release/latchset/jwcrypto?label=changelog)](https://github.com/latchset/jwcrypto/releases)
 [![Build Status](https://github.com/latchset/jwcrypto/actions/workflows/build.yml/badge.svg)](https://github.com/latchset/jwcrypto/actions/workflows/build.yml)
 [![ppc64le Build](https://github.com/latchset/jwcrypto/actions/workflows/ppc64le.yml/badge.svg)](https://github.com/latchset/jwcrypto/actions/workflows/ppc64le.yml)
+[![Code Scan](https://github.com/latchset/jwcrypto/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/latchset/jwcrypto/actions/workflows/codeql-analysis.yml)
 
 JWCrypto
 ========
