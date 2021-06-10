@@ -345,6 +345,7 @@ class JWT(object):
         self._check_integer_claim('nbf', claims)
         self._check_integer_claim('iat', claims)
         self._check_string_claim('jti', claims)
+        self._check_string_claim('typ', claims)
 
         if self._check_claims is None:
             if 'exp' in claims:
@@ -406,11 +407,27 @@ class JWT(object):
                 else:
                     self._check_nbf(claims[name], time.time(), self._leeway)
 
+            elif name == 'typ':
+                if value is not None:
+                    if self.norm_typ(value) != self.norm_typ(claims[name]):
+                        raise JWTInvalidClaimValue("Invalid '%s' value. '%s'"
+                                                   " does not normalize to "
+                                                   "'%s'" % (name,
+                                                             claims[name],
+                                                             value))
+
             else:
                 if value is not None and value != claims[name]:
                     raise JWTInvalidClaimValue(
                         "Invalid '%s' value. Expected '%s' got '%s'" % (
                             name, value, claims[name]))
+
+    def norm_typ(self, val):
+        lc = val.lower()
+        if '/' in lc:
+            return lc
+        else:
+            return 'application/' + lc
 
     def make_signed_token(self, key):
         """Signs the payload.
