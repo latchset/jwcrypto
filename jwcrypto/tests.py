@@ -1492,6 +1492,38 @@ class TestJWT(unittest.TestCase):
                 check_claims={"iss": "test", "exp": None,
                               "string_claim": "test"})
 
+    def test_claims_typ(self):
+        key = jwk.JWK().generate(kty='oct')
+        claims = '{"typ":"application/test"}'
+        string_header = '{"alg":"HS256"}'
+        t = jwt.JWT(string_header, claims)
+        t.make_signed_token(key)
+        token = t.serialize()
+
+        # Same typ w/o application prefix
+        jwt.JWT(jwt=token, key=key, check_claims={"typ": "test"})
+        self.assertRaises(jwt.JWTInvalidClaimValue, jwt.JWT, jwt=token,
+                          key=key, check_claims={"typ": "wrong"})
+
+        # Same typ w/ application prefix
+        jwt.JWT(jwt=token, key=key, check_claims={"typ": "application/test"})
+        self.assertRaises(jwt.JWTInvalidClaimValue, jwt.JWT, jwt=token,
+                          key=key, check_claims={"typ": "application/wrong"})
+
+        # check that a '/' in the name makes it not be matched with
+        # 'application/' prefix
+        claims = '{"typ":"diffmime/test"}'
+        t = jwt.JWT(string_header, claims)
+        t.make_signed_token(key)
+        token = t.serialize()
+        self.assertRaises(jwt.JWTInvalidClaimValue, jwt.JWT, jwt=token,
+                          key=key, check_claims={"typ": "application/test"})
+        self.assertRaises(jwt.JWTInvalidClaimValue, jwt.JWT, jwt=token,
+                          key=key, check_claims={"typ": "test"})
+
+        # finally make sure it doesn't raise if not checked.
+        jwt.JWT(jwt=token, key=key)
+
     def test_empty_claims(self):
         key = jwk.JWK().generate(kty='oct')
 
