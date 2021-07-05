@@ -180,8 +180,7 @@ class JWS(object):
         :param header_registry: Optional additions to the header registry
         """
         self.objects = dict()
-        if payload:
-            self.objects['payload'] = payload
+        self.objects['payload'] = payload
         self.verifylog = None
         self._allowed_algs = None
         self.header_registry = JWSEHeaderRegistry(JWSHeaderRegistry)
@@ -427,17 +426,13 @@ class JWS(object):
         :param protected: The Protected Header (optional)
         :param header: The Unprotected Header (optional)
 
-        :raises InvalidJWSObject: if no payload has been set on the object,
-                                  or invalid headers are provided.
+        :raises InvalidJWSObject: if invalid headers are provided.
         :raises ValueError: if the key is not a :class:`JWK` object.
         :raises ValueError: if the algorithm is missing or is not provided
          by one of the headers.
         :raises InvalidJWAAlgorithm: if the algorithm is not valid, is
          unknown or otherwise not yet implemented.
         """
-
-        if not self.objects.get('payload', None):
-            raise InvalidJWSObject('Missing Payload')
 
         b64 = True
 
@@ -481,7 +476,8 @@ class JWS(object):
             raise ValueError('"alg" not specified')
 
         c = JWSCore(
-            alg, key, protected, self.objects['payload'], self.allowed_algs
+            alg, key, protected, self.objects.get('payload'),
+            self.allowed_algs
         )
         sig = c.sign()
 
@@ -539,7 +535,7 @@ class JWS(object):
             else:
                 raise InvalidJWSOperation("Can't use compact encoding "
                                           "without protected header")
-            if self.objects.get('payload', False):
+            if self.objects.get('payload'):
                 if self.objects.get('b64', True):
                     payload = base64url_encode(self.objects['payload'])
                 else:
@@ -558,11 +554,11 @@ class JWS(object):
         else:
             obj = self.objects
             sig = dict()
-            if self.objects.get('payload', False):
-                if self.objects.get('b64', True):
-                    sig['payload'] = base64url_encode(self.objects['payload'])
-                else:
-                    sig['payload'] = self.objects['payload']
+            payload = self.objects.get('payload', '')
+            if self.objects.get('b64', True):
+                sig['payload'] = base64url_encode(payload)
+            else:
+                sig['payload'] = payload
             if 'signature' in obj:
                 if not obj.get('valid', False):
                     raise InvalidJWSSignature("No valid signature found")
@@ -590,11 +586,9 @@ class JWS(object):
 
     @property
     def payload(self):
-        if 'payload' not in self.objects:
-            raise InvalidJWSOperation("Payload not available")
         if not self.is_valid:
             raise InvalidJWSOperation("Payload not verified")
-        return self.objects['payload']
+        return self.objects.get('payload')
 
     def detach_payload(self):
         self.objects.pop('payload', None)
