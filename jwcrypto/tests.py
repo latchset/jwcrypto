@@ -934,6 +934,21 @@ class TestJWS(unittest.TestCase):
         jws_verify.verify(key.public())
         self.assertEqual(jws_verify.payload, payload)
 
+    def test_jws_issue_224(self):
+        key = jwk.JWK().generate(kty='oct')
+
+        # Test Empty payload is supported for creating and verifying signatures
+        s = jws.JWS(payload='')
+        s.add_signature(key, None, json_encode({"alg": "HS256"}))
+        o1 = s.serialize(compact=True)
+        self.assertTrue('..' in o1)
+        o2 = json_decode(s.serialize())
+        self.assertEqual(o2['payload'], '')
+
+        t = jws.JWS()
+        t.deserialize(o1)
+        t.verify(key)
+
 
 E_A1_plaintext = \
     [84, 104, 101, 32, 116, 114, 117, 101, 32, 115, 105, 103, 110, 32,
@@ -1505,12 +1520,12 @@ class TestJWT(unittest.TestCase):
         c.deserialize(token, key)
         self.assertEqual('{}', c.claims)
 
-        # empty string is not valid
+        # empty string is also valid
         t = jwt.JWT('{"alg":"HS256"}', '')
-        self.assertEqual('', t.claims)
-        self.assertRaises(jws.InvalidJWSObject, t.make_signed_token, key)
+        t.make_signed_token(key)
+        token = t.serialize()
 
-        # but a space is fine
+        # also a space is fine
         t = jwt.JWT('{"alg":"HS256"}', ' ')
         self.assertEqual(' ', t.claims)
         t.make_signed_token(key)
