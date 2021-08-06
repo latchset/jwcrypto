@@ -27,4 +27,5 @@ setup(
         'cryptography >= 2.3',
         'deprecated',
     ],
+    python_requires = '>= 3.6',
 )
