@@ -91,7 +91,7 @@ class JWE(object):
         :param header_registry: Optional additions to the header registry
         """
         self._allowed_algs = None
-        self.objects = dict()
+        self.objects = {}
         self.plaintext = None
         self.header_registry = JWSEHeaderRegistry(JWEHeaderRegistry)
         if header_registry:
@@ -164,7 +164,7 @@ class JWE(object):
         return h1
 
     def _get_jose_header(self, header=None):
-        jh = dict()
+        jh = {}
         if 'protected' in self.objects:
             ph = json_decode(self.objects['protected'])
             jh = self._merge_headers(jh, ph)
@@ -229,7 +229,7 @@ class JWE(object):
         jh = self._get_jose_header(header)
         alg, enc = self._get_alg_enc_from_headers(jh)
 
-        rec = dict()
+        rec = {}
         if header:
             rec['header'] = header
 
@@ -250,8 +250,8 @@ class JWE(object):
         if 'recipients' in self.objects:
             self.objects['recipients'].append(rec)
         elif 'encrypted_key' in self.objects or 'header' in self.objects:
-            self.objects['recipients'] = list()
-            n = dict()
+            self.objects['recipients'] = []
+            n = {}
             if 'encrypted_key' in self.objects:
                 n['encrypted_key'] = self.objects.pop('encrypted_key')
             if 'header' in self.objects:
@@ -329,9 +329,9 @@ class JWE(object):
             if 'aad' in obj:
                 enc['aad'] = base64url_encode(obj['aad'])
             if 'recipients' in obj:
-                enc['recipients'] = list()
+                enc['recipients'] = []
                 for rec in obj['recipients']:
-                    e = dict()
+                    e = {}
                     if 'encrypted_key' in rec:
                         e['encrypted_key'] = \
                             base64url_encode(rec['encrypted_key'])
@@ -361,7 +361,7 @@ class JWE(object):
         jh = self._get_jose_header(ppe.get('header', None))
 
         # TODO: allow caller to specify list of headers it understands
-        self._check_crit(jh.get('crit', dict()))
+        self._check_crit(jh.get('crit', {}))
 
         for hdr in jh:
             if hdr in self.header_registry:
@@ -407,7 +407,7 @@ class JWE(object):
 
         if 'ciphertext' not in self.objects:
             raise InvalidJWEOperation("No available ciphertext")
-        self.decryptlog = list()
+        self.decryptlog = []
 
         if 'recipients' in self.objects:
             for rec in self.objects['recipients']:
@@ -442,11 +442,11 @@ class JWE(object):
         :raises InvalidJWEOperation: if the decryption fails.
         """
 
-        self.objects = dict()
+        self.objects = {}
         self.plaintext = None
         self.cek = None
 
-        o = dict()
+        o = {}
         try:
             try:
                 djwe = json_decode(raw_jwe)
@@ -461,9 +461,9 @@ class JWE(object):
                 if 'aad' in djwe:
                     o['aad'] = base64url_decode(djwe['aad'])
                 if 'recipients' in djwe:
-                    o['recipients'] = list()
+                    o['recipients'] = []
                     for rec in djwe['recipients']:
-                        e = dict()
+                        e = {}
                         if 'encrypted_key' in rec:
                             e['encrypted_key'] = \
                                 base64url_decode(rec['encrypted_key'])

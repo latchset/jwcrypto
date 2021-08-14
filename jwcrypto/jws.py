@@ -124,7 +124,7 @@ class JWSCore(object):
 
             self.protected = base64url_encode(header.encode('utf-8'))
         else:
-            self.header = dict()
+            self.header = {}
             self.protected = ''
         self.payload = payload
 
@@ -179,7 +179,7 @@ class JWS(object):
         :param payload(bytes): An arbitrary value (optional).
         :param header_registry: Optional additions to the header registry
         """
-        self.objects = dict()
+        self.objects = {}
         self.objects['payload'] = payload
         self.verifylog = None
         self._allowed_algs = None
@@ -236,7 +236,7 @@ class JWS(object):
             if hn is None:
                 continue
             if header is None:
-                header = dict()
+                header = {}
             for h in list(hn.keys()):
                 if h in self.header_registry:
                     if self.header_registry[h].mustprotect:
@@ -253,7 +253,7 @@ class JWS(object):
 
     # TODO: support selecting key with 'kid' and passing in multiple keys
     def _verify(self, alg, key, payload, signature, protected, header=None):
-        p = dict()
+        p = {}
         # verify it is a valid JSON object and decode
         if protected is not None:
             p = json_decode(protected)
@@ -298,7 +298,7 @@ class JWS(object):
         :raises InvalidJWSSignature: if the verification fails.
         """
 
-        self.verifylog = list()
+        self.verifylog = []
         self.objects['valid'] = False
         obj = self.objects
         if 'signature' in obj:
@@ -332,8 +332,7 @@ class JWS(object):
                                       'signatures' + repr(self.verifylog))
 
     def _deserialize_signature(self, s):
-        o = dict()
-        o['signature'] = base64url_decode(str(s['signature']))
+        o = {'signature': base64url_decode(str(s['signature']))}
         if 'protected' in s:
             p = base64url_decode(str(s['protected']))
             o['protected'] = p.decode('utf-8')
@@ -375,13 +374,13 @@ class JWS(object):
         :raises InvalidJWSObject: if the raw object is an invalid JWS token.
         :raises InvalidJWSSignature: if the verification fails.
         """
-        self.objects = dict()
-        o = dict()
+        self.objects = {}
+        o = {}
         try:
             try:
                 djws = json_decode(raw_jws)
                 if 'signatures' in djws:
-                    o['signatures'] = list()
+                    o['signatures'] = []
                     for s in djws['signatures']:
                         os = self._deserialize_signature(s)
                         o['signatures'].append(os)
@@ -437,7 +436,7 @@ class JWS(object):
 
         b64 = True
 
-        p = dict()
+        p = {}
         if protected:
             if isinstance(protected, dict):
                 p = protected
@@ -482,20 +481,20 @@ class JWS(object):
         )
         sig = c.sign()
 
-        o = dict()
-        o['signature'] = base64url_decode(sig['signature'])
+        o = {
+            'signature': base64url_decode(sig['signature']),
+            'valid': True,
+        }
         if protected:
             o['protected'] = protected
         if header:
             o['header'] = h
-        o['valid'] = True
 
         if 'signatures' in self.objects:
             self.objects['signatures'].append(o)
         elif 'signature' in self.objects:
-            self.objects['signatures'] = list()
-            n = dict()
-            n['signature'] = self.objects.pop('signature')
+            self.objects['signatures'] = []
+            n = {'signature': self.objects.pop('signature')}
             if 'protected' in self.objects:
                 n['protected'] = self.objects.pop('protected')
             if 'header' in self.objects:
@@ -554,7 +553,7 @@ class JWS(object):
                              base64url_encode(self.objects['signature'])])
         else:
             obj = self.objects
-            sig = dict()
+            sig = {}
             payload = self.objects.get('payload', '')
             if self.objects.get('b64', True):
                 sig['payload'] = base64url_encode(payload)
@@ -569,7 +568,7 @@ class JWS(object):
                 if 'header' in obj:
                     sig['header'] = obj['header']
             elif 'signatures' in obj:
-                sig['signatures'] = list()
+                sig['signatures'] = []
                 for o in obj['signatures']:
                     if not o.get('valid', False):
                         continue
@@ -602,16 +601,16 @@ class JWS(object):
                 p = json_decode(obj['protected'])
             else:
                 p = None
-            return self._merge_check_headers(p, obj.get('header', dict()))
+            return self._merge_check_headers(p, obj.get('header', {}))
         elif 'signatures' in self.objects:
-            jhl = list()
+            jhl = []
             for o in obj['signatures']:
-                jh = dict()
+                jh = {}
                 if 'protected' in o:
                     p = json_decode(o['protected'])
                 else:
                     p = None
-                jh = self._merge_check_headers(p, o.get('header', dict()))
+                jh = self._merge_check_headers(p, o.get('header', {}))
                 jhl.append(jh)
             return jhl
         else:

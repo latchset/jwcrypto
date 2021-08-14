@@ -392,7 +392,7 @@ class TestJWK(unittest.TestCase):
         self.assertEqual(kec1.get_op_key('verify').public_numbers().x,
                          kec2.get_op_key('verify').public_numbers().x)
         self.assertRaises(jwk.InvalidJWKValue,
-                          jwk.JWK.from_pyca, dict())
+                          jwk.JWK.from_pyca, {})
 
     def test_jwk_from_json(self):
         k = jwk.JWK.generate(kty='oct', size=256)
