@@ -243,7 +243,7 @@ class InvalidJWKOperation(JWException):
             op = JWKOperationsRegistry[self.op]
         else:
             op = 'Unknown(%s)' % self.op
-        valid = list()
+        valid = []
         for v in self.values:
             if v in list(JWKOperationsRegistry.keys()):
                 valid.append(JWKOperationsRegistry[v])
@@ -483,7 +483,7 @@ class JWK(dict):
         self.import_key(**params)
 
     def import_key(self, **kwargs):
-        newkey = dict()
+        newkey = {}
         key_vals = 0
 
         names = list(kwargs.keys())
@@ -624,7 +624,7 @@ class JWK(dict):
         return pub
 
     def _export_all(self, as_dict=False):
-        d = dict()
+        d = {}
         d.update(self)
         if as_dict is True:
             return d
@@ -1082,7 +1082,7 @@ class JWK(dict):
 
     # Prevent accidental disclosure of key material via repr()
     def __repr__(self):
-        repr_dict = dict()
+        repr_dict = {}
         repr_dict['kid'] = self.get('kid', 'Missing Key ID')
         repr_dict['thumbprint'] = self.thumbprint()
         return json_encode(repr_dict)
@@ -1147,10 +1147,10 @@ class JWKSet(dict):
         :param as_dict(bool): Whether to return a dict instead of
                               a JSON object
         """
-        exp_dict = dict()
+        exp_dict = {}
         for k, v in self.items():
             if k == 'keys':
-                keys = list()
+                keys = []
                 for jwk in v:
                     keys.append(jwk.export(private_keys, as_dict=True))
                 v = keys
@@ -1199,10 +1199,10 @@ class JWKSet(dict):
         return None
 
     def __repr__(self):
-        repr_dict = dict()
+        repr_dict = {}
         for k, v in self.items():
             if k == 'keys':
-                keys = list()
+                keys = []
                 for jwk in v:
                     keys.append(repr(jwk))
                 v = keys

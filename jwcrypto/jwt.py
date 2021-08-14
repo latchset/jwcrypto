@@ -484,7 +484,7 @@ class JWT(object):
         if self._algs:
             self.token.allowed_algs = self._algs
 
-        self.deserializelog = list()
+        self.deserializelog = []
         # now deserialize and also decrypt/verify (or raise) if we
         # have a key
         if key is None:
