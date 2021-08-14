@@ -70,7 +70,7 @@ InvalidJWEKeyType = common.InvalidJWEKeyType
 InvalidJWEOperation = common.InvalidJWEOperation
 
 
-class JWE(object):
+class JWE:
     """JSON Web Encryption object
 
     This object represent a JWE token.

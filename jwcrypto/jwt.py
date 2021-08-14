@@ -143,7 +143,7 @@ class JWTMissingKey(JWException):
         super(JWTMissingKey, self).__init__(msg)
 
 
-class JWT(object):
+class JWT:
     """JSON Web token object
 
     This object represent a generic token.
