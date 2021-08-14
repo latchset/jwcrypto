@@ -82,7 +82,7 @@ def _decode_int(n):
     return int(hexlify(n), 16)
 
 
-class _RawJWS(object):
+class _RawJWS:
 
     def sign(self, key, payload):
         raise NotImplementedError
@@ -333,7 +333,7 @@ class _None(_RawNone, JWAAlgorithm):
     algorithm_use = 'sig'
 
 
-class _RawKeyMgmt(object):
+class _RawKeyMgmt:
 
     def wrap(self, key, bitsize, cek, headers):
         raise NotImplementedError
@@ -849,7 +849,7 @@ class _EdDsa(_RawJWS, JWAAlgorithm):
         raise NotImplementedError
 
 
-class _RawJWE(object):
+class _RawJWE:
 
     def encrypt(self, k, a, m):
         raise NotImplementedError
@@ -1042,7 +1042,7 @@ class _A256Gcm(_AesGcm, JWAAlgorithm):
     algorithm_use = 'enc'
 
 
-class JWA(object):
+class JWA:
     """JWA Signing Algorithms.
 
     This class provides access to all JWA algorithms.

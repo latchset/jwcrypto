@@ -85,7 +85,7 @@ class InvalidJWSOperation(JWException):
         super(InvalidJWSOperation, self).__init__(msg)
 
 
-class JWSCore(object):
+class JWSCore:
     """The inner JWS Core object.
 
     This object SHOULD NOT be used directly, the JWS object should be
@@ -167,7 +167,7 @@ class JWSCore(object):
         return True
 
 
-class JWS(object):
+class JWS:
     """JSON Web Signature object
 
     This object represent a JWS token.

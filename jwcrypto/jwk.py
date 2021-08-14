@@ -18,7 +18,7 @@ from jwcrypto.common import base64url_decode, base64url_encode
 from jwcrypto.common import json_decode, json_encode
 
 
-class UnimplementedOKPCurveKey(object):
+class UnimplementedOKPCurveKey:
     @classmethod
     def generate(cls):
         raise NotImplementedError
