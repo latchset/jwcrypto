@@ -237,7 +237,7 @@ zl9HYIMxATFyqSiD9jsx
 -----END CERTIFICATE-----
 """
 
-PublicCertThumbprint = u'7KITkGJF74IZ9NKVvHfuJILbuIZny6j-roaNjB1vgiA'
+PublicCertThumbprint = '7KITkGJF74IZ9NKVvHfuJILbuIZny6j-roaNjB1vgiA'
 
 # RFC 8037 - A.2
 PublicKeys_EdDsa = {
@@ -501,7 +501,7 @@ class TestJWK(unittest.TestCase):
         key = jwk.JWK.from_pem(RSAPrivatePEM, password=RSAPrivatePassword)
         k = key.export_private(as_dict=True)
         self.assertEqual(k['kid'],
-                         u'x31vrbZceU2qOPLtrUwPkLa3PNakMn9tOsq_ntFVrJc')
+                         'x31vrbZceU2qOPLtrUwPkLa3PNakMn9tOsq_ntFVrJc')
         keyset = jwk.JWKSet.from_json(json_encode(PrivateKeys))
         ks = keyset.export(as_dict=True)
         self.assertTrue('keys' in ks)
