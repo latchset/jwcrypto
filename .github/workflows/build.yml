@@ -84,6 +84,7 @@
                         "architecture": "${{ matrix.arch }}"
                     },
                 },
+                { "run": "sudo apt-get update" },
                 { "run": "sudo apt-get install cargo" },
                 { "run": "pip --version" },
                 { "run": "pip install tox" },
