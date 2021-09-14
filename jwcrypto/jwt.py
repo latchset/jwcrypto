@@ -195,6 +195,8 @@ class JWT:
             self._reg_claims = default_claims
 
         if check_claims is not None:
+            if check_claims is not False:
+                self._check_check_claims(check_claims)
             self._check_claims = check_claims
 
         if claims is not None:
@@ -302,13 +304,13 @@ class JWT:
         self._add_jti_claim(claims)
 
     def _check_string_claim(self, name, claims):
-        if name not in claims:
+        if name not in claims or claims[name] is None:
             return
         if not isinstance(claims[name], str):
             raise JWTInvalidClaimFormat("Claim %s is not a StringOrURI type")
 
     def _check_array_or_string_claim(self, name, claims):
-        if name not in claims:
+        if name not in claims or claims[name] is None:
             return
         if isinstance(claims[name], list):
             if any(not isinstance(claim, str) for claim in claims):
@@ -319,7 +321,7 @@ class JWT:
                 "Claim %s is not a StringOrURI type" % (name, ))
 
     def _check_integer_claim(self, name, claims):
-        if name not in claims:
+        if name not in claims or claims[name] is None:
             return
         try:
             int(claims[name])
@@ -352,6 +354,16 @@ class JWT:
                 self._check_exp(claims['exp'], time.time(), self._leeway)
             if 'nbf' in claims:
                 self._check_nbf(claims['nbf'], time.time(), self._leeway)
+
+    def _check_check_claims(self, check_claims):
+        self._check_string_claim('iss', check_claims)
+        self._check_string_claim('sub', check_claims)
+        self._check_string_claim('aud', check_claims)
+        self._check_integer_claim('exp', check_claims)
+        self._check_integer_claim('nbf', check_claims)
+        self._check_integer_claim('iat', check_claims)
+        self._check_string_claim('jti', check_claims)
+        self._check_string_claim('typ', check_claims)
 
     def _check_provided_claims(self):
         # check_claims can be set to False to skip any check

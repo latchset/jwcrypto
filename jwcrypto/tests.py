@@ -1581,6 +1581,15 @@ class TestJWT(unittest.TestCase):
         # the oct key before hitting the ES one
         jwt.JWT(jwt=token, key=ks)
 
+    def test_Issue_239(self):
+        claims = {"aud": "www.example.com"}
+        check_claims = {"aud": ["www.example.com", "account"]}
+        key = jwk.JWK(generate='oct', size=256)
+        token = jwt.JWT(header={"alg": "HS256"}, claims=claims)
+        token.make_signed_token(key)
+        self.assertRaises(jwt.JWTInvalidClaimFormat, jwt.JWT, key=key,
+                          jwt=token.serialize(), check_claims=check_claims)
+
 
 class ConformanceTests(unittest.TestCase):
 
