@@ -183,8 +183,12 @@ JWKOperationsRegistry = {'sign': 'Compute digital Signature or MAC',
 JWKpycaCurveMap = {'secp256r1': 'P-256',
                    'secp384r1': 'P-384',
                    'secp521r1': 'P-521',
-                   'secp256k1': 'secp256k1'}
+                   'secp256k1': 'secp256k1',
+                   'P-256K': 'P-256K'}
 
+ARG_ALTERNAMES = {
+    'secp256k1': ['secp256k1', 'P-256K']
+}
 
 class InvalidJWKType(JWException):
     """Invalid JWK Type Exception.
@@ -400,7 +404,7 @@ class JWK(dict):
             return ec.SECP384R1()
         elif name == 'P-521':
             return ec.SECP521R1()
-        elif name == 'secp256k1':
+        elif name in ARG_ALTERNAMES['secp256k1']:
             return ec.SECP256K1()
         elif name in _OKP_CURVES_TABLE:
             return name
@@ -411,10 +415,12 @@ class JWK(dict):
         curve = 'P-256'
         if 'curve' in params:
             curve = params.pop('curve')
+            params['curve_name'] = curve
         # 'curve' is for backwards compat, if 'crv' is defined it takes
         # precedence
         if 'crv' in params:
             curve = params.pop('crv')
+            params['curve_name'] = curve
         curve_name = self._get_curve_by_name(curve)
         key = ec.generate_private_key(curve_name, default_backend())
         self._import_pyca_pri_ec(key, **params)
@@ -424,7 +430,7 @@ class JWK(dict):
         key_size = pn.public_numbers.curve.key_size
         params.update(
             kty='EC',
-            crv=JWKpycaCurveMap[key.curve.name],
+            crv=JWKpycaCurveMap.get(params.get('curve_name'), JWKpycaCurveMap[key.curve.name]),
             x=self._encode_int(pn.public_numbers.x, key_size),
             y=self._encode_int(pn.public_numbers.y, key_size),
             d=self._encode_int(pn.private_value, key_size)
@@ -436,7 +442,7 @@ class JWK(dict):
         key_size = pn.curve.key_size
         params.update(
             kty='EC',
-            crv=JWKpycaCurveMap[key.curve.name],
+            crv=JWKpycaCurveMap.get(params.get('curve_name'), JWKpycaCurveMap[key.curve.name]),
             x=self._encode_int(pn.x, key_size),
             y=self._encode_int(pn.y, key_size),
         )
@@ -709,7 +715,8 @@ class JWK(dict):
         crv = self.get('crv')
         if self.get('kty') not in ['EC', 'OKP']:
             raise InvalidJWKType('Not an EC or OKP key')
-        if arg and crv != arg:
+
+        if arg and crv not in ARG_ALTERNAMES.get(arg, arg):
             raise InvalidJWKValue('Curve requested is "%s", but '
                                   'key curve is "%s"' % (arg, crv))
 
