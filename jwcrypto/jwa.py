@@ -335,7 +335,7 @@ class _None(_RawNone, JWAAlgorithm):
 
 class _RawKeyMgmt:
 
-    def wrap(self, key, bitsize, cek, headers):
+    def wrap(self, key, bitsize, cek, headers, epk: JWK=None):
         raise NotImplementedError
 
     def unwrap(self, key, bitsize, ek, headers):
@@ -354,7 +354,7 @@ class _RSA(_RawKeyMgmt):
             raise InvalidJWEKeyType('RSA', key['kty'])
 
     # FIXME: get key size and insure > 2048 bits
-    def wrap(self, key, bitsize, cek, headers):
+    def wrap(self, key, bitsize, cek, headers, epk: JWK=None):
         self._check_key(key)
         if not cek:
             cek = _randombits(bitsize)
@@ -445,7 +445,7 @@ class _AesKw(_RawKeyMgmt):
             raise InvalidJWEKeyLength(self.keysize, _bitsize(rk))
         return rk
 
-    def wrap(self, key, bitsize, cek, headers):
+    def wrap(self, key, bitsize, cek, headers, epk: JWK=None):
         rk = self._get_key(key, 'encrypt')
         if not cek:
             cek = _randombits(bitsize)
@@ -507,7 +507,7 @@ class _AesGcmKw(_RawKeyMgmt):
             raise InvalidJWEKeyLength(self.keysize, _bitsize(rk))
         return rk
 
-    def wrap(self, key, bitsize, cek, headers):
+    def wrap(self, key, bitsize, cek, headers, epk: JWK=None):
         rk = self._get_key(key, 'encrypt')
         if not cek:
             cek = _randombits(bitsize)
@@ -607,7 +607,7 @@ class _Pbes2HsAesKw(_RawKeyMgmt):
             raise InvalidJWEKeyLength(self.keysize, len(rk))
         return JWK(kty="oct", use="enc", k=base64url_encode(rk))
 
-    def wrap(self, key, bitsize, cek, headers):
+    def wrap(self, key, bitsize, cek, headers, epk: JWK=None):
         p2s = _randombits(128)
         p2c = 8192
         kek = self._get_key(headers['alg'], key, p2s, p2c)
@@ -674,7 +674,7 @@ class _Direct(_RawKeyMgmt, JWAAlgorithm):
         if key['kty'] != 'oct':
             raise InvalidJWEKeyType('oct', key['kty'])
 
-    def wrap(self, key, bitsize, cek, headers):
+    def wrap(self, key, bitsize, cek, headers, epk: JWK=None):
         self._check_key(key)
         if cek:
             return (cek, None)
@@ -750,7 +750,7 @@ class _EcdhEs(_RawKeyMgmt, JWAAlgorithm):
                              backend=self.backend)
         return ckdf.derive(shared_key)
 
-    def wrap(self, key, bitsize, cek, headers):
+    def wrap(self, key, bitsize, cek, headers, epk: JWK=None):
         self._check_key(key)
         dk_size = self.keysize
         if self.keysize is None:
@@ -761,7 +761,12 @@ class _EcdhEs(_RawKeyMgmt, JWAAlgorithm):
         else:
             alg = headers['alg']
 
-        epk = JWK.generate(kty=key['kty'], crv=key['crv'])
+        if isinstance(epk, JWK):
+            if not (key['kty'] == epk['kty'] and key['crv'] == epk['crv']):
+                raise InvalidJWEKeyType('EPK has different kty or crv with recipient')
+        else:
+            epk = JWK.generate(kty=key['kty'], crv=key['crv'])
+
         dk = self._derive(epk.get_op_key('unwrapKey'),
                           key.get_op_key('wrapKey'),
                           alg, dk_size, headers)

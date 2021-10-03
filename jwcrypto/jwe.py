@@ -1,14 +1,15 @@
 # Copyright (C) 2015 JWCrypto Project Contributors - see LICENSE file
 
-import zlib
+from typing import Optional
 
+import zlib
 from jwcrypto import common
 from jwcrypto.common import JWException
 from jwcrypto.common import JWSEHeaderParameter, JWSEHeaderRegistry
 from jwcrypto.common import base64url_decode, base64url_encode
 from jwcrypto.common import json_decode, json_encode
 from jwcrypto.jwa import JWA
-
+from jwcrypto.jwk import JWK
 
 # RFC 7516 - 4.1
 # name: (description, supported?)
@@ -78,7 +79,7 @@ class JWE:
 
     def __init__(self, plaintext=None, protected=None, unprotected=None,
                  aad=None, algs=None, recipient=None, header=None,
-                 header_registry=None):
+                 header_registry=None, epk: Optional[JWK]=None):
         """Creates a JWE token.
 
         :param plaintext(bytes): An arbitrary plaintext to be encrypted.
@@ -121,7 +122,7 @@ class JWE:
             self._allowed_algs = algs
 
         if recipient:
-            self.add_recipient(recipient, header=header)
+            self.add_recipient(recipient, header=header, epk=epk)
         elif header:
             raise ValueError('Header is allowed only with default recipient')
 
@@ -206,7 +207,7 @@ class JWE:
         self.objects['ciphertext'] = ciphertext
         self.objects['tag'] = tag
 
-    def add_recipient(self, key, header=None):
+    def add_recipient(self, key, header=None, epk: Optional[JWK] = None):
         """Encrypt the plaintext with the given key.
 
         :param key: A JWK key or password of appropriate type for the 'alg'
@@ -233,7 +234,7 @@ class JWE:
         if header:
             rec['header'] = header
 
-        wrapped = alg.wrap(key, enc.wrap_key_size, self.cek, jh)
+        wrapped = alg.wrap(key, enc.wrap_key_size, self.cek, jh, epk=epk)
         self.cek = wrapped['cek']
 
         if 'ek' in wrapped:
