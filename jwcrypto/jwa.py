@@ -364,7 +364,7 @@ class _RSA(_RawKeyMgmt):
 
     def unwrap(self, key, bitsize, ek, headers):
         self._check_key(key)
-        rk = key.get_op_key('decrypt')
+        rk = key.get_op_key('unwrapKey')
         cek = rk.decrypt(ek, self.padfn)
         if _bitsize(cek) != bitsize:
             raise InvalidJWEKeyLength(bitsize, _bitsize(cek))
