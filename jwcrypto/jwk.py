@@ -265,7 +265,7 @@ class InvalidJWKValue(JWException):
 class JWK(dict):
     """JSON Web Key object
 
-    This object represent a Key.
+    This object represents a Key.
     It must be instantiated by using the standard defined key/value pairs
     as arguments of the initialization function.
     """
@@ -292,7 +292,7 @@ class JWK(dict):
          * OKP: crv(str) (one of Ed25519, Ed448, X25519, X448)
 
         Deprecated:
-        Alternatively if the 'generate' parameter is provided, with a
+        Alternatively if the 'generate' parameter is provided with a
         valid key type as value then a new key will be generated according
         to the defaults or provided key strength options (type specific).
 
@@ -591,7 +591,7 @@ class JWK(dict):
         """
         if private_key is True:
             # Use _export_all for backwards compatibility, as this
-            # function allows to export symmetrict keys too
+            # function allows to export symmetric keys too
             return self._export_all(as_dict)
 
         return self.export_public(as_dict)
@@ -704,7 +704,7 @@ class JWK(dict):
         :param arg: an optional curve name
 
         :raises InvalidJWKType: the key is not an EC or OKP key.
-        :raises InvalidJWKValue: if the curve names is invalid.
+        :raises InvalidJWKValue: if the curve name is invalid.
         """
         crv = self.get('crv')
         if self.get('kty') not in ['EC', 'OKP']:
@@ -807,7 +807,7 @@ class JWK(dict):
         :param operation: The requested operation.
          The valid set of operations is available in the
          :data:`JWKOperationsRegistry` registry.
-        :param arg: an optional, context specific, argument
+        :param arg: An optional, context specific, argument.
          For example a curve name.
 
         :raises InvalidJWKOperation: if the operation is unknown or

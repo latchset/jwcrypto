@@ -21,9 +21,9 @@ JWTClaimsRegistry = {'iss': 'Issuer',
 
 
 class JWTExpired(JWException):
-    """Json Web Token is expired.
+    """JSON Web Token is expired.
 
-    This exception is raised when a token is expired accoring to its claims.
+    This exception is raised when a token is expired according to its claims.
     """
 
     def __init__(self, message=None, exception=None):
@@ -38,7 +38,7 @@ class JWTExpired(JWException):
 
 
 class JWTNotYetValid(JWException):
-    """Json Web Token is not yet valid.
+    """JSON Web Token is not yet valid.
 
     This exception is raised when a token is not valid yet according to its
     claims.
@@ -56,7 +56,7 @@ class JWTNotYetValid(JWException):
 
 
 class JWTMissingClaim(JWException):
-    """Json Web Token claim is invalid.
+    """JSON Web Token claim is invalid.
 
     This exception is raised when a claim does not match the expected value.
     """
@@ -73,7 +73,7 @@ class JWTMissingClaim(JWException):
 
 
 class JWTInvalidClaimValue(JWException):
-    """Json Web Token claim is invalid.
+    """JSON Web Token claim is invalid.
 
     This exception is raised when a claim does not match the expected value.
     """
@@ -90,7 +90,7 @@ class JWTInvalidClaimValue(JWException):
 
 
 class JWTInvalidClaimFormat(JWException):
-    """Json Web Token claim format is invalid.
+    """JSON Web Token claim format is invalid.
 
     This exception is raised when a claim is not in a valid format.
     """
@@ -108,7 +108,7 @@ class JWTInvalidClaimFormat(JWException):
 
 # deprecated and not used anymore
 class JWTMissingKeyID(JWException):
-    """Json Web Token is missing key id.
+    """JSON Web Token is missing key id.
 
     This exception is raised when trying to decode a JWT with a key set
     that does not have a kid value in its header.
@@ -126,7 +126,7 @@ class JWTMissingKeyID(JWException):
 
 
 class JWTMissingKey(JWException):
-    """Json Web Token is using a key not in the key set.
+    """JSON Web Token is using a key not in the key set.
 
     This exception is raised if the key that was used is not available
     in the passed key set.

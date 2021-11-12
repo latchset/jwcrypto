@@ -353,7 +353,7 @@ class _RSA(_RawKeyMgmt):
         if key['kty'] != 'RSA':
             raise InvalidJWEKeyType('RSA', key['kty'])
 
-    # FIXME: get key size and insure > 2048 bits
+    # FIXME: get key size and ensure > 2048 bits
     def wrap(self, key, bitsize, cek, headers):
         self._check_key(key)
         if not cek:
@@ -581,7 +581,7 @@ class _Pbes2HsAesKw(_RawKeyMgmt):
 
     def _get_key(self, alg, key, p2s, p2c):
         if not isinstance(key, JWK):
-            # backwards compatiblity for old interface
+            # backwards compatibility for old interface
             if isinstance(key, bytes):
                 plain = key
             else:
@@ -836,7 +836,6 @@ class _EdDsa(_RawJWS, JWAAlgorithm):
     keysize = None
 
     def sign(self, key, payload):
-
         if key['crv'] in ['Ed25519', 'Ed448']:
             skey = key.get_op_key('sign')
             return skey.sign(payload)
@@ -1101,7 +1100,7 @@ class JWA:
         try:
             return cls.instantiate_alg(name, use='sig')
         except KeyError:
-            raise InvalidJWAAlgorithm('%s is not a valid Signign algorithm'
+            raise InvalidJWAAlgorithm('%s is not a valid Signing algorithm'
                                       ' name' % name) from None
 
     @classmethod

@@ -292,7 +292,7 @@ class JWS:
         """Verifies a JWS token.
 
         :param key: The (:class:`jwcrypto.jwk.JWK`) verification key.
-        :param alg: The signing algorithm (optional). usually the algorithm
+        :param alg: The signing algorithm (optional). Usually the algorithm
             is known as it is provided with the JOSE Headers of the token.
 
         :raises InvalidJWSSignature: if the verification fails.
@@ -368,7 +368,7 @@ class JWS:
         :param key: A (:class:`jwcrypto.jwk.JWK`) verification key (optional).
          If a key is provided a verification step will be attempted after
          the object is successfully deserialized.
-        :param alg: The signing algorithm (optional). usually the algorithm
+        :param alg: The signing algorithm (optional). Usually the algorithm
          is known as it is provided with the JOSE Headers of the token.
 
         :raises InvalidJWSObject: if the raw object is an invalid JWS token.
