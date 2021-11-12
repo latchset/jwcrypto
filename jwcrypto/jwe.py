@@ -39,7 +39,7 @@ default_allowed_algs = [
     'ECDH-ES', 'ECDH-ES+A128KW', 'ECDH-ES+A192KW', 'ECDH-ES+A256KW',
     'A128GCMKW', 'A192GCMKW', 'A256GCMKW',
     'PBES2-HS256+A128KW', 'PBES2-HS384+A192KW', 'PBES2-HS512+A256KW',
-    # Content Encryption Algoritms
+    # Content Encryption Algorithms
     'A128CBC-HS256', 'A192CBC-HS384', 'A256CBC-HS512',
     'A128GCM', 'A192GCM', 'A256GCM']
 """Default allowed algorithms"""
@@ -267,7 +267,7 @@ class JWE:
         :param compact(boolean): if True generates the compact
          representation, otherwise generates a standard JSON format.
 
-        :raises InvalidJWEOperation: if the object cannot serialized
+        :raises InvalidJWEOperation: if the object cannot be serialized
          with the compact representation and `compact` is True.
         :raises InvalidJWEOperation: if no recipients have been added
          to the object.
@@ -300,7 +300,7 @@ class JWE:
                 rec = self.objects
             if 'header' in rec:
                 # The AESGCMKW algorithm generates data (iv, tag) we put in the
-                # per-recipient unpotected header by default. Move it to the
+                # per-recipient unprotected header by default. Move it to the
                 # protected header and re-encrypt the payload, as the protected
                 # header is used as additional authenticated data.
                 h = json_decode(rec['header'])

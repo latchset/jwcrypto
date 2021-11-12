@@ -111,7 +111,7 @@ class InvalidJWEKeyLength(JWException):
 class InvalidJWSERegOperation(JWException):
     """Invalid JWSE Header Registry Operation.
 
-    This exception is raised when there is an error in trying ot add a JW
+    This exception is raised when there is an error in trying to add a JW
     Signature or Encryption header to the Registry.
     """
 
