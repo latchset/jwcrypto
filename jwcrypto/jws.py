@@ -108,6 +108,7 @@ class JWSCore:
         :raises ValueError: if the key is not a :class:`JWK` object
         :raises InvalidJWAAlgorithm: if the algorithm is not valid, is
             unknown or otherwise not yet implemented.
+        :raises InvalidJWSOperation: if the algorithm is not allowed.
         """
         self.alg = alg
         self.engine = self._jwa(alg, algs)
