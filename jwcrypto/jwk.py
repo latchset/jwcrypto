@@ -301,6 +301,8 @@ class JWK(dict):
             are provided.
         """
         super(JWK, self).__init__()
+        self._cache_pub_k = None
+        self._cache_pri_k = None
 
         if 'generate' in kwargs:
             self.generate_key(**kwargs)
@@ -485,6 +487,8 @@ class JWK(dict):
     def import_key(self, **kwargs):
         newkey = {}
         key_vals = 0
+        self._cache_pub_k = None
+        self._cache_pri_k = None
 
         names = list(kwargs.keys())
 
@@ -730,57 +734,93 @@ class JWK(dict):
     def _decode_int(self, n):
         return int(hexlify(base64url_decode(n)), 16)
 
-    def _rsa_pub(self):
+    def _rsa_pub_n(self):
         e = self._decode_int(self.get('e'))
         n = self._decode_int(self.get('n'))
         return rsa.RSAPublicNumbers(e, n)
 
-    def _rsa_pri(self):
+    def _rsa_pri_n(self):
         p = self._decode_int(self.get('p'))
         q = self._decode_int(self.get('q'))
         d = self._decode_int(self.get('d'))
         dp = self._decode_int(self.get('dp'))
         dq = self._decode_int(self.get('dq'))
         qi = self._decode_int(self.get('qi'))
-        return rsa.RSAPrivateNumbers(p, q, d, dp, dq, qi, self._rsa_pub())
+        return rsa.RSAPrivateNumbers(p, q, d, dp, dq, qi, self._rsa_pub_n())
 
-    def _ec_pub(self, curve):
+    def _rsa_pub(self):
+        k = self._cache_pub_k
+        if k is None:
+            k = self._rsa_pub_n().public_key(default_backend())
+            self._cache_pub_k = k
+        return k
+
+    def _rsa_pri(self):
+        k = self._cache_pri_k
+        if k is None:
+            k = self._rsa_pri_n().private_key(default_backend())
+            self._cache_pri_k = k
+        return k
+
+    def _ec_pub_n(self, curve):
         x = self._decode_int(self.get('x'))
         y = self._decode_int(self.get('y'))
         return ec.EllipticCurvePublicNumbers(x, y, self.get_curve(curve))
 
-    def _ec_pri(self, curve):
+    def _ec_pri_n(self, curve):
         d = self._decode_int(self.get('d'))
-        return ec.EllipticCurvePrivateNumbers(d, self._ec_pub(curve))
+        return ec.EllipticCurvePrivateNumbers(d, self._ec_pub_n(curve))
+
+    def _ec_pub(self, curve):
+        k = self._cache_pub_k
+        if k is None:
+            k = self._ec_pub_n(curve).public_key(default_backend())
+            self._cache_pub_k = k
+        return k
+
+    def _ec_pri(self, curve):
+        k = self._cache_pri_k
+        if k is None:
+            k = self._ec_pri_n(curve).private_key(default_backend())
+            self._cache_pri_k = k
+        return k
 
     def _okp_pub(self):
-        crv = self.get('crv')
-        try:
-            pubkey = _OKP_CURVES_TABLE[crv].pubkey
-        except KeyError as e:
-            raise InvalidJWKValue('Unknown curve "%s"' % crv) from e
+        k = self._cache_pub_k
+        if k is None:
+            crv = self.get('crv')
+            try:
+                pubkey = _OKP_CURVES_TABLE[crv].pubkey
+            except KeyError as e:
+                raise InvalidJWKValue('Unknown curve "%s"' % crv) from e
 
-        x = base64url_decode(self.get('x'))
-        return pubkey.from_public_bytes(x)
+            x = base64url_decode(self.get('x'))
+            k = pubkey.from_public_bytes(x)
+            self._cache_pub_k = k
+        return k
 
     def _okp_pri(self):
-        crv = self.get('crv')
-        try:
-            privkey = _OKP_CURVES_TABLE[crv].privkey
-        except KeyError as e:
-            raise InvalidJWKValue('Unknown curve "%s"' % crv) from e
+        k = self._cache_pri_k
+        if k is None:
+            crv = self.get('crv')
+            try:
+                privkey = _OKP_CURVES_TABLE[crv].privkey
+            except KeyError as e:
+                raise InvalidJWKValue('Unknown curve "%s"' % crv) from e
 
-        d = base64url_decode(self.get('d'))
-        return privkey.from_private_bytes(d)
+            d = base64url_decode(self.get('d'))
+            k = privkey.from_private_bytes(d)
+            self._cache_pri_k = k
+        return k
 
     def _get_public_key(self, arg=None):
         ktype = self.get('kty')
         if ktype == 'oct':
             return self.get('k')
         elif ktype == 'RSA':
-            return self._rsa_pub().public_key(default_backend())
+            return self._rsa_pub()
         elif ktype == 'EC':
-            return self._ec_pub(arg).public_key(default_backend())
+            return self._ec_pub(arg)
         elif ktype == 'OKP':
             return self._okp_pub()
         else:
@@ -791,9 +831,9 @@ class JWK(dict):
         if ktype == 'oct':
             return self.get('k')
         elif ktype == 'RSA':
-            return self._rsa_pri().private_key(default_backend())
+            return self._rsa_pri()
         elif ktype == 'EC':
-            return self._ec_pri(arg).private_key(default_backend())
+            return self._ec_pri(arg)
         elif ktype == 'OKP':
             return self._okp_pri()
         else:
@@ -969,6 +1009,9 @@ class JWK(dict):
 
         # Check if item is a key value and verify its format
         if item in list(JWKValuesRegistry[kty].keys()):
+            # Invalidate cached keys if any
+            self._cache_pub_k = None
+            self._cache_pri_k = None
             if JWKValuesRegistry[kty][item].type == ParmType.b64:
                 try:
                     v = base64url_decode(value)
@@ -1027,6 +1070,12 @@ class JWK(dict):
             for name in list(JWKValuesRegistry[param].keys()):
                 if self.get(name) is not None:
                     raise KeyError("Cannot remove 'kty', values present")
+
+        kty = self.get('kty')
+        if kty is not None and item in list(JWKValuesRegistry[kty].keys()):
+            # Invalidate cached keys if any
+            self._cache_pub_k = None
+            self._cache_pri_k = None
 
         super(JWK, self).__delitem__(item)
 
