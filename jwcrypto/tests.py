@@ -269,7 +269,13 @@ PublicKeys_secp256k1 = {
             "crv": "secp256k1",
             "x": "Ss6na3mcci8Ud4lQrjaB_T40sfKApEcl2RLIWOJdjow",
             "y": "7l9qIKtKPW6oEiOYBt7r22Sm0mtFJU-yBkkvMvpscd8"
-        }
+        },
+        {
+            "kty": "EC",
+            "crv": "P-256K",
+            "x": "Ss6na3mcci8Ud4lQrjaB_T40sfKApEcl2RLIWOJdjow",
+            "y": "7l9qIKtKPW6oEiOYBt7r22Sm0mtFJU-yBkkvMvpscd8"
+        },
     ]
 }
 
@@ -278,6 +284,13 @@ PrivateKeys_secp256k1 = {
         {
             "kty": "EC",
             "crv": "secp256k1",
+            "x": "Ss6na3mcci8Ud4lQrjaB_T40sfKApEcl2RLIWOJdjow",
+            "y": "7l9qIKtKPW6oEiOYBt7r22Sm0mtFJU-yBkkvMvpscd8",
+            "d": "GYhU2vrYGZrjLZn71Xniqm54Mi53xiYtaTLawzaf9dA"
+        },
+        {
+            "kty": "EC",
+            "crv": "P-256K",
             "x": "Ss6na3mcci8Ud4lQrjaB_T40sfKApEcl2RLIWOJdjow",
             "y": "7l9qIKtKPW6oEiOYBt7r22Sm0mtFJU-yBkkvMvpscd8",
             "d": "GYhU2vrYGZrjLZn71Xniqm54Mi53xiYtaTLawzaf9dA"
@@ -594,6 +607,21 @@ class TestJWK(unittest.TestCase):
         key = jwk.JWK.from_password('test password')
         self.assertEqual(key['kty'], 'oct')
         self.assertEqual(key['k'], 'dGVzdCBwYXNzd29yZA')
+
+    def test_p256k_alias(self):
+        key = jwk.JWK.generate(kty='EC', curve='P-256K')
+        key.get_curve('secp256k1')
+
+        pub_k = jwk.JWK(**PrivateKeys_secp256k1['keys'][0])
+        pri_k = jwk.JWK(**PrivateKeys_secp256k1['keys'][1])
+        payload = bytes(bytearray(A1_payload))
+        test = jws.JWS(payload)
+        test.add_signature(pri_k, None, json_encode({"alg": "ES256K"}), None)
+        test_serialization_compact = test.serialize(compact=True)
+        verify = jws.JWS()
+        verify.deserialize(test_serialization_compact)
+        verify.verify(pub_k.public())
+        self.assertEqual(verify.payload, payload)
 
 
 # RFC 7515 - A.1
