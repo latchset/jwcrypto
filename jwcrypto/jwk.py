@@ -395,17 +395,25 @@ class JWK(dict):
         )
         self.import_key(**params)
 
+    def _curve_name(self, name):
+        # P-256K is an alias for 'secp256k1' to handle compatibility
+        # with some implementation using this old drafting name
+        if name == 'P-256K':
+            return 'secp256k1'
+        return name
+
     def _get_curve_by_name(self, name):
-        if name == 'P-256':
+        cname = self._curve_name(name)
+        if cname == 'P-256':
             return ec.SECP256R1()
-        elif name == 'P-384':
+        elif cname == 'P-384':
             return ec.SECP384R1()
-        elif name == 'P-521':
+        elif cname == 'P-521':
             return ec.SECP521R1()
-        elif name == 'secp256k1':
+        elif cname == 'secp256k1':
             return ec.SECP256K1()
-        elif name in _OKP_CURVES_TABLE:
-            return name
+        elif cname in _OKP_CURVES_TABLE:
+            return cname
         else:
             raise InvalidJWKValue('Unknown Elliptic Curve Type')
 
@@ -713,7 +721,7 @@ class JWK(dict):
         crv = self.get('crv')
         if self.get('kty') not in ['EC', 'OKP']:
             raise InvalidJWKType('Not an EC or OKP key')
-        if arg and crv != arg:
+        if arg and self._curve_name(crv) != self._curve_name(arg):
             raise InvalidJWKValue('Curve requested is "%s", but '
                                   'key curve is "%s"' % (arg, crv))
 
