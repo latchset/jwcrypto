@@ -138,9 +138,9 @@ class _RawEC(_RawJWS):
 
     def sign(self, key, payload):
         skey = key.get_op_key('sign', self._curve)
+        size = skey.key_size
         signature = skey.sign(payload, ec.ECDSA(self.hashfn))
         r, s = ec_utils.decode_dss_signature(signature)
-        size = key.get_curve(self._curve).key_size
         return _encode_int(r, size) + _encode_int(s, size)
 
     def verify(self, key, payload, signature):
