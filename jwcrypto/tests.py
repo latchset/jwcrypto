@@ -375,21 +375,21 @@ class TestJWK(unittest.TestCase):
     def test_generate_EC_key(self):
         # Backwards compat curve
         key = jwk.JWK.generate(kty='EC', curve='P-256')
-        key.get_curve('P-256')
+        key.get_op_key('verify', 'P-256')
         # New param
         key = jwk.JWK.generate(kty='EC', crv='P-521')
-        key.get_curve('P-521')
+        key.get_op_key('verify', 'P-521')
         # New param prevails
         key = jwk.JWK.generate(kty='EC', curve='P-256', crv='P-521')
-        key.get_curve('P-521')
+        key.get_op_key('verify', 'P-521')
         # New secp256k curve
         key = jwk.JWK.generate(kty='EC', curve='secp256k1')
-        key.get_curve('secp256k1')
+        key.get_op_key('verify', 'secp256k1')
 
     def test_generate_OKP_keys(self):
         for crv in jwk.ImplementedOkpCurves:
             key = jwk.JWK.generate(kty='OKP', crv=crv)
-            self.assertEqual(key.get_curve(crv), crv)
+            self.assertEqual(key['crv'], crv)
 
     def test_import_pyca_keys(self):
         rsa1 = rsa.generate_private_key(65537, 1024, default_backend())
@@ -610,7 +610,7 @@ class TestJWK(unittest.TestCase):
 
     def test_p256k_alias(self):
         key = jwk.JWK.generate(kty='EC', curve='P-256K')
-        key.get_curve('secp256k1')
+        key.get_op_key('verify', 'secp256k1')
 
         pub_k = jwk.JWK(**PrivateKeys_secp256k1['keys'][0])
         pri_k = jwk.JWK(**PrivateKeys_secp256k1['keys'][1])
