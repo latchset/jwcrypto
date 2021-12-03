@@ -33,4 +33,4 @@ DOCS_DIR = docs
 .PHONY: docs
 
 docs:
-	$(MAKE) -C $(DOCS_DIR) html
+	$(MAKE) -C $(DOCS_DIR) html doctest
