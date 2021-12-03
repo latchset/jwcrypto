@@ -54,8 +54,8 @@ Sign a JWS token::
     >>> payload = "My Integrity protected message"
     >>> jwstoken = jws.JWS(payload.encode('utf-8'))
     >>> jwstoken.add_signature(key, None,
-                               json_encode({"alg": "HS256"}),
-                               json_encode({"kid": key.thumbprint()}))
+    ...                        json_encode({"alg": "HS256"}),
+    ...                        json_encode({"kid": key.thumbprint()}))
     >>> sig = jwstoken.serialize()
 
 Verify a JWS token::

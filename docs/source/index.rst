@@ -26,6 +26,10 @@ Contents:
    jwt
 
 
+Note: In the examples, random or generated output values are replaced
+with '...' to allow for doctesting. Where possible the immutable part of
+a token has been preserved, and only the variable part replaced with '...'
+
 Indices and tables
 ==================
 

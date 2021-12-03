@@ -66,25 +66,24 @@ Create a 256bit symmetric key::
     >>> key = jwk.JWK.generate(kty='oct', size=256)
 
 Export the key with::
-    >>> key.export()
-    '{"k":"X6TBlwY2so8EwKZ2TFXM7XHSgWBKQJhcspzYydp5Y-o","kty":"oct"}'
+    >>> key.export()    #doctest: +ELLIPSIS
+    '{"k":"...","kty":"oct"}'
 
 Create a 2048bit RSA key pair::
-    >>> jwk.JWK.generate(kty='RSA', size=2048)
+    >>> jwk.JWK.generate(kty='RSA', size=2048) #doctest: +ELLIPSIS
+    {"kid":"Missing Key ID","thumbprint":"..."}
 
 Create a P-256 EC key pair and export the public key::
     >>> key = jwk.JWK.generate(kty='EC', crv='P-256')
-    >>> key.export(private_key=False)
-    '{"y":"VYlYwBfOTIICojCPfdUjnmkpN-g-lzZKxzjAoFmDRm8",
-      "x":"3mdE0rODWRju6qqU01Kw5oPYdNxBOMisFvJFH1vEu9Q",
-      "crv":"P-256","kty":"EC"}'
+    >>> key.export(private_key=False)   #doctest: +ELLIPSIS
+    '{"crv":"P-256","kty":"EC","x":"...","y":"..."}'
 
 Import a P-256 Public Key::
     >>> expkey = {"y":"VYlYwBfOTIICojCPfdUjnmkpN-g-lzZKxzjAoFmDRm8",
-                  "x":"3mdE0rODWRju6qqU01Kw5oPYdNxBOMisFvJFH1vEu9Q",
-                  "crv":"P-256","kty":"EC"}
+    ...           "x":"3mdE0rODWRju6qqU01Kw5oPYdNxBOMisFvJFH1vEu9Q",
+    ...           "crv":"P-256","kty":"EC"}
     >>> key = jwk.JWK(**expkey)
 
 Import a Key from a PEM file::
-    >>> with open("public.pem", "rb") as pemfile:
-    >>>     key = jwk.JWK.from_pem(pemfile.read())
+    >>> with open("public.pem", "rb") as pemfile:  #doctest: +SKIP
+    ...     key = jwk.JWK.from_pem(pemfile.read())

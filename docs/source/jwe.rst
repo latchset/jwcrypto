@@ -60,8 +60,8 @@ Encrypt a JWE token::
     >>> key = jwk.JWK.generate(kty='oct', size=256)
     >>> payload = "My Encrypted message"
     >>> jwetoken = jwe.JWE(payload.encode('utf-8'),
-                           json_encode({"alg": "A256KW",
-                                        "enc": "A256CBC-HS512"}))
+    ...                    json_encode({"alg": "A256KW",
+    ...                                 "enc": "A256CBC-HS512"}))
     >>> jwetoken.add_recipient(key)
     >>> enc = jwetoken.serialize()
 
@@ -82,14 +82,14 @@ Encrypt a JWE token::
     >>> public_key.import_key(**json_decode(private_key.export_public()))
     >>> payload = "My Encrypted message"
     >>> protected_header = {
-            "alg": "RSA-OAEP-256",
-            "enc": "A256CBC-HS512",
-            "typ": "JWE",
-            "kid": public_key.thumbprint(),
-        }
+    ...     "alg": "RSA-OAEP-256",
+    ...     "enc": "A256CBC-HS512",
+    ...     "typ": "JWE",
+    ...     "kid": public_key.thumbprint(),
+    ... }
     >>> jwetoken = jwe.JWE(payload.encode('utf-8'),
-                           recipient=public_key,
-                           protected=protected_header)
+    ...                    recipient=public_key,
+    ...                    protected=protected_header)
     >>> enc = jwetoken.serialize()
 
 Decrypt a JWE token::
