@@ -289,14 +289,29 @@ class JWS:
         c = JWSCore(a, key, protected, payload, self._allowed_algs)
         c.verify(signature)
 
-    def verify(self, key, alg=None):
+    # Helper to deal with detached payloads in verification
+    def _get_obj_payload(self, obj, dp):
+        op = obj.get('payload')
+        if dp is not None:
+            if op is None or len(op) == 0:
+                return dp
+            else:
+                raise InvalidJWSOperation('Object Payload present but'
+                                          ' Deatched Payload provided')
+        return op
+
+    def verify(self, key, alg=None, detached_payload=None):
         """Verifies a JWS token.
 
         :param key: The (:class:`jwcrypto.jwk.JWK`) verification key.
         :param alg: The signing algorithm (optional). Usually the algorithm
             is known as it is provided with the JOSE Headers of the token.
+        :param detached_payload: A detached payload to verify the signature
+            against. Only valid for tokens that are not carrying a payload.
 
         :raises InvalidJWSSignature: if the verification fails.
+        :raises InvalidJWSOperation: if a detached_payload is provided but
+                                     an object payload exists
         """
 
         self.verifylog = []
@@ -304,8 +319,9 @@ class JWS:
         obj = self.objects
         if 'signature' in obj:
             try:
+                payload = self._get_obj_payload(obj, detached_payload)
                 self._verify(alg, key,
-                             obj['payload'],
+                             payload,
                              obj['signature'],
                              obj.get('protected', None),
                              obj.get('header', None))
@@ -316,8 +332,9 @@ class JWS:
         elif 'signatures' in obj:
             for o in obj['signatures']:
                 try:
+                    payload = self._get_obj_payload(obj, detached_payload)
                     self._verify(alg, key,
-                                 obj['payload'],
+                                 payload,
                                  o['signature'],
                                  o.get('protected', None),
                                  o.get('header', None))

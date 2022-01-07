@@ -1821,6 +1821,17 @@ class TestUnencodedPayload(unittest.TestCase):
         sig = s.serialize(compact=True)
         self.assertEqual(sig, result)
 
+    def test_detached_payload_verification(self):
+        token = \
+            'eyJhbGciOiJIUzI1NiIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..' + \
+            'A5dxf2s96_n5FLueVuW1Z_vh161FwXZC4YLPff6dmDY'
+
+        s = jws.JWS()
+        s.deserialize(token)
+        s.verify(jwk.JWK(**SymmetricKeys['keys'][1]),
+                 detached_payload=rfc7797_payload)
+        self.assertTrue(s.is_valid)
+
     def test_misses_crit(self):
         s = jws.JWS(rfc7797_payload)
         with self.assertRaises(jws.InvalidJWSObject):
