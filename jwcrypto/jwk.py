@@ -1139,7 +1139,7 @@ class JWK(dict):
     def from_password(cls, password):
         """Creates a symmetric JWK key from a user password.
 
-        :param key: A password in utf8 format.
+        :param password: A password in utf8 format.
         """
         obj = cls()
         params = {'kty': 'oct'}
@@ -1267,6 +1267,12 @@ class JWKSet(dict):
             if jwk.get('kid') == kid:
                 return jwk
         return None
+
+    def get_keys(self, kid):
+        """Gets keys from the set with matching kid.
+        :param kid: the 'kid' key identifier.
+        """
+        return (jwk for jwk in self['keys'] if jwk.get('kid') == kid)
 
     def __repr__(self):
         repr_dict = {}
