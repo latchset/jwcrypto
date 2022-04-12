@@ -450,10 +450,14 @@ class TestJWK(unittest.TestCase):
             self.assertTrue(item in ksm)
             num += 1
         self.assertEqual(num, len(PrivateKeys['keys']))
+        self.assertEqual(k1, ksm.get_key('1'))
 
         ksm.add(k2)
         self.assertEqual({k1, k2}, ksm.get_keys('1'))
         self.assertEqual(3, len(ksm['keys']))
+        # Expect that duplicate kids will raise an exception when we use get_key
+        with self.assertRaises(jwk.InvalidJWKValue):
+            ksm.get_key('1')
 
     def test_jwkset_issue_208(self):
         ks = jwk.JWKSet()

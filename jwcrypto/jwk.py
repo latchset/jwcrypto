@@ -1160,13 +1160,6 @@ class JWK(dict):
 
 class _JWKkeys(set):
 
-    def __init__(self, *args, **kwargs):
-        super(_JWKkeys, self).__init__(*args, **kwargs)
-        self._by_kid = {}
-
-    def get_keys(self, kid):
-        return self._by_kid.get(kid, {})
-
     def add(self, elem):
         """Adds a JWK object to the set
 
@@ -1176,11 +1169,6 @@ class _JWKkeys(set):
         """
         if not isinstance(elem, JWK):
             raise TypeError('Only JWK objects are valid elements')
-        kid = elem.get('kid')
-        if kid is not None:
-            keys = self._by_kid.get(kid, set())
-            keys.add(elem)
-            self._by_kid[kid] = keys
         set.add(self, elem)
 
 
@@ -1275,16 +1263,16 @@ class JWKSet(dict):
         """Gets a key from the set.
         :param kid: the 'kid' key identifier.
         """
-        for jwk in self['keys']:
-            if jwk.get('kid') == kid:
-                return jwk
-        return None
+        keys = self.get_keys(kid)
+        if len(keys) > 1:
+            raise InvalidJWKValue('Duplicate keys found with requested kid: 1 expected')
+        return tuple(keys)[0]
 
     def get_keys(self, kid):
         """Gets keys from the set with matching kid.
         :param kid: the 'kid' key identifier.
         """
-        return self['keys'].get_keys(kid)
+        return {key for key in self['keys'] if key.get('kid') == kid}
 
     def __repr__(self):
         repr_dict = {}
