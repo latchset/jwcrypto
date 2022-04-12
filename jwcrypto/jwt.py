@@ -434,6 +434,22 @@ class JWT:
                         "Invalid '%s' value. Expected '%s' got '%s'" % (
                             name, value, claims[name]))
 
+    def _deserialize_token_with_keys(self, jwt, keys):
+        for k in keys:
+            try:
+                self.token.deserialize(jwt, k)
+                self.deserializelog.append("Success")
+                break
+            except Exception as e:  # pylint: disable=broad-except
+                keyid = k.get('kid')
+                if keyid is None:
+                    keyid = k.thumbprint()
+                self.deserializelog.append('Key [%s] failed: [%s]' % (
+                    keyid, repr(e)))
+                continue
+        if "Success" not in self.deserializelog:
+            raise JWTMissingKey('No working key found in key set')
+
     def norm_typ(self, val):
         lc = val.lower()
         if '/' in lc:
@@ -507,26 +523,13 @@ class JWT:
         elif isinstance(key, JWKSet):
             self.token.deserialize(jwt, None)
             if 'kid' in self.token.jose_header:
-                kid_key = key.get_key(self.token.jose_header['kid'])
-                if not kid_key:
+                kid_keys = key.get_keys(self.token.jose_header['kid'])
+                if not kid_keys:
                     raise JWTMissingKey('Key ID %s not in key set'
                                         % self.token.jose_header['kid'])
-                self.token.deserialize(jwt, kid_key)
+                self._deserialize_token_with_keys(jwt, kid_keys)
             else:
-                for k in key:
-                    try:
-                        self.token.deserialize(jwt, k)
-                        self.deserializelog.append("Success")
-                        break
-                    except Exception as e:  # pylint: disable=broad-except
-                        keyid = k.get('kid')
-                        if keyid is None:
-                            keyid = k.thumbprint()
-                        self.deserializelog.append('Key [%s] failed: [%s]' % (
-                            keyid, repr(e)))
-                        continue
-                if "Success" not in self.deserializelog:
-                    raise JWTMissingKey('No working key found in key set')
+                self._deserialize_token_with_keys(jwt, key)
         else:
             raise ValueError("Unrecognized Key Type")
 
