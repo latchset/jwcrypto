@@ -437,6 +437,24 @@ class TestJWK(unittest.TestCase):
             num += 1
         self.assertEqual(num, len(PrivateKeys['keys']))
 
+    def test_jwkset_get_keys(self):
+        # Test key set with mutiple keys
+        ksm = jwk.JWKSet.from_json(json_encode(PrivateKeys))
+        k1 = jwk.JWK.from_json(json_encode(PrivateKeys['keys'][0]))
+        kwargs = RSAPrivateKey.copy()
+        kwargs['kid'] = '1'
+        k2 = jwk.JWK(**kwargs)
+        num = 0
+        for item in ksm:
+            self.assertTrue(isinstance(item, jwk.JWK))
+            self.assertTrue(item in ksm)
+            num += 1
+        self.assertEqual(num, len(PrivateKeys['keys']))
+
+        ksm.add(k2)
+        self.assertEqual({k1, k2}, ksm.get_keys('1'))
+        self.assertEqual(3, len(ksm['keys']))
+
     def test_jwkset_issue_208(self):
         ks = jwk.JWKSet()
         key1 = RSAPrivateKey.copy()
