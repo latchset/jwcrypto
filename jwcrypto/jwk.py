@@ -1164,7 +1164,7 @@ class _JWKkeys(set):
         super(_JWKkeys, self).__init__(*args, **kwargs)
         self._by_kid = {}
 
-    def get_by_kid(self, kid):
+    def get_keys(self, kid):
         return self._by_kid.get(kid, {})
 
     def add(self, elem):
@@ -1284,7 +1284,7 @@ class JWKSet(dict):
         """Gets keys from the set with matching kid.
         :param kid: the 'kid' key identifier.
         """
-        return self['keys'].get_by_kid(kid)
+        return self['keys'].get_keys(kid)
 
     def __repr__(self):
         repr_dict = {}
