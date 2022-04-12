@@ -451,6 +451,7 @@ class TestJWK(unittest.TestCase):
             num += 1
         self.assertEqual(num, len(PrivateKeys['keys']))
         self.assertEqual(k1, ksm.get_key('1'))
+        self.assertIsNone(ksm.get_key('not-there'))
 
         ksm.add(k2)
         self.assertEqual({k1, k2}, ksm.get_keys('1'))

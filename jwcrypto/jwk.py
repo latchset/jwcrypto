@@ -1266,7 +1266,10 @@ class JWKSet(dict):
         keys = self.get_keys(kid)
         if len(keys) > 1:
             raise InvalidJWKValue('Duplicate keys found with requested kid: 1 expected')
-        return tuple(keys)[0]
+        try:
+            return tuple(keys)[0]
+        except IndexError:
+            return None
 
     def get_keys(self, kid):
         """Gets keys from the set with matching kid.
