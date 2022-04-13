@@ -1265,7 +1265,8 @@ class JWKSet(dict):
         """
         keys = self.get_keys(kid)
         if len(keys) > 1:
-            raise InvalidJWKValue('Duplicate keys found with requested kid: 1 expected')
+            raise InvalidJWKValue(
+                'Duplicate keys found with requested kid: 1 expected')
         try:
             return tuple(keys)[0]
         except IndexError:
