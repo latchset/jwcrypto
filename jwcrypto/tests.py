@@ -1488,7 +1488,9 @@ class TestJWT(unittest.TestCase):
         t.make_encrypted_token(key)
         token = t.serialize()
         # try to decrypt without a matching key
-        self.assertRaises(jwt.JWTMissingKey, jwt.JWT, jwt=token, key=keyset)
+        self.assertRaises(jwt.JWTMissingKey, jwt.JWT, jwt=token, key=keyset,
+                          algs=jwe_algs_and_rsa1_5,
+                          check_claims={'exp': 1300819380})
         # now decrypt with key
         keyset.add(key)
         jwt.JWT(jwt=token, key=keyset, algs=jwe_algs_and_rsa1_5,
@@ -1509,7 +1511,9 @@ class TestJWT(unittest.TestCase):
         t.make_encrypted_token(key)
         token = t.serialize()
         # try to decrypt without a matching key
-        self.assertRaises(jwt.JWTMissingKey, jwt.JWT, jwt=token, key=keyset)
+        self.assertRaises(jwt.JWTMissingKey, jwt.JWT, jwt=token, key=keyset,
+                          algs=jwe_algs_and_rsa1_5,
+                          check_claims={'exp': 1300819380})
         # now decrypt with key
         keyset.add(key)
         jwt.JWT(jwt=token, key=keyset, algs=jwe_algs_and_rsa1_5,
@@ -1531,7 +1535,8 @@ class TestJWT(unittest.TestCase):
 
         # try to decrypt without a matching key
         with self.assertRaises(jwt.JWTMissingKey):
-            jwt.JWT(jwt=token, key=keyset, check_claims={'exp': 1300819380})
+            jwt.JWT(jwt=token, key=keyset, algs=jwe_algs_and_rsa1_5,
+                    check_claims={'exp': 1300819380})
 
         # add right key
         keyset.add(key)
