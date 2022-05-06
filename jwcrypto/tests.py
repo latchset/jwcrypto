@@ -1657,14 +1657,27 @@ class TestJWT(unittest.TestCase):
         # the oct key before hitting the ES one
         jwt.JWT(jwt=token, key=ks)
 
-    def test_Issue_239(self):
-        claims = {"aud": "www.example.com"}
-        check_claims = {"aud": ["www.example.com", "account"]}
+    def test_Issue_277(self):
+        claims = {"aud": ["www.example.com", "www.test.net"]}
         key = jwk.JWK(generate='oct', size=256)
         token = jwt.JWT(header={"alg": "HS256"}, claims=claims)
         token.make_signed_token(key)
-        self.assertRaises(jwt.JWTInvalidClaimFormat, jwt.JWT, key=key,
-                          jwt=token.serialize(), check_claims=check_claims)
+        sertok = token.serialize()
+        jwt.JWT(key=key, jwt=sertok, check_claims={"aud": "www.example.com"})
+        jwt.JWT(key=key, jwt=sertok, check_claims={"aud": "www.test.net"})
+        jwt.JWT(key=key, jwt=sertok, check_claims={"aud": ["www.example.com"]})
+        jwt.JWT(key=key, jwt=sertok, check_claims={"aud": ["www.test.net"]})
+        jwt.JWT(key=key, jwt=sertok, check_claims={"aud": ["www.example.com",
+                                                           "www.test.net"]})
+        jwt.JWT(key=key, jwt=sertok, check_claims={"aud": ["www.example.com",
+                                                           "nomatch"]})
+        self.assertRaises(jwt.JWTInvalidClaimValue, jwt.JWT, key=key,
+                          jwt=sertok, check_claims={"aud": "nomatch"})
+        self.assertRaises(jwt.JWTInvalidClaimValue, jwt.JWT, key=key,
+                          jwt=sertok, check_claims={"aud": ["nomatch"]})
+        self.assertRaises(jwt.JWTInvalidClaimValue, jwt.JWT, key=key,
+                          jwt=sertok, check_claims={"aud": ["nomatch",
+                                                            "failmatch"]})
 
 
 class ConformanceTests(unittest.TestCase):

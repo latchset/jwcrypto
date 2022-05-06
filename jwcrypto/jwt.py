@@ -358,7 +358,7 @@ class JWT:
     def _check_check_claims(self, check_claims):
         self._check_string_claim('iss', check_claims)
         self._check_string_claim('sub', check_claims)
-        self._check_string_claim('aud', check_claims)
+        self._check_array_or_string_claim('aud', check_claims)
         self._check_integer_claim('exp', check_claims)
         self._check_integer_claim('nbf', check_claims)
         self._check_integer_claim('iat', check_claims)
@@ -398,14 +398,23 @@ class JWT:
 
             elif name == 'aud':
                 if value is not None:
-                    if value == claims[name]:
-                        continue
                     if isinstance(claims[name], list):
-                        if value in claims[name]:
-                            continue
-                    raise JWTInvalidClaimValue(
-                        "Invalid '%s' value. Expected '%s' to be in '%s'" % (
-                            name, claims[name], value))
+                        tclaims = claims[name]
+                    else:
+                        tclaims = [claims[name]]
+                    if isinstance(value, list):
+                        cclaims = value
+                    else:
+                        cclaims = [value]
+                    found = False
+                    for v in cclaims:
+                        if v in tclaims:
+                            found = True
+                            break
+                    if not found:
+                        raise JWTInvalidClaimValue(
+                            "Invalid '{}' value. Expected '{}' in '{}'".format(
+                                name, claims[name], value))
 
             elif name == 'exp':
                 if value is not None:
