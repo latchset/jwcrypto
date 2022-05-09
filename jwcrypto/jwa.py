@@ -608,13 +608,25 @@ class _Pbes2HsAesKw(_RawKeyMgmt):
         return JWK(kty="oct", use="enc", k=base64url_encode(rk))
 
     def wrap(self, key, bitsize, cek, headers):
-        p2s = _randombits(128)
-        p2c = 8192
+        ret_header = {}
+        if 'p2s' in headers:
+            p2s = base64url_decode(headers['p2s'])
+            if len(p2s) < 8:
+                raise ValueError('Invalid Salt, must be 8 or more octects')
+        else:
+            p2s = _randombits(128)
+            ret_header['p2s'] = base64url_encode(p2s)
+        if 'p2c' in headers:
+            p2c = headers['p2c']
+        else:
+            p2c = 8192
+            ret_header['p2c'] = p2c
         kek = self._get_key(headers['alg'], key, p2s, p2c)
 
         aeskw = self.aeskwmap[self.keysize]()
         ret = aeskw.wrap(kek, bitsize, cek, headers)
-        ret['header'] = {'p2s': base64url_encode(p2s), 'p2c': p2c}
+        if len(ret_header) > 0:
+            ret['header'] = ret_header
         return ret
 
     def unwrap(self, key, bitsize, ek, headers):

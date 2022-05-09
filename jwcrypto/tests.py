@@ -1788,6 +1788,28 @@ class ConformanceTests(unittest.TestCase):
         check.decrypt(key)
         self.assertEqual(check.payload, b'plain')
 
+    def test_pbes2_hs256_aeskw_custom_params(self):
+        enc = jwe.JWE(plaintext='plain',
+                      protected={"alg": "PBES2-HS256+A128KW",
+                                 "enc": "A256CBC-HS512",
+                                 "p2c": 4096,
+                                 "p2s": base64url_encode("A" * 16)})
+        key = jwk.JWK.from_password('password')
+        enc.add_recipient(key)
+        o = enc.serialize()
+        check = jwe.JWE()
+        check.deserialize(o)
+        check.decrypt(key)
+        self.assertEqual(check.payload, b'plain')
+
+        enc = jwe.JWE(plaintext='plain',
+                      protected={"alg": "PBES2-HS256+A128KW",
+                                 "enc": "A256CBC-HS512",
+                                 "p2c": 4096,
+                                 "p2s": base64url_encode("A" * 7)})
+        key = jwk.JWK.from_password('password')
+        self.assertRaises(ValueError, enc.add_recipient, key)
+
 
 class JWATests(unittest.TestCase):
     def test_jwa_create(self):
