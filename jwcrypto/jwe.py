@@ -510,3 +510,17 @@ class JWE:
         if len(jh) == 0:
             raise InvalidJWEOperation("JOSE Header not available")
         return jh
+
+    @classmethod
+    def from_jose_token(cls, token):
+        """Creates a JWE object from a serialized JWE token.
+
+        :param token: A string with the json or compat representation
+         of the token.
+
+        :raises InvalidJWEData: if the raw object is an invalid JWE token.
+        """
+
+        obj = cls()
+        obj.deserialize(token)
+        return obj
