@@ -645,3 +645,16 @@ class JWS:
         obj = cls()
         obj.deserialize(token)
         return obj
+
+    def __str__(self):
+        try:
+            return self.serialize()
+        except Exception:  # pylint: disable=broad-except
+            return self.__repr__()
+
+    def __repr__(self):
+        try:
+            return f'JWS.from_json_token("{self.serialize()}")'
+        except Exception:  # pylint: disable=broad-except
+            payload = self.objects['payload'].decode('utf-8')
+            return f'JWS(payload={payload})'
