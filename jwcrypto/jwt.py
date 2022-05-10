@@ -564,3 +564,18 @@ class JWT:
         compact representation.
         """
         return self.token.serialize(compact)
+
+    @classmethod
+    def from_jose_token(cls, token):
+        """Creates a JWT object from a serialized JWT token.
+
+        :param token: A string with the json or compat representation
+         of the token.
+
+        :raises InvalidJWEData or InvalidJWSObject: if the raw object is an
+         invalid JWT token.
+        """
+
+        obj = cls()
+        obj.deserialize(token)
+        return obj
