@@ -995,6 +995,18 @@ class TestJWS(unittest.TestCase):
         t.deserialize(o1)
         t.verify(key)
 
+    def test_jws_issue_281(self):
+        header = {"alg": "HS256"}
+        header_copy = copy.deepcopy(header)
+
+        key = jwk.JWK().generate(kty='oct')
+
+        s = jws.JWS(payload='test')
+        s.add_signature(key, protected=header,
+                        header={"kid": key.thumbprint()})
+
+        self.assertEqual(header, header_copy)
+
 
 E_A1_plaintext = \
     [84, 104, 101, 32, 116, 114, 117, 101, 32, 115, 105, 103, 110, 32,
