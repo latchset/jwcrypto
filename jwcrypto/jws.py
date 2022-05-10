@@ -631,3 +631,17 @@ class JWS:
             return jhl
         else:
             raise InvalidJWSOperation("JOSE Header(s) not available")
+
+    @classmethod
+    def from_jose_token(cls, token):
+        """Creates a JWS object from a serialized JWS token.
+
+        :param token: A string with the json or compat representation
+         of the token.
+
+        :raises InvalidJWSObject: if the raw object is an invalid JWS token.
+        """
+
+        obj = cls()
+        obj.deserialize(token)
+        return obj
