@@ -579,3 +579,18 @@ class JWT:
         obj = cls()
         obj.deserialize(token)
         return obj
+
+    def __str__(self):
+        try:
+            return self.serialize()
+        except Exception:  # pylint: disable=broad-except
+            return self.__repr__()
+
+    def __repr__(self):
+        jwt = repr(self.token)
+        return f'JWT(header={self._header}, ' + \
+               f'claims={self._claims}, ' + \
+               f'jwt={jwt}, ' + \
+               f'key=None, algs={self._algs}, ' + \
+               f'default_claims={self._reg_claims}, ' + \
+               f'check_claims={self._check_claims})'
