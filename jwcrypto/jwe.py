@@ -280,7 +280,7 @@ class JWE:
             for invalid in 'aad', 'unprotected':
                 if invalid in self.objects:
                     raise InvalidJWEOperation(
-                        "Can't use compact encoding when the '%s' parameter"
+                        "Can't use compact encoding when the '%s' parameter "
                         "is set" % invalid)
             if 'protected' not in self.objects:
                 raise InvalidJWEOperation(
