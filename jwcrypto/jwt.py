@@ -1,5 +1,6 @@
 # Copyright (C) 2015  JWCrypto Project Contributors - see LICENSE file
 
+import copy
 import time
 import uuid
 
@@ -232,15 +233,19 @@ class JWT:
 
     @claims.setter
     def claims(self, c):
-        if self._reg_claims and not isinstance(c, dict):
-            # decode c so we can set default claims
+        if not isinstance(c, dict):
+            if not self._reg_claims:
+                # no default_claims, can return immediately
+                self._claims = c
+                return
             c = json_decode(c)
-
-        if isinstance(c, dict):
-            self._add_default_claims(c)
-            self._claims = json_encode(c)
         else:
-            self._claims = c
+            # _add_default_claims modifies its argument
+            # so we must always copy it.
+            c = copy.deepcopy(c)
+
+        self._add_default_claims(c)
+        self._claims = json_encode(c)
 
     @property
     def token(self):
