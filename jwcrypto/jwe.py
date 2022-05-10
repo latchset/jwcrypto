@@ -524,3 +524,23 @@ class JWE:
         obj = cls()
         obj.deserialize(token)
         return obj
+
+    def __str__(self):
+        try:
+            return self.serialize()
+        except Exception:  # pylint: disable=broad-except
+            return self.__repr__()
+
+    def __repr__(self):
+        try:
+            return f'JWE.from_json_token("{self.serialize()}")'
+        except Exception:  # pylint: disable=broad-except
+            plaintext = repr(self.plaintext)
+            protected = self.objects.get('protected')
+            unprotected = self.objects.get('unprotected')
+            aad = self.objects.get('aad')
+            algs = self._allowed_algs
+            return f'JWE(plaintext={plaintext}, ' + \
+                   f'protected={protected}, ' + \
+                   f'unprotected={unprotected}, ' + \
+                   f'aad={aad}, algs={algs})'
