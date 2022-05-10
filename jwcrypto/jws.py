@@ -118,10 +118,9 @@ class JWSCore:
 
         if header is not None:
             if isinstance(header, dict):
-                self.header = header
                 header = json_encode(header)
-            else:
-                self.header = json_decode(header)
+            # Make sure this is always a deep copy of the dict
+            self.header = json_decode(header)
 
             self.protected = base64url_encode(header.encode('utf-8'))
         else:
@@ -454,13 +453,13 @@ class JWS:
 
         b64 = True
 
-        p = {}
         if protected:
             if isinstance(protected, dict):
-                p = protected
-                protected = json_encode(p)
-            else:
-                p = json_decode(protected)
+                protected = json_encode(protected)
+            # Make sure p is always a deep copy of the dict
+            p = json_decode(protected)
+        else:
+            p = dict()
 
         # If b64 is present we must enforce criticality
         if 'b64' in list(p.keys()):
@@ -476,10 +475,9 @@ class JWS:
         h = None
         if header:
             if isinstance(header, dict):
-                h = header
                 header = json_encode(header)
-            else:
-                h = json_decode(header)
+            # Make sure h is always a deep copy of the dict
+            h = json_decode(header)
 
         p = self._merge_check_headers(p, h)
 
