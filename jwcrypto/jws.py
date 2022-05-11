@@ -157,6 +157,9 @@ class JWSCore:
         """Verifies a signature
 
         :raises InvalidJWSSignature: if the verification fails.
+
+        :return: Returns True or an Exception
+        :rtype: `bool`
         """
         try:
             payload = self._payload()
@@ -533,6 +536,9 @@ class JWS:
          with the compact representation and `compact` is True.
         :raises InvalidJWSSignature: if no signature has been added
          to the object, or no valid signature can be found.
+
+        :return: A json formatted string or a compact representation string
+        :rtype: `str`
         """
         if compact:
             if 'signatures' in self.objects:
@@ -640,6 +646,9 @@ class JWS:
          of the token.
 
         :raises InvalidJWSObject: if the raw object is an invalid JWS token.
+
+        :return: A JWS token
+        :rtype: JWS
         """
 
         obj = cls()

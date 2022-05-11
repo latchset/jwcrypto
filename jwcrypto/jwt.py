@@ -584,7 +584,13 @@ class JWT:
         :class:`jwcrypto.jwe.JWE` so that these objects can all be used
         interchangeably. However the only valid JWT representation is the
         compact representation.
+
+        :return: A json formatted string or a compact representation string
+        :rtype: `str`
         """
+        if not compact:
+            raise ValueError("Only the compact serialization is allowed")
+
         return self.token.serialize(compact)
 
     @classmethod
@@ -596,6 +602,9 @@ class JWT:
 
         :raises InvalidJWEData or InvalidJWSObject: if the raw object is an
          invalid JWT token.
+
+        :return: A JWT token
+        :rtype: JWT
         """
 
         obj = cls()

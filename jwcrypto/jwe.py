@@ -271,6 +271,9 @@ class JWE:
          with the compact representation and `compact` is True.
         :raises InvalidJWEOperation: if no recipients have been added
          to the object.
+
+        :return: A json formatted string or a compact representation string
+        :rtype: `str`
         """
 
         if 'ciphertext' not in self.objects:
@@ -519,6 +522,9 @@ class JWE:
          of the token.
 
         :raises InvalidJWEData: if the raw object is an invalid JWE token.
+
+        :return: A JWE token
+        :rtype: JWE
         """
 
         obj = cls()
