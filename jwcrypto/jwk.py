@@ -602,6 +602,9 @@ class JWK(dict):
         """Creates a RFC 7517 JWK from the standard JSON format.
 
         :param key: The RFC 7517 representation of a JWK.
+
+        :return: A JWK object that holds the json key.
+        :rtype: JWK
         """
         obj = cls()
         try:
@@ -618,6 +621,11 @@ class JWK(dict):
 
         :param private_key(bool): Whether to export the private key.
                                   Defaults to True.
+
+        :return: A portable representation of the key.
+            If as_dict is True then a dictionary is returned.
+            By default a json string
+        :rtype: `str` or `dict`
         """
         if private_key is True:
             # Use _export_all for backwards compatibility, as this
@@ -632,6 +640,11 @@ class JWK(dict):
         is called on a symmetric key.
 
         :param as_dict(bool): If set to True export as python dict not JSON
+
+        :return: A portable representation of the public key only.
+            If as_dict is True then a dictionary is returned.
+            By default a json string
+        :rtype: `str` or `dict`
         """
         pub = self._public_params()
         if as_dict is True:
@@ -665,6 +678,11 @@ class JWK(dict):
         It fails for a JWK that has only a public key or is symmetric.
 
         :param as_dict(bool): If set to True export as python dict not JSON
+
+        :return: A portable representation of a private key.
+            If as_dict is True then a dictionary is returned.
+            By default a json string
+        :rtype: `str` or `dict`
         """
         if self.has_private:
             return self._export_all(as_dict)
@@ -736,6 +754,9 @@ class JWK(dict):
 
         :raises InvalidJWKType: the key is not an EC or OKP key.
         :raises InvalidJWKValue: if the curve name is invalid.
+
+        :return: An EllipticCurve object
+        :rtype: `EllipticCurve`
         """
         return self._get_curve_by_name(arg)
 
@@ -875,6 +896,9 @@ class JWK(dict):
          not permitted with this key.
         :raises InvalidJWKUsage: if the use constraints do not permit
          the operation.
+
+        :return: A Python Cryptography key object for asymmetric keys
+            or a baseurl64_encoded octet string for symmetric keys
         """
         validops = self.get('key_ops',
                             list(JWKOperationsRegistry.keys()))
@@ -961,6 +985,9 @@ class JWK(dict):
          Defaults to False which will cause the operation to fail. To avoid
          encryption the user must explicitly pass None, otherwise the user
          needs to provide a password in a bytes buffer.
+
+        :return: A serialized bytes buffer containing a PEM formatted key.
+        :rtype: `bytes`
         """
         e = serialization.Encoding.PEM
         if private_key:
@@ -996,6 +1023,9 @@ class JWK(dict):
 
         :param data(bytes): The data contained in a PEM file.
         :param password(bytes): An optional password to unwrap the key.
+
+        :return: A JWK object.
+        :rtype: JWK
         """
         obj = cls()
         obj.import_from_pem(data, password)
@@ -1005,6 +1035,9 @@ class JWK(dict):
         """Returns the key thumbprint as specified by RFC 7638.
 
         :param hashalg: A hash function (defaults to SHA256)
+
+        :return: A base64url encoded digest of the key
+        :rtype: `str`
         """
 
         t = {'kty': self.get('kty')}
@@ -1140,6 +1173,9 @@ class JWK(dict):
         """Creates a symmetric JWK key from a user password.
 
         :param password: A password in utf8 format.
+
+        :return: a JWK object
+        :rtype: JWK
         """
         obj = cls()
         params = {'kty': 'oct'}
@@ -1216,6 +1252,11 @@ class JWKSet(dict):
                                   Defaults to True.
         :param as_dict(bool): Whether to return a dict instead of
                               a JSON object
+
+        :return: A portable representation of the key set.
+            If as_dict is True then a dictionary is returned.
+            By default a json string
+        :rtype: `str` or `dict`
         """
         exp_dict = {}
         for k, v in self.items():
@@ -1254,6 +1295,9 @@ class JWKSet(dict):
         """Creates a RFC 7517 key set from the standard JSON format.
 
         :param keyset: The RFC 7517 representation of a JOSE key set.
+
+        :return: A JWKSet object.
+        :rtype: JWKSet
         """
         obj = cls()
         obj.import_keyset(keyset)
@@ -1262,6 +1306,9 @@ class JWKSet(dict):
     def get_key(self, kid):
         """Gets a key from the set.
         :param kid: the 'kid' key identifier.
+
+        :return: A JWK from the set
+        :rtype: JWK
         """
         keys = self.get_keys(kid)
         if len(keys) > 1:
@@ -1275,6 +1322,9 @@ class JWKSet(dict):
     def get_keys(self, kid):
         """Gets keys from the set with matching kid.
         :param kid: the 'kid' key identifier.
+
+        :return: a List of keys
+        :rtype: `list`
         """
         return {key for key in self['keys'] if key.get('kid') == kid}
 
