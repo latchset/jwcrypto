@@ -525,6 +525,18 @@ class JWE:
         obj.deserialize(token)
         return obj
 
+    def __eq__(self, other):
+        if not isinstance(other, JWE):
+            return False
+        try:
+            return self.serialize() == other.serialize()
+        except Exception:  # pylint: disable=broad-except
+            a = {'plaintext': self.plaintext}
+            a.update(self.objects)
+            b = {'plaintext': other.plaintext}
+            b.update(other.objects)
+            return a == b
+
     def __str__(self):
         try:
             return self.serialize()

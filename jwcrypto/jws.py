@@ -646,6 +646,14 @@ class JWS:
         obj.deserialize(token)
         return obj
 
+    def __eq__(self, other):
+        if not isinstance(other, JWS):
+            return False
+        try:
+            return self.serialize() == other.serialize()
+        except Exception:  # pylint: disable=broad-except
+            return self.objects == other.objects
+
     def __str__(self):
         try:
             return self.serialize()
