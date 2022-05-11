@@ -2041,10 +2041,7 @@ class TestOverloadedOperators(unittest.TestCase):
 
         c = jwt.JWT.from_jose_token(a.serialize())
         self.assertNotEqual(a, c)
-        # FIXME: replace once JWT.validate(key) is made available
-        c.token.verify(key)
-        c.header = c.token.jose_header
-        c.claims = c.token.payload.decode('utf-8')
+        c.validate(key)
         self.assertEqual(a, c)
 
         ea = jwt.JWT(header={"alg": "A256KW", "enc": "A256CBC-HS512"},
@@ -2063,10 +2060,7 @@ class TestOverloadedOperators(unittest.TestCase):
 
         ect = jwt.JWT.from_jose_token(ea.serialize())
         self.assertNotEqual(ea, ect)
-        # FIXME: replace once JWT.validate(key) is made available
-        ect.token.decrypt(key)
-        ect.header = ect.token.jose_header
-        ect.claims = ect.token.payload.decode('utf-8')
+        ect.validate(key)
         self.assertEqual(ea, ect)
 
     def test_jwt_representations(self):
