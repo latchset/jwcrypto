@@ -3,6 +3,7 @@
 [![Build Status](https://github.com/latchset/jwcrypto/actions/workflows/build.yml/badge.svg)](https://github.com/latchset/jwcrypto/actions/workflows/build.yml)
 [![ppc64le Build](https://github.com/latchset/jwcrypto/actions/workflows/ppc64le.yml/badge.svg)](https://github.com/latchset/jwcrypto/actions/workflows/ppc64le.yml)
 [![Code Scan](https://github.com/latchset/jwcrypto/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/latchset/jwcrypto/actions/workflows/codeql-analysis.yml)
+[![Documentation Status](https://readthedocs.org/projects/jwcrypto/badge/?version=latest)](https://jwcrypto.readthedocs.io/en/latest/?badge=latest)
 
 JWCrypto
 ========
