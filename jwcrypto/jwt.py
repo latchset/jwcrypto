@@ -580,6 +580,13 @@ class JWT:
         obj.deserialize(token)
         return obj
 
+    def __eq__(self, other):
+        if not isinstance(other, JWT):
+            return False
+        return self._claims == other._claims and \
+            self._header == other._header and \
+            self.token == other.token
+
     def __str__(self):
         try:
             return self.serialize()
