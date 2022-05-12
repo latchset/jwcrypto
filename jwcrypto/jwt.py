@@ -4,9 +4,10 @@ import copy
 import time
 import uuid
 
+from deprecated import deprecated
+
 from jwcrypto.common import JWException, json_decode, json_encode
 from jwcrypto.jwe import JWE
-from jwcrypto.jwk import JWK, JWKSet
 from jwcrypto.jws import JWS
 
 
@@ -107,7 +108,7 @@ class JWTInvalidClaimFormat(JWException):
         super(JWTInvalidClaimFormat, self).__init__(msg)
 
 
-# deprecated and not used anymore
+@deprecated
 class JWTMissingKeyID(JWException):
     """JSON Web Token is missing key id.
 
@@ -126,6 +127,7 @@ class JWTMissingKeyID(JWException):
         super(JWTMissingKeyID, self).__init__(msg)
 
 
+@deprecated
 class JWTMissingKey(JWException):
     """JSON Web Token is using a key not in the key set.
 
@@ -498,47 +500,22 @@ class JWT:
         if self.token is None:
             raise ValueError("Token empty")
 
-        if isinstance(key, JWK):
-            try:
-                if isinstance(self.token, JWS):
-                    self.token.verify(key)
-                elif isinstance(self.token, JWE):
-                    self.token.decrypt(key)
-                else:
-                    raise ValueError("Token format unrecognized")
-                self.deserializelog.append("Success")
-            except Exception as e:  # pylint: disable=broad-except
-                self.deserializelog.append(
-                    'Validation failed: [{}]'.format(repr(e)))
-                raise
-        elif isinstance(key, JWKSet):
-            keys = key
-            if 'kid' in self.token.jose_header:
-                kid_keys = key.get_keys(self.token.jose_header['kid'])
-                if not kid_keys:
-                    raise JWTMissingKey('Key ID {} not in key set'.format(
-                                        self.token.jose_header['kid']))
-                keys = kid_keys
-
-            for k in keys:
-                try:
-                    if isinstance(self.token, JWS):
-                        self.token.verify(k)
-                    elif isinstance(self.token, JWE):
-                        self.token.decrypt(k)
-                    else:
-                        raise ValueError("Token format unrecognized")
-                    self.deserializelog.append("Success")
-                    break
-                except Exception as e:  # pylint: disable=broad-except
-                    keyid = k.get('kid', k.thumbprint())
-                    self.deserializelog.append('Key [{}] failed: [{}]'.format(
-                                               keyid, repr(e)))
-                    continue
-            if "Success" not in self.deserializelog:
-                raise JWTMissingKey('No working key found in key set')
-        else:
-            raise ValueError("Unrecognized key type")
+        try:
+            if isinstance(self.token, JWS):
+                self.token.verify(key)
+            elif isinstance(self.token, JWE):
+                self.token.decrypt(key)
+            else:
+                raise ValueError("Token format unrecognized")
+            self.deserializelog.append("Success")
+        except Exception as e:  # pylint: disable=broad-except
+            if isinstance(self.token, JWS):
+                self.deserializelog = self.token.verifylog
+            elif isinstance(self.token, JWE):
+                self.deserializelog = self.token.decryptlog
+            self.deserializelog.append(
+                'Validation failed: [{}]'.format(repr(e)))
+            raise
 
         self.header = self.token.jose_header
         self.claims = self.token.payload.decode('utf-8')
