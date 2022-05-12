@@ -5,7 +5,7 @@ from jwcrypto.common import JWSEHeaderParameter, JWSEHeaderRegistry
 from jwcrypto.common import base64url_decode, base64url_encode
 from jwcrypto.common import json_decode, json_encode
 from jwcrypto.jwa import JWA
-from jwcrypto.jwk import JWK
+from jwcrypto.jwk import JWK, JWKSet
 
 JWSHeaderRegistry = {
     'alg': JWSEHeaderParameter('Algorithm', False, True, None),
@@ -99,8 +99,9 @@ class JWSCore:
 
         :param alg: The algorithm used to produce the signature.
             See RFC 7518
-        :param key: A (:class:`jwcrypto.jwk.JWK`) key of appropriate
-            type for the "alg" provided in the 'protected' json string.
+        :param key: A (:class:`jwcrypto.jwk.JWK`) verification or
+         a (:class:`jwcrypto.jwk.JWKSet`) that contains a key indexed by the
+         'kid' header. A JWKSet is allowed only for verification operations.
         :param header: A JSON string representing the protected header.
         :param payload(bytes): An arbitrary value
         :param algs: An optional list of allowed algorithms
@@ -112,8 +113,6 @@ class JWSCore:
         """
         self.alg = alg
         self.engine = self._jwa(alg, algs)
-        if not isinstance(key, JWK):
-            raise ValueError('key is not a JWK object')
         self.key = key
 
         if header is not None:
@@ -126,7 +125,7 @@ class JWSCore:
         else:
             self.header = {}
             self.protected = ''
-        self.payload = payload
+        self.payload = self._payload(payload)
 
     def _jwa(self, name, allowed):
         if allowed is None:
@@ -135,22 +134,24 @@ class JWSCore:
             raise InvalidJWSOperation('Algorithm not allowed')
         return JWA.signing_alg(name)
 
-    def _payload(self):
+    def _payload(self, payload):
         if self.header.get('b64', True):
-            return base64url_encode(self.payload).encode('utf-8')
+            return base64url_encode(payload).encode('utf-8')
         else:
-            if isinstance(self.payload, bytes):
-                return self.payload
+            if isinstance(payload, bytes):
+                return payload
             else:
-                return self.payload.encode('utf-8')
+                return payload.encode('utf-8')
 
     def sign(self):
         """Generates a signature"""
-        payload = self._payload()
-        sigin = b'.'.join([self.protected.encode('utf-8'), payload])
+        if not isinstance(self.key, JWK):
+            raise ValueError('key is not a JWK object')
+        sigin = b'.'.join([self.protected.encode('utf-8'),
+                           self.payload])
         signature = self.engine.sign(self.key, sigin)
         return {'protected': self.protected,
-                'payload': payload,
+                'payload': self.payload,
                 'signature': base64url_encode(signature)}
 
     def verify(self, signature):
@@ -162,8 +163,8 @@ class JWSCore:
         :rtype: `bool`
         """
         try:
-            payload = self._payload()
-            sigin = b'.'.join([self.protected.encode('utf-8'), payload])
+            sigin = b'.'.join([self.protected.encode('utf-8'),
+                               self.payload])
             self.engine.verify(self.key, sigin, signature)
         except Exception as e:  # pylint: disable=broad-except
             raise InvalidJWSSignature('Verification failed') from e
@@ -254,7 +255,6 @@ class JWS:
 
         return header
 
-    # TODO: support selecting key with 'kid' and passing in multiple keys
     def _verify(self, alg, key, payload, signature, protected, header=None):
         p = {}
         # verify it is a valid JSON object and decode
@@ -288,8 +288,33 @@ class JWS:
 
         # the following will verify the "alg" is supported and the signature
         # verifies
-        c = JWSCore(a, key, protected, payload, self._allowed_algs)
-        c.verify(signature)
+        if isinstance(key, JWK):
+            c = JWSCore(a, key, protected, payload, self._allowed_algs)
+            c.verify(signature)
+            self.verifylog.append("Success")
+        elif isinstance(key, JWKSet):
+            keys = key
+            if 'kid' in self.jose_header:
+                kid_keys = key.get_keys(self.jose_header['kid'])
+                if not kid_keys:
+                    raise ValueError('Key ID {} not in key set'.format(
+                                     self.jose_header['kid']))
+                keys = kid_keys
+
+            for k in keys:
+                try:
+                    c = JWSCore(a, k, protected, payload, self._allowed_algs)
+                    c.verify(signature)
+                    self.verifylog.append("Success")
+                    break
+                except Exception as e:  # pylint: disable=broad-except
+                    keyid = k.get('kid', k.thumbprint())
+                    self.verifylog.append('Key [{}] failed: [{}]'.format(
+                                          keyid, repr(e)))
+            if "Success" not in self.verifylog:
+                raise ValueError('No working key found in key set')
+        else:
+            raise ValueError("Unrecognized key type")
 
     # Helper to deal with detached payloads in verification
     def _get_obj_payload(self, obj, dp):
@@ -305,7 +330,9 @@ class JWS:
     def verify(self, key, alg=None, detached_payload=None):
         """Verifies a JWS token.
 
-        :param key: The (:class:`jwcrypto.jwk.JWK`) verification key.
+        :param key: A (:class:`jwcrypto.jwk.JWK`) verification or
+         a (:class:`jwcrypto.jwk.JWKSet`) that contains a key indexed by the
+         'kid' header.
         :param alg: The signing algorithm (optional). Usually the algorithm
             is known as it is provided with the JOSE Headers of the token.
         :param detached_payload: A detached payload to verify the signature
@@ -320,8 +347,8 @@ class JWS:
         self.objects['valid'] = False
         obj = self.objects
         if 'signature' in obj:
+            payload = self._get_obj_payload(obj, detached_payload)
             try:
-                payload = self._get_obj_payload(obj, detached_payload)
                 self._verify(alg, key,
                              payload,
                              obj['signature'],
@@ -332,9 +359,9 @@ class JWS:
                 self.verifylog.append('Failed: [%s]' % repr(e))
 
         elif 'signatures' in obj:
+            payload = self._get_obj_payload(obj, detached_payload)
             for o in obj['signatures']:
                 try:
-                    payload = self._get_obj_payload(obj, detached_payload)
                     self._verify(alg, key,
                                  payload,
                                  o['signature'],
@@ -383,11 +410,14 @@ class JWS:
         NOTE: Destroys any current status and tries to import the raw
         JWS provided.
 
+        If a key is provided a verification step will be attempted after
+        the object is successfully deserialized.
+
         :param raw_jws: a 'raw' JWS token (JSON Encoded or Compact
          notation) string.
-        :param key: A (:class:`jwcrypto.jwk.JWK`) verification key (optional).
-         If a key is provided a verification step will be attempted after
-         the object is successfully deserialized.
+        :param key: A (:class:`jwcrypto.jwk.JWK`) verification or
+         a (:class:`jwcrypto.jwk.JWKSet`) that contains a key indexed by the
+         'kid' header (optional).
         :param alg: The signing algorithm (optional). Usually the algorithm
          is known as it is provided with the JOSE Headers of the token.
 
