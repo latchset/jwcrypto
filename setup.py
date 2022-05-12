@@ -2,6 +2,7 @@
 #
 # Copyright (C) 2015  JWCrypto Project Contributors, see  LICENSE file
 
+import os
 from setuptools import setup
 
 # read the contents of your README file
@@ -9,9 +10,13 @@ from pathlib import Path
 this_directory = Path(__file__).parent
 long_description = (this_directory / "README.md").read_text()
 
+version = None
+with open(os.path.join('jwcrypto', 'VERSION')) as verfile:
+    version = verfile.read().strip()
+
 setup(
     name = 'jwcrypto',
-    version = '1.2',
+    version = version,
     license = 'LGPLv3+',
     maintainer = 'JWCrypto Project Contributors',
     maintainer_email = 'simo@redhat.com',
