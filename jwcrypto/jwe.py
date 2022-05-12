@@ -8,6 +8,7 @@ from jwcrypto.common import JWSEHeaderParameter, JWSEHeaderRegistry
 from jwcrypto.common import base64url_decode, base64url_encode
 from jwcrypto.common import json_decode, json_encode
 from jwcrypto.jwa import JWA
+from jwcrypto.jwk import JWKSet
 
 
 # RFC 7516 - 4.1
@@ -358,6 +359,14 @@ class JWE:
                     raise InvalidJWEData('Unsupported critical header: '
                                          '"%s"' % k)
 
+    def _unwrap_decrypt(self, alg, enc, key, enckey, header,
+                        aad, iv, ciphertext, tag):
+        cek = alg.unwrap(key, enc.wrap_key_size, enckey, header)
+        data = enc.decrypt(cek, aad, iv, ciphertext, tag)
+        self.decryptlog.append('Success')
+        self.cek = cek
+        return data
+
     # FIXME: allow to specify which algorithms to accept as valid
     def _decrypt(self, key, ppe):
 
@@ -377,16 +386,38 @@ class JWE:
         aad = base64url_encode(self.objects.get('protected', ''))
         if 'aad' in self.objects:
             aad += '.' + base64url_encode(self.objects['aad'])
+        aad = aad.encode('utf-8')
 
-        cek = alg.unwrap(key, enc.wrap_key_size,
-                         ppe.get('encrypted_key', b''), jh)
-        data = enc.decrypt(cek, aad.encode('utf-8'),
-                           self.objects['iv'],
-                           self.objects['ciphertext'],
-                           self.objects['tag'])
+        if isinstance(key, JWKSet):
+            keys = key
+            if 'kid' in self.jose_header:
+                kid_keys = key.get_keys(self.jose_header['kid'])
+                if not kid_keys:
+                    raise ValueError('Key ID {} not in key set'.format(
+                                     self.jose_header['kid']))
+                keys = kid_keys
 
-        self.decryptlog.append('Success')
-        self.cek = cek
+            for k in keys:
+                try:
+                    data = self._unwrap_decrypt(alg, enc, k,
+                                                ppe.get('encrypted_key', b''),
+                                                jh, aad, self.objects['iv'],
+                                                self.objects['ciphertext'],
+                                                self.objects['tag'])
+                    break
+                except Exception as e:  # pylint: disable=broad-except
+                    keyid = k.get('kid', k.thumbprint())
+                    self.decryptlog.append('Key [{}] failed: [{}]'.format(
+                                           keyid, repr(e)))
+
+            if "Success" not in self.decryptlog:
+                raise ValueError('No working key found in key set')
+        else:
+            data = self._unwrap_decrypt(alg, enc, key,
+                                        ppe.get('encrypted_key', b''),
+                                        jh, aad, self.objects['iv'],
+                                        self.objects['ciphertext'],
+                                        self.objects['tag'])
 
         compress = jh.get('zip', None)
         if compress == 'DEF':
@@ -400,8 +431,9 @@ class JWE:
         """Decrypt a JWE token.
 
         :param key: The (:class:`jwcrypto.jwk.JWK`) decryption key.
-        :param key: A (:class:`jwcrypto.jwk.JWK`) decryption key or a password
-         string (optional).
+        :param key: A (:class:`jwcrypto.jwk.JWK`) decryption key,
+         or a (:class:`jwcrypto.jwk.JWKSet`) that contains a key indexed
+         by the 'kid' header or (deprecated) a string containing a password.
 
         :raises InvalidJWEOperation: if the key is not a JWK object.
         :raises InvalidJWEData: if the ciphertext can't be decrypted or
@@ -434,12 +466,15 @@ class JWE:
         NOTE: Destroys any current status and tries to import the raw
         JWE provided.
 
+        If a key is provided a decryption step will be attempted after
+        the object is successfully deserialized.
+
         :param raw_jwe: a 'raw' JWE token (JSON Encoded or Compact
          notation) string.
-        :param key: A (:class:`jwcrypto.jwk.JWK`) decryption key or a password
-         string (optional).
-         If a key is provided a decryption step will be attempted after
-         the object is successfully deserialized.
+        :param key: A (:class:`jwcrypto.jwk.JWK`) decryption key,
+         or a (:class:`jwcrypto.jwk.JWKSet`) that contains a key indexed
+         by the 'kid' header or (deprecated) a string containing a password
+         (optional).
 
         :raises InvalidJWEData: if the raw object is an invalid JWE token.
         :raises InvalidJWEOperation: if the decryption fails.
