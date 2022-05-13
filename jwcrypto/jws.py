@@ -106,7 +106,7 @@ class JWSCore:
         :param payload(bytes): An arbitrary value
         :param algs: An optional list of allowed algorithms
 
-        :raises ValueError: if the key is not a :class:`JWK` object
+        :raises ValueError: if the key is not a (:class:`jwcrypto.jwk.JWK`)
         :raises InvalidJWAAlgorithm: if the algorithm is not valid, is
             unknown or otherwise not yet implemented.
         :raises InvalidJWSOperation: if the algorithm is not allowed.
@@ -477,7 +477,7 @@ class JWS:
         :param header: The Unprotected Header (optional)
 
         :raises InvalidJWSObject: if invalid headers are provided.
-        :raises ValueError: if the key is not a :class:`JWK` object.
+        :raises ValueError: if the key is not a (:class:`jwcrypto.jwk.JWK`)
         :raises ValueError: if the algorithm is missing or is not provided
          by one of the headers.
         :raises InvalidJWAAlgorithm: if the algorithm is not valid, is

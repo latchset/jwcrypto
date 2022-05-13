@@ -274,7 +274,7 @@ class JWK(dict):
     """
 
     def __init__(self, **kwargs):
-        """Creates a new JWK object.
+        r"""Creates a new JWK object.
 
         The function arguments must be valid parameters as defined in the
         'IANA JSON Web Key Set Parameters registry' and specified in
@@ -298,6 +298,8 @@ class JWK(dict):
         Alternatively if the 'generate' parameter is provided with a
         valid key type as value then a new key will be generated according
         to the defaults or provided key strength options (type specific).
+
+        :param \**kwargs: parameters (otional).
 
         :raises InvalidJWKType: if the key type is invalid
         :raises InvalidJWKValue: if incorrect or inconsistent parameters
@@ -1107,6 +1109,10 @@ class JWK(dict):
         super(JWK, self).__setitem__(item, value)
 
     def update(self, *args, **kwargs):
+        r"""
+        :param \*args: arguments
+        :param \**kwargs: keyword arguments
+        """
         for k, v in dict(*args, **kwargs).items():
             self.__setitem__(k, v)
 
@@ -1233,6 +1239,10 @@ class JWKSet(dict):
             super(JWKSet, self).__setitem__(key, val)
 
     def update(self, *args, **kwargs):
+        r"""
+        :param \*args: arguments
+        :param \**kwargs: keyword arguments
+        """
         for k, v in dict(*args, **kwargs).items():
             self.__setitem__(k, v)
 
