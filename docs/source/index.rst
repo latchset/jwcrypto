@@ -24,6 +24,7 @@ Contents:
    jws
    jwe
    jwt
+   common
 
 
 Note: In the examples, random or generated output values are replaced
