@@ -126,6 +126,22 @@ class InvalidJWSERegOperation(JWException):
         super(InvalidJWSERegOperation, self).__init__(msg)
 
 
+class JWKeyNotFound(JWException):
+    """The key needed to complete the operation was not found.
+
+    This exception is raised when a JWKSet is used to perform
+    some operation and the key required to successfully complete
+    the operation is not found.
+    """
+
+    def __init__(self, message=None):
+        if message:
+            msg = message
+        else:
+            msg = 'Key Not Found'
+        super(JWKeyNotFound, self).__init__(msg)
+
+
 # JWSE Header Registry definitions
 
 # RFC 7515 - 9.1: JSON Web Signature and Encryption Header Parameters Registry

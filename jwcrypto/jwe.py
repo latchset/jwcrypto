@@ -3,7 +3,7 @@
 import zlib
 
 from jwcrypto import common
-from jwcrypto.common import JWException
+from jwcrypto.common import JWException, JWKeyNotFound
 from jwcrypto.common import JWSEHeaderParameter, JWSEHeaderRegistry
 from jwcrypto.common import base64url_decode, base64url_encode
 from jwcrypto.common import json_decode, json_encode
@@ -393,8 +393,8 @@ class JWE:
             if 'kid' in self.jose_header:
                 kid_keys = key.get_keys(self.jose_header['kid'])
                 if not kid_keys:
-                    raise ValueError('Key ID {} not in key set'.format(
-                                     self.jose_header['kid']))
+                    raise JWKeyNotFound('Key ID {} not in key set'.format(
+                                        self.jose_header['kid']))
                 keys = kid_keys
 
             for k in keys:
@@ -404,6 +404,7 @@ class JWE:
                                                 jh, aad, self.objects['iv'],
                                                 self.objects['ciphertext'],
                                                 self.objects['tag'])
+                    self.decryptlog.append("Success")
                     break
                 except Exception as e:  # pylint: disable=broad-except
                     keyid = k.get('kid', k.thumbprint())
@@ -411,7 +412,7 @@ class JWE:
                                            keyid, repr(e)))
 
             if "Success" not in self.decryptlog:
-                raise ValueError('No working key found in key set')
+                raise JWKeyNotFound('No working key found in key set')
         else:
             data = self._unwrap_decrypt(alg, enc, key,
                                         ppe.get('encrypted_key', b''),
@@ -438,25 +439,33 @@ class JWE:
         :raises InvalidJWEOperation: if the key is not a JWK object.
         :raises InvalidJWEData: if the ciphertext can't be decrypted or
          the object is otherwise malformed.
+        :raises JWKeyNotFound: if key is a JWKSet and the key is not found.
         """
 
         if 'ciphertext' not in self.objects:
             raise InvalidJWEOperation("No available ciphertext")
         self.decryptlog = []
+        missingkey = False
 
         if 'recipients' in self.objects:
             for rec in self.objects['recipients']:
                 try:
                     self._decrypt(key, rec)
                 except Exception as e:  # pylint: disable=broad-except
+                    if isinstance(e, JWKeyNotFound):
+                        missingkey = True
                     self.decryptlog.append('Failed: [%s]' % repr(e))
         else:
             try:
                 self._decrypt(key, self.objects)
             except Exception as e:  # pylint: disable=broad-except
+                if isinstance(e, JWKeyNotFound):
+                    missingkey = True
                 self.decryptlog.append('Failed: [%s]' % repr(e))
 
         if not self.plaintext:
+            if missingkey:
+                raise JWKeyNotFound("Key Not found in JWKSet")
             raise InvalidJWEData('No recipient matched the provided '
                                  'key' + repr(self.decryptlog))
 
