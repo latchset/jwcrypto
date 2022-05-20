@@ -36,3 +36,6 @@ Exceptions
 
 .. autoclass:: jwcrypto.common.InvalidJWSERegOperation
    :show-inheritance:
+
+.. autoclass:: jwcrypto.common.JWKeyNotFound
+   :show-inheritance:

@@ -1,6 +1,6 @@
 # Copyright (C) 2015 JWCrypto Project Contributors - see LICENSE file
 
-from jwcrypto.common import JWException
+from jwcrypto.common import JWException, JWKeyNotFound
 from jwcrypto.common import JWSEHeaderParameter, JWSEHeaderRegistry
 from jwcrypto.common import base64url_decode, base64url_encode
 from jwcrypto.common import json_decode, json_encode
@@ -297,8 +297,8 @@ class JWS:
             if 'kid' in self.jose_header:
                 kid_keys = key.get_keys(self.jose_header['kid'])
                 if not kid_keys:
-                    raise ValueError('Key ID {} not in key set'.format(
-                                     self.jose_header['kid']))
+                    raise JWKeyNotFound('Key ID {} not in key set'.format(
+                                        self.jose_header['kid']))
                 keys = kid_keys
 
             for k in keys:
@@ -312,7 +312,7 @@ class JWS:
                     self.verifylog.append('Key [{}] failed: [{}]'.format(
                                           keyid, repr(e)))
             if "Success" not in self.verifylog:
-                raise ValueError('No working key found in key set')
+                raise JWKeyNotFound('No working key found in key set')
         else:
             raise ValueError("Unrecognized key type")
 
@@ -341,11 +341,13 @@ class JWS:
         :raises InvalidJWSSignature: if the verification fails.
         :raises InvalidJWSOperation: if a detached_payload is provided but
                                      an object payload exists
+        :raises JWKeyNotFound: if key is a JWKSet and the key is not found.
         """
 
         self.verifylog = []
         self.objects['valid'] = False
         obj = self.objects
+        missingkey = False
         if 'signature' in obj:
             payload = self._get_obj_payload(obj, detached_payload)
             try:
@@ -356,6 +358,8 @@ class JWS:
                              obj.get('header', None))
                 obj['valid'] = True
             except Exception as e:  # pylint: disable=broad-except
+                if isinstance(e, JWKeyNotFound):
+                    missingkey = True
                 self.verifylog.append('Failed: [%s]' % repr(e))
 
         elif 'signatures' in obj:
@@ -370,11 +374,15 @@ class JWS:
                     # Ok if at least one verifies
                     obj['valid'] = True
                 except Exception as e:  # pylint: disable=broad-except
+                    if isinstance(e, JWKeyNotFound):
+                        missingkey = True
                     self.verifylog.append('Failed: [%s]' % repr(e))
         else:
             raise InvalidJWSSignature('No signatures available')
 
         if not self.is_valid:
+            if missingkey:
+                raise JWKeyNotFound('No working key found in key set')
             raise InvalidJWSSignature('Verification failed for all '
                                       'signatures' + repr(self.verifylog))
 
@@ -423,6 +431,7 @@ class JWS:
 
         :raises InvalidJWSObject: if the raw object is an invalid JWS token.
         :raises InvalidJWSSignature: if the verification fails.
+        :raises JWKeyNotFound: if key is a JWKSet and the key is not found.
         """
         self.objects = {}
         o = {}

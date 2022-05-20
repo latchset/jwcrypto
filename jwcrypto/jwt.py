@@ -6,7 +6,8 @@ import uuid
 
 from deprecated import deprecated
 
-from jwcrypto.common import JWException, json_decode, json_encode
+from jwcrypto.common import JWException, JWKeyNotFound
+from jwcrypto.common import json_decode, json_encode
 from jwcrypto.jwe import JWE
 from jwcrypto.jws import JWS
 
@@ -127,8 +128,7 @@ class JWTMissingKeyID(JWException):
         super(JWTMissingKeyID, self).__init__(msg)
 
 
-@deprecated
-class JWTMissingKey(JWException):
+class JWTMissingKey(JWKeyNotFound):
     """JSON Web Token is using a key not in the key set.
 
     This exception is raised if the key that was used is not available
@@ -515,6 +515,8 @@ class JWT:
                 self.deserializelog = self.token.decryptlog
             self.deserializelog.append(
                 'Validation failed: [{}]'.format(repr(e)))
+            if isinstance(e, JWKeyNotFound):
+                raise JWTMissingKey() from e
             raise
 
         self.header = self.token.jose_header

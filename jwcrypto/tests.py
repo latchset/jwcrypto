@@ -15,6 +15,7 @@ from jwcrypto import jwk
 from jwcrypto import jws
 from jwcrypto import jwt
 from jwcrypto.common import InvalidJWSERegOperation
+from jwcrypto.common import JWKeyNotFound
 from jwcrypto.common import JWSEHeaderParameter
 from jwcrypto.common import base64url_decode, base64url_encode
 from jwcrypto.common import json_decode, json_encode
@@ -1007,6 +1008,25 @@ class TestJWS(unittest.TestCase):
 
         self.assertEqual(header, header_copy)
 
+    def test_decrypt_keyset(self):
+        ks = jwk.JWKSet()
+        key1 = jwk.JWK.generate(kty='oct', alg='HS256', kid='key1')
+        key2 = jwk.JWK.generate(kty='oct', alg='HS384', kid='key2')
+        key3 = jwk.JWK.generate(kty='oct', alg='HS512', kid='key3')
+        ks.add(key1)
+        ks.add(key2)
+        s1 = jws.JWS(payload=b'secret')
+        s1.add_signature(key1, protected='{"alg":"HS256"}')
+        s2 = jws.JWS()
+        s2.deserialize(s1.serialize(), ks)
+        self.assertEqual(s2.payload, b'secret')
+
+        s3 = jws.JWS(payload=b'secret')
+        s3.add_signature(key3, protected='{"alg":"HS256"}')
+        s4 = jws.JWS()
+        with self.assertRaises(JWKeyNotFound):
+            s4.deserialize(s3.serialize(), ks)
+
 
 E_A1_plaintext = \
     [84, 104, 101, 32, 116, 114, 117, 101, 32, 115, 105, 103, 110, 32,
@@ -1330,6 +1350,25 @@ class TestJWE(unittest.TestCase):
             e2.deserialize(enc, x25519key)
             self.assertEqual(e2.payload, plaintext)
 
+    def test_decrypt_keyset(self):
+        ks = jwk.JWKSet()
+        key1 = jwk.JWK.generate(kty='oct', alg='A128KW', kid='key1')
+        key2 = jwk.JWK.generate(kty='oct', alg='A192KW', kid='key2')
+        key3 = jwk.JWK.generate(kty='oct', alg='A256KW', kid='key3')
+        ks.add(key1)
+        ks.add(key2)
+        e1 = jwe.JWE(plaintext=b'secret')
+        e1.add_recipient(key1, '{"alg":"A128KW","enc":"A128GCM"}')
+        e2 = jwe.JWE()
+        e2.deserialize(e1.serialize(), ks)
+        self.assertEqual(e2.payload, b'secret')
+
+        e3 = jwe.JWE(plaintext=b'secret')
+        e3.add_recipient(key3, '{"alg":"A256KW","enc":"A256GCM"}')
+        e4 = jwe.JWE()
+        with self.assertRaises(JWKeyNotFound):
+            e4.deserialize(e3.serialize(), ks)
+
 
 MMA_vector_key = jwk.JWK(**E_A2_key)
 MMA_vector_ok_cek =  \
@@ -1500,7 +1539,7 @@ class TestJWT(unittest.TestCase):
         t.make_encrypted_token(key)
         token = t.serialize()
         # try to decrypt without a matching key
-        self.assertRaises(Exception, jwt.JWT, jwt=token, key=keyset,
+        self.assertRaises(jwt.JWTMissingKey, jwt.JWT, jwt=token, key=keyset,
                           algs=jwe_algs_and_rsa1_5,
                           check_claims={'exp': 1300819380})
         # now decrypt with key
@@ -1514,7 +1553,8 @@ class TestJWT(unittest.TestCase):
         t = jwt.JWT(header, A1_claims, algs=jwe_algs_and_rsa1_5)
         t.make_encrypted_token(key)
         token = t.serialize()
-        self.assertRaises(Exception, jwt.JWT, jwt=token, key=keyset)
+        self.assertRaises(jwt.JWTMissingKey, jwt.JWT, jwt=token, key=keyset,
+                          algs=jwe_algs_and_rsa1_5)
 
         keyset = jwk.JWKSet.from_json(json_encode(PrivateKeys))
         # encrypt a new JWT with no kid
@@ -1523,7 +1563,7 @@ class TestJWT(unittest.TestCase):
         t.make_encrypted_token(key)
         token = t.serialize()
         # try to decrypt without a matching key
-        self.assertRaises(Exception, jwt.JWT, jwt=token, key=keyset,
+        self.assertRaises(jwt.JWTMissingKey, jwt.JWT, jwt=token, key=keyset,
                           algs=jwe_algs_and_rsa1_5,
                           check_claims={'exp': 1300819380})
         # now decrypt with key
@@ -1546,7 +1586,7 @@ class TestJWT(unittest.TestCase):
         token = t.serialize()
 
         # try to decrypt without a matching key
-        with self.assertRaises(Exception):
+        with self.assertRaises(jwt.JWTMissingKey):
             jwt.JWT(jwt=token, key=keyset, algs=jwe_algs_and_rsa1_5,
                     check_claims={'exp': 1300819380})
 
