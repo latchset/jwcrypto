@@ -5,7 +5,7 @@ The jwe Module implements the `JSON Web Encryption`_ standard.
 A JSON Web Encryption is represented by a JWE object, related utility
 classes and functions are available in this module too.
 
-.. _JSON Web Encryption: https://tools.ietf.org/html/rfc7516
+.. _JSON Web Encryption: https://datatracker.ietf.org/doc/rfc7516/
 
 Classes
 -------
