@@ -5,7 +5,7 @@ The jws Module implements the `JSON Web Signature`_ standard.
 A JSON Web Signature is represented by a JWS object, related utility
 classes and functions are available in this module too.
 
-.. _JSON Web Signature: http://tools.ietf.org/html/rfc7515
+.. _JSON Web Signature: https://datatracker.ietf.org/doc/rfc7515/
 
 Classes
 -------
