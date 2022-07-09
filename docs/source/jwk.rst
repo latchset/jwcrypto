@@ -5,7 +5,7 @@ The jwk Module implements the `JSON Web Key`_ standard.
 A JSON Web Key is represented by a JWK object, related utility classes and
 functions are available in this module too.
 
-.. _JSON Web Key: http://tools.ietf.org/html/rfc7517
+.. _JSON Web Key: https://datatracker.ietf.org/doc/rfc7517/
 
 Classes
 -------
