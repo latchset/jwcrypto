@@ -188,6 +188,24 @@ JWKpycaCurveMap = {'secp256r1': 'P-256',
                    'secp521r1': 'P-521',
                    'secp256k1': 'secp256k1'}
 
+IANANamedInformationHashAlgorithmRegistry = {
+    'sha-256': hashes.SHA256(),
+    'sha-256-128': None,
+    'sha-256-120': None,
+    'sha-256-96': None,
+    'sha-256-64': None,
+    'sha-256-32': None,
+    'sha-384': hashes.SHA384(),
+    'sha-512': hashes.SHA512(),
+    'sha3-224': hashes.SHA3_224(),
+    'sha3-256': hashes.SHA3_256(),
+    'sha3-384': hashes.SHA3_384(),
+    'sha3-512': hashes.SHA3_512(),
+    'blake2s-256': hashes.BLAKE2s(32),
+    'blake2b-256': None,  # pyca supports only 64 bytes for BLAKEb
+    'blake2b-512': hashes.BLAKE2b(64),
+}
+
 
 class InvalidJWKType(JWException):
     """Invalid JWK Type Exception.
@@ -1049,6 +1067,28 @@ class JWK(dict):
         digest = hashes.Hash(hashalg, backend=default_backend())
         digest.update(bytes(json_encode(t).encode('utf8')))
         return base64url_encode(digest.finalize())
+
+    def thumbprint_uri(self, hname='sha-256'):
+        """Returns the key thumbprint URI as specified by RFC 9278.
+
+        :param hname: A hash function name as specified in IANA's
+         Named Information registry:
+         https://www.iana.org/assignments/named-information/
+         Values from `IANANamedInformationHashAlgorithmRegistry`
+
+        :return: A JWK Thumbprint URI
+        :rtype: `str`
+        """
+
+        try:
+            h = IANANamedInformationHashAlgorithmRegistry[hname]
+        except KeyError as e:
+            raise InvalidJWKValue('Unknown hash "{}"'.format(hname)) from e
+        if h is None:
+            raise InvalidJWKValue('Unsupported hash "{}"'.format(hname))
+
+        t = self.thumbprint(h)
+        return "urn:ietf:params:oauth:jwk-thumbprint:{}:{}".format(hname, t)
 
     # Methods to constrain what this dict allows
     def __setitem__(self, item, value):
