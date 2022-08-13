@@ -642,6 +642,13 @@ class TestJWK(unittest.TestCase):
         verify.verify(pub_k.public())
         self.assertEqual(verify.payload, payload)
 
+    def test_thumbprint_uri(self):
+        k = jwk.JWK(**PublicKeys['keys'][1])
+        self.assertEqual(
+            k.thumbprint_uri(),
+            "urn:ietf:params:oauth:jwk-thumbprint:sha-256:{}".format(
+                PublicKeys['thumbprints'][1]))
+
 
 # RFC 7515 - A.1
 A1_protected = \
