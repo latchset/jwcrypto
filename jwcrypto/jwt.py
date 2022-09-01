@@ -9,6 +9,7 @@ from deprecated import deprecated
 from jwcrypto.common import JWException, JWKeyNotFound
 from jwcrypto.common import json_decode, json_encode
 from jwcrypto.jwe import JWE
+from jwcrypto.jwe import default_allowed_algs as jwe_algs
 from jwcrypto.jws import JWS
 
 
@@ -153,7 +154,8 @@ class JWT:
     """
 
     def __init__(self, header=None, claims=None, jwt=None, key=None,
-                 algs=None, default_claims=None, check_claims=None):
+                 algs=None, default_claims=None, check_claims=None,
+                 expected_type=None):
         """Creates a JWT object.
 
         :param header: A dict or a JSON string with the JWT Header data.
@@ -169,6 +171,12 @@ class JWT:
         :param check_claims: An optional dict of claims that must be
          present in the token, if the value is not None the claim must
          match exactly.
+        :param expected_type: An optional string that defines what kind
+         of token to expect when validating a deserialized token.
+         Supported values: "JWS" or "JWE"
+         If left to None the code will try to detect what the expected
+         type is based on other parameters like 'algs' and will default
+         to JWS if no hints are found. It has no effect on token creation.
 
         Note: either the header,claims or jwt,key parameters should be
         provided as a deserialization operation (which occurs if the jwt
@@ -190,6 +198,7 @@ class JWT:
         self._leeway = 60  # 1 minute clock skew allowed
         self._validity = 600  # 10 minutes validity (up to 11 with leeway)
         self.deserializelog = None
+        self._expected_type = expected_type
 
         if header:
             self.header = header
@@ -275,6 +284,33 @@ class JWT:
     @validity.setter
     def validity(self, v):
         self._validity = int(v)
+
+    @property
+    def expected_type(self):
+        if self._expected_type is not None:
+            return self._expected_type
+
+        # If no expected type is set we default to accept only JWSs,
+        # however to improve backwards compatibility we try some
+        # heuristic to see if there has been strong indication of
+        # what the expected token type is.
+        if self._expected_type is None and self._algs:
+            if set(self._algs).issubset(jwe_algs + ['RSA1_5']):
+                self._expected_type = "JWE"
+        if self._expected_type is None and self._header:
+            if "enc" in json_decode(self._header):
+                self._expected_type = "JWE"
+        if self._expected_type is None:
+            self._expected_type = "JWS"
+
+        return self._expected_type
+
+    @expected_type.setter
+    def expected_type(self, v):
+        if v in ["JWS", "JWE"]:
+            self._expected_type = v
+        else:
+            raise ValueError("Invalid value, must be 'JWS' or 'JWE'")
 
     def _add_optional_claim(self, name, claims):
         if name in claims:
@@ -472,6 +508,7 @@ class JWT:
             t.allowed_algs = self._algs
         t.add_signature(key, protected=self.header)
         self.token = t
+        self._expected_type = "JWS"
 
     def make_encrypted_token(self, key):
         """Encrypts the payload.
@@ -488,6 +525,7 @@ class JWT:
             t.allowed_algs = self._algs
         t.add_recipient(key)
         self.token = t
+        self._expected_type = "JWE"
 
     def validate(self, key):
         """Validate a JWT token that was deserialized w/o providing a key
@@ -500,13 +538,23 @@ class JWT:
         if self.token is None:
             raise ValueError("Token empty")
 
+        et = self.expected_type
+        validate_fn = None
+
+        if isinstance(self.token, JWS):
+            if et != "JWS":
+                raise TypeError("Expected {}, got JWS".format(et))
+            validate_fn = self.token.verify
+        elif isinstance(self.token, JWE):
+            if et != "JWE":
+                print("algs: {}".format(self._algs))
+                raise TypeError("Expected {}, got JWE".format(et))
+            validate_fn = self.token.decrypt
+        else:
+            raise ValueError("Token format unrecognized")
+
         try:
-            if isinstance(self.token, JWS):
-                self.token.verify(key)
-            elif isinstance(self.token, JWE):
-                self.token.decrypt(key)
-            else:
-                raise ValueError("Token format unrecognized")
+            validate_fn(key)
             self.deserializelog.append("Success")
         except Exception as e:  # pylint: disable=broad-except
             if isinstance(self.token, JWS):
@@ -520,7 +568,10 @@ class JWT:
             raise
 
         self.header = self.token.jose_header
-        self.claims = self.token.payload.decode('utf-8')
+        payload = self.token.payload
+        if isinstance(payload, bytes):
+            payload = payload.decode('utf-8')
+        self.claims = payload
         self._check_provided_claims()
 
     def deserialize(self, jwt, key=None):

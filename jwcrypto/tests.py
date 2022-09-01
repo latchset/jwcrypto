@@ -21,7 +21,6 @@ from jwcrypto.common import base64url_decode, base64url_encode
 from jwcrypto.common import json_decode, json_encode
 
 jwe_algs_and_rsa1_5 = jwe.default_allowed_algs + ['RSA1_5']
-jws_algs_and_rsa1_5 = jws.default_allowed_algs + ['RSA1_5']
 
 # RFC 7517 - A.1
 PublicKeys = {"keys": [
@@ -1531,9 +1530,11 @@ class TestJWT(unittest.TestCase):
         tinner = jwt.JWT(jwt=touter.claims, key=sigkey, check_claims=False)
         self.assertEqual(A1_claims, json_decode(tinner.claims))
 
+        # Test Exception throwing when token is encrypted with
+        # algorithms not in the allowed set
         with self.assertRaises(jwe.InvalidJWEData):
             jwt.JWT(jwt=A2_token, key=E_A2_ex['key'],
-                    algs=jws_algs_and_rsa1_5)
+                    algs=['A192KW', 'A192CBC-HS384', 'RSA1_5'])
 
     def test_decrypt_keyset(self):
         key = jwk.JWK(kid='testkey', **E_A2_key)
@@ -1737,6 +1738,43 @@ class TestJWT(unittest.TestCase):
         self.assertRaises(jwt.JWTInvalidClaimValue, jwt.JWT, key=key,
                           jwt=sertok, check_claims={"aud": ["nomatch",
                                                             "failmatch"]})
+
+    def test_unexpected(self):
+        key = jwk.JWK(generate='oct', size=256)
+        claims = {"testclaim": "test"}
+        token = jwt.JWT(header={"alg": "HS256"}, claims=claims)
+        token.make_signed_token(key)
+        sertok = token.serialize()
+
+        token.validate(key)
+        token.expected_type = "JWS"
+        token.validate(key)
+        token.expected_type = "JWE"
+        with self.assertRaises(TypeError):
+            token.validate(key)
+
+        jwt.JWT(jwt=sertok, key=key)
+        jwt.JWT(jwt=sertok, key=key, expected_type='JWS')
+        with self.assertRaises(TypeError):
+            jwt.JWT(jwt=sertok, key=key, expected_type='JWE')
+
+        token = jwt.JWT(header={"alg": "A256KW", "enc": "A256GCM"},
+                        claims=claims)
+        token.make_encrypted_token(key)
+        enctok = token.serialize()
+
+        token.validate(key)
+        token.expected_type = "JWE"
+        token.validate(key)
+        token.expected_type = "JWS"
+        with self.assertRaises(TypeError):
+            token.validate(key)
+
+        jwt.JWT(jwt=enctok, key=key, expected_type='JWE')
+        with self.assertRaises(TypeError):
+            jwt.JWT(jwt=enctok, key=key)
+        with self.assertRaises(TypeError):
+            jwt.JWT(jwt=enctok, key=key, expected_type='JWS')
 
 
 class ConformanceTests(unittest.TestCase):
@@ -2107,6 +2145,7 @@ class TestOverloadedOperators(unittest.TestCase):
 
         ect = jwt.JWT.from_jose_token(ea.serialize())
         self.assertNotEqual(ea, ect)
+        ect.expected_type = "JWE"
         ect.validate(key)
         self.assertEqual(ea, ect)
 
