@@ -22,6 +22,17 @@ JWTClaimsRegistry = {'iss': 'Issuer',
                      'nbf': 'Not Before',
                      'iat': 'Issued At',
                      'jti': 'JWT ID'}
+"""Registry of RFC 7519 defined claims"""
+
+
+# do not use this unless you know about CVE-2022-3102
+JWT_expect_type = True
+"""This module parameter can disable the use of the expectation
+   feature that has been introduced to fix CVE-2022-3102. This knob
+   has been added as a workaround for applications that can't be
+   immediately refactored to deal with the change in behavior but it
+   is considered deprecated and will be removed in a future release.
+"""
 
 
 class JWTExpired(JWException):
@@ -542,11 +553,11 @@ class JWT:
         validate_fn = None
 
         if isinstance(self.token, JWS):
-            if et != "JWS":
+            if et != "JWS" and JWT_expect_type:
                 raise TypeError("Expected {}, got JWS".format(et))
             validate_fn = self.token.verify
         elif isinstance(self.token, JWE):
-            if et != "JWE":
+            if et != "JWE" and JWT_expect_type:
                 print("algs: {}".format(self._algs))
                 raise TypeError("Expected {}, got JWE".format(et))
             validate_fn = self.token.decrypt

@@ -1763,6 +1763,11 @@ class TestJWT(unittest.TestCase):
         token.make_encrypted_token(key)
         enctok = token.serialize()
 
+        # test workaroud for older applications
+        jwt.JWT_expect_type = False
+        jwt.JWT(jwt=enctok, key=key)
+        jwt.JWT_expect_type = True
+
         token.validate(key)
         token.expected_type = "JWE"
         token.validate(key)
