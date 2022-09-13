@@ -14,6 +14,13 @@ Classes
    :members:
    :show-inheritance:
 
+Variables
+---------
+
+.. autodata:: jwcrypto.jwt.JWTClaimsRegistry
+
+.. autodata:: jwcrypto.jwt.JWT_expect_type
+
 Examples
 --------
 
