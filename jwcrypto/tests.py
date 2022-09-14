@@ -1758,6 +1758,24 @@ class TestJWT(unittest.TestCase):
         with self.assertRaises(TypeError):
             jwt.JWT(jwt=sertok, key=key, expected_type='JWE')
 
+        key.use = 'sig'
+        jwt.JWT(jwt=sertok, key=key)
+        key.use = 'enc'
+        with self.assertRaises(TypeError):
+            jwt.JWT(jwt=sertok, key=key)
+        key.use = None
+        key.key_ops = 'verify'
+        jwt.JWT(jwt=sertok, key=key)
+        key.key_ops = ['sign', 'verify']
+        jwt.JWT(jwt=sertok, key=key)
+        key.key_ops = 'decrypt'
+        with self.assertRaises(TypeError):
+            jwt.JWT(jwt=sertok, key=key)
+        key.key_ops = ['encrypt', 'decrypt']
+        with self.assertRaises(TypeError):
+            jwt.JWT(jwt=sertok, key=key)
+        key.key_ops = None
+
         token = jwt.JWT(header={"alg": "A256KW", "enc": "A256GCM"},
                         claims=claims)
         token.make_encrypted_token(key)
@@ -1780,6 +1798,24 @@ class TestJWT(unittest.TestCase):
             jwt.JWT(jwt=enctok, key=key)
         with self.assertRaises(TypeError):
             jwt.JWT(jwt=enctok, key=key, expected_type='JWS')
+
+        key.use = 'enc'
+        jwt.JWT(jwt=enctok, key=key)
+        key.use = 'sig'
+        with self.assertRaises(TypeError):
+            jwt.JWT(jwt=enctok, key=key)
+        key.use = None
+        key.key_ops = 'verify'
+        with self.assertRaises(TypeError):
+            jwt.JWT(jwt=enctok, key=key)
+        key.key_ops = ['sign', 'verify']
+        with self.assertRaises(TypeError):
+            jwt.JWT(jwt=enctok, key=key)
+        key.key_ops = 'decrypt'
+        jwt.JWT(jwt=enctok, key=key)
+        key.key_ops = ['encrypt', 'decrypt']
+        jwt.JWT(jwt=enctok, key=key)
+        key.key_ops = None
 
 
 class ConformanceTests(unittest.TestCase):

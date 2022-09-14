@@ -10,7 +10,9 @@ from jwcrypto.common import JWException, JWKeyNotFound
 from jwcrypto.common import json_decode, json_encode
 from jwcrypto.jwe import JWE
 from jwcrypto.jwe import default_allowed_algs as jwe_algs
+from jwcrypto.jwk import JWK, JWKSet
 from jwcrypto.jws import JWS
+from jwcrypto.jws import default_allowed_algs as jws_algs
 
 
 # RFC 7519 - 4.1
@@ -296,6 +298,78 @@ class JWT:
     def validity(self, v):
         self._validity = int(v)
 
+    def _expected_type_heuristics(self, key=None):
+        if self._expected_type is None and self._algs:
+            if set(self._algs).issubset(jwe_algs + ['RSA1_5']):
+                self._expected_type = "JWE"
+            elif set(self._algs).issubset(jws_algs):
+                self._expected_type = "JES"
+        if self._expected_type is None and self._header:
+            if "enc" in json_decode(self._header):
+                self._expected_type = "JWE"
+        if self._expected_type is None and key is not None:
+            if isinstance(key, JWK):
+                use = key.get('use')
+                if use == 'sig':
+                    self._expected_type = "JWS"
+                elif use == 'enc':
+                    self._expected_type = "JWE"
+            elif isinstance(key, JWKSet):
+                all_use = None
+                # we can infer only if all keys are of the same type
+                for k in key:
+                    use = k.get('use')
+                    if all_use is None:
+                        all_use = use
+                    elif use != all_use:
+                        all_use = None
+                        break
+                if all_use == 'sig':
+                    self._expected_type = "JWS"
+                elif all_use == 'enc':
+                    self._expected_type = "JWE"
+        if self._expected_type is None and key is not None:
+            if isinstance(key, JWK):
+                ops = key.get('key_ops')
+                if ops:
+                    if not isinstance(ops, list):
+                        ops = [ops]
+                    if set(ops).issubset(['sign', 'verify']):
+                        self._expected_type = "JWS"
+                    elif set(ops).issubset(['encrypt', 'decrypt']):
+                        self._expected_type = "JWE"
+            elif isinstance(key, JWKSet):
+                all_ops = None
+                ttype = None
+                # we can infer only if all keys are of the same type
+                for k in key:
+                    ops = k.get('key_ops')
+                    if ops:
+                        if not isinstance(ops, list):
+                            ops = [ops]
+                        if all_ops is None:
+                            if set(ops).issubset(['sign', 'verify']):
+                                all_ops = set(['sign', 'verify'])
+                                ttype = "JWS"
+                            elif set(ops).issubset(['encrypt', 'decrypt']):
+                                all_ops = set(['encrypt', 'decrypt'])
+                                ttype = "JWE"
+                            else:
+                                ttype = None
+                                break
+                        else:
+                            if not set(ops).issubset(all_ops):
+                                ttype = None
+                                break
+                    elif all_ops:
+                        ttype = None
+                        break
+                if ttype:
+                    self._expected_type = ttype
+        if self._expected_type is None:
+            self._expected_type = "JWS"
+        return self._expected_type
+
     @property
     def expected_type(self):
         if self._expected_type is not None:
@@ -305,16 +379,7 @@ class JWT:
         # however to improve backwards compatibility we try some
         # heuristic to see if there has been strong indication of
         # what the expected token type is.
-        if self._expected_type is None and self._algs:
-            if set(self._algs).issubset(jwe_algs + ['RSA1_5']):
-                self._expected_type = "JWE"
-        if self._expected_type is None and self._header:
-            if "enc" in json_decode(self._header):
-                self._expected_type = "JWE"
-        if self._expected_type is None:
-            self._expected_type = "JWS"
-
-        return self._expected_type
+        return self._expected_type_heuristics()
 
     @expected_type.setter
     def expected_type(self, v):
@@ -549,7 +614,7 @@ class JWT:
         if self.token is None:
             raise ValueError("Token empty")
 
-        et = self.expected_type
+        et = self._expected_type_heuristics(key)
         validate_fn = None
 
         if isinstance(self.token, JWS):
@@ -558,7 +623,6 @@ class JWT:
             validate_fn = self.token.verify
         elif isinstance(self.token, JWE):
             if et != "JWE" and JWT_expect_type:
-                print("algs: {}".format(self._algs))
                 raise TypeError("Expected {}, got JWE".format(et))
             validate_fn = self.token.decrypt
         else:
