@@ -303,7 +303,7 @@ class JWT:
             if set(self._algs).issubset(jwe_algs + ['RSA1_5']):
                 self._expected_type = "JWE"
             elif set(self._algs).issubset(jws_algs):
-                self._expected_type = "JES"
+                self._expected_type = "JWS"
         if self._expected_type is None and self._header:
             if "enc" in json_decode(self._header):
                 self._expected_type = "JWE"
