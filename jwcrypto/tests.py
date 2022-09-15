@@ -1758,6 +1758,8 @@ class TestJWT(unittest.TestCase):
         with self.assertRaises(TypeError):
             jwt.JWT(jwt=sertok, key=key, expected_type='JWE')
 
+        jwt.JWT(jwt=sertok, algs=['HS256'], key=key)
+
         key.use = 'sig'
         jwt.JWT(jwt=sertok, key=key)
         key.use = 'enc'
@@ -1798,6 +1800,8 @@ class TestJWT(unittest.TestCase):
             jwt.JWT(jwt=enctok, key=key)
         with self.assertRaises(TypeError):
             jwt.JWT(jwt=enctok, key=key, expected_type='JWS')
+
+        jwt.JWT(jwt=enctok, algs=['A256KW', 'A256GCM'], key=key)
 
         key.use = 'enc'
         jwt.JWT(jwt=enctok, key=key)
