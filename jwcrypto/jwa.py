@@ -990,7 +990,7 @@ class _AesGcm(_RawJWE):
 
     # RFC 7518 - 5.3
     def encrypt(self, k, a, m):
-        """ Encrypt accoriding to the selected encryption and hashing
+        """ Encrypt according to the selected encryption and hashing
         functions.
 
         :param k: Encryption key (optional)
@@ -1009,7 +1009,7 @@ class _AesGcm(_RawJWE):
         return (iv, e, encryptor.tag)
 
     def decrypt(self, k, a, iv, e, t):
-        """ Decrypt accoriding to the selected encryption and hashing
+        """ Decrypt according to the selected encryption and hashing
         functions.
         :param k: Encryption key (optional)
         :param a: Additional Authenticated Data

@@ -1101,7 +1101,7 @@ JWE_flattened_5_12_5 = {
 
 # In general we can't compare ciphertexts with the reference because
 # either the algorithms use random nonces to authenticate the ciphertext
-# or we randomly genrate the nonce when we create the JWe.
+# or we randomly generate the nonce when we create the JWe.
 # To double check implementation we encrypt/decrypt our own input and then
 # decrypt the reference and check it against the given plaintext
 class Cookbook08JWETests(unittest.TestCase):

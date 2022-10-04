@@ -324,7 +324,7 @@ class JWS:
                 return dp
             else:
                 raise InvalidJWSOperation('Object Payload present but'
-                                          ' Deatched Payload provided')
+                                          ' Detached Payload provided')
         return op
 
     def verify(self, key, alg=None, detached_payload=None):
