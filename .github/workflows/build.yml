@@ -24,6 +24,7 @@
                         "sphinx",
                         "lint",
                         "pep8",
+                        "codespell",
                     ],
                     "include": [
                         {
@@ -84,6 +85,12 @@
                             "name": "pep8",
                             "python": "3.10",
                             "toxenv": "pep8",
+                            "arch": "x64",
+                        },
+                        {
+                            "name": "codespell",
+                            "python": "3.10",
+                            "toxenv": "codespell",
                             "arch": "x64",
                         },
                     ],
