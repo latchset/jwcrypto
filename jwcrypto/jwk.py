@@ -317,7 +317,7 @@ class JWK(dict):
         valid key type as value then a new key will be generated according
         to the defaults or provided key strength options (type specific).
 
-        :param \**kwargs: parameters (otional).
+        :param \**kwargs: parameters (optional).
 
         :raises InvalidJWKType: if the key type is invalid
         :raises InvalidJWKValue: if incorrect or inconsistent parameters

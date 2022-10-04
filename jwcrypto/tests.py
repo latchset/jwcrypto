@@ -428,7 +428,7 @@ class TestJWK(unittest.TestCase):
         ks3 = jwk.JWKSet.from_json(ks.export())
         self.assertEqual(len(ks), len(ks3))
 
-        # Test key set with mutiple keys
+        # Test key set with multiple keys
         ksm = jwk.JWKSet.from_json(json_encode(PrivateKeys))
         num = 0
         for item in ksm:
@@ -438,7 +438,7 @@ class TestJWK(unittest.TestCase):
         self.assertEqual(num, len(PrivateKeys['keys']))
 
     def test_jwkset_get_keys(self):
-        # Test key set with mutiple keys
+        # Test key set with multiple keys
         ksm = jwk.JWKSet.from_json(json_encode(PrivateKeys))
         k1 = jwk.JWK.from_json(json_encode(PrivateKeys['keys'][0]))
         kwargs = RSAPrivateKey.copy()
@@ -881,7 +881,7 @@ class TestJWS(unittest.TestCase):
             self.assertEqual(decsig, test['signature'])
         else:
             # Check we can verify the test signature independently
-            # this is so taht we can test the ECDSA agaist a known
+            # this is so that we can test the ECDSA against a known
             # good signature
             s.verify(test['signature'])
 
@@ -1783,7 +1783,7 @@ class TestJWT(unittest.TestCase):
         token.make_encrypted_token(key)
         enctok = token.serialize()
 
-        # test workaroud for older applications
+        # test workaround for older applications
         jwt.JWT_expect_type = False
         jwt.JWT(jwt=enctok, key=key)
         jwt.JWT_expect_type = True
