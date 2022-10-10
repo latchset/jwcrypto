@@ -1053,6 +1053,54 @@ class _A256Gcm(_AesGcm, JWAAlgorithm):
     algorithm_use = 'enc'
 
 
+class _BP256R1(_RawEC, JWAAlgorithm):
+
+    name = "BP256R1"
+    description = (
+        "ECDSA using Brainpool256R1 curve and SHA-256"
+        " (unregistered, custom-defined in breach"
+        " of IETF rules by gematik GmbH)"
+    )
+    keysize = 256
+    algorithm_usage_location = 'alg'
+    algorithm_use = 'sig'
+
+    def __init__(self):
+        super(_BP256R1, self).__init__('BP-256', hashes.SHA256())
+
+
+class _BP384R1(_RawEC, JWAAlgorithm):
+
+    name = "BP384R1"
+    description = (
+        "ECDSA using Brainpool384R1 curve and SHA-384"
+        " (unregistered, custom-defined in breach"
+        " of IETF rules by gematik GmbH)"
+    )
+    keysize = 384
+    algorithm_usage_location = 'alg'
+    algorithm_use = 'sig'
+
+    def __init__(self):
+        super(_BP384R1, self).__init__('BP-384', hashes.SHA384())
+
+
+class _BP512R1(_RawEC, JWAAlgorithm):
+
+    name = "BP512R1"
+    description = (
+        "ECDSA using Brainpool512R1 curve and SHA-512"
+        " (unregistered, custom-defined in breach"
+        " of IETF rules by gematik GmbH)"
+    )
+    keysize = 512
+    algorithm_usage_location = 'alg'
+    algorithm_use = 'sig'
+
+    def __init__(self):
+        super(_BP512R1, self).__init__('BP-512', hashes.SHA512())
+
+
 class JWA:
     """JWA Signing Algorithms.
 
@@ -1097,7 +1145,10 @@ class JWA:
         'A256CBC-HS512': _A256CbcHs512,
         'A128GCM': _A128Gcm,
         'A192GCM': _A192Gcm,
-        'A256GCM': _A256Gcm
+        'A256GCM': _A256Gcm,
+        'BP256R1': _BP256R1,
+        'BP384R1': _BP384R1,
+        'BP512R1': _BP512R1
     }
 
     @classmethod
