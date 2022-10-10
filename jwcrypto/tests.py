@@ -294,7 +294,66 @@ PrivateKeys_secp256k1 = {
             "x": "Ss6na3mcci8Ud4lQrjaB_T40sfKApEcl2RLIWOJdjow",
             "y": "7l9qIKtKPW6oEiOYBt7r22Sm0mtFJU-yBkkvMvpscd8",
             "d": "GYhU2vrYGZrjLZn71Xniqm54Mi53xiYtaTLawzaf9dA"
+        }
+    ]
+}
+
+PublicKeys_brainpool = {
+    "keys": [
+        {
+            "kty": "EC",
+            "crv": "BP-256",
+            "x": "mpkJ29_CYAD0mzQ_MsrbjFMFYtcc9Oxpro37Fa4cLfI",
+            "y": "iBfhNHk0cI73agNpjbKW62dvuVxn7kxp1Sm8oDnzHl8",
         },
+        {
+            "kty": "EC",
+            "crv": "BP-384",
+            "x": ("WZanneaC2Hi3xslA4znJv7otyEdV5dTPzNUvBjBXPM"
+                  "ytf4mRY9JaAITdItjvUTAh"),
+            "y": ("KNLRTNdvUg66aB_TVW4POZkE3q8S0YoQrCzYUrExRDe"
+                  "_BXikkqIama-GYQ3UBOQL"),
+        },
+        {
+            "kty": "EC",
+            "crv": "BP-512",
+            "x": ("aQXpvz7DH9OK5eFNO9dY3BdPY1v0-8Rg9KC322PY1Jy"
+                  "BJq3EhT0uR_-tgbL2E_aGP6k56lF1xIOOtQxo8zziGA"),
+            "y": ("l9XLHHncigOPr5Tvnj_mVzBFv6i7rdBQrLTq3RXZlCC"
+                  "_f_q6L2o79K9IrN_J2wWxAfS8ekuGPGlHZUzK-3D9sA"),
+        }
+    ]
+}
+
+PrivateKeys_brainpool = {
+    "keys": [
+        {
+            "kty": "EC",
+            "crv": "BP-256",
+            "x": "mpkJ29_CYAD0mzQ_MsrbjFMFYtcc9Oxpro37Fa4cLfI",
+            "y": "iBfhNHk0cI73agNpjbKW62dvuVxn7kxp1Sm8oDnzHl8",
+            "d": "KdKRgq0WEM97BQw3jpW_fTOep6fn-Samv4DfDNb-4s4"
+        },
+        {
+            "kty": "EC",
+            "crv": "BP-384",
+            "x": ("WZanneaC2Hi3xslA4znJv7otyEdV5dTPzNUvBjBXPM"
+                  "ytf4mRY9JaAITdItjvUTAh"),
+            "y": ("KNLRTNdvUg66aB_TVW4POZkE3q8S0YoQrCzYUrExRDe"
+                  "_BXikkqIama-GYQ3UBOQL"),
+            "d": ("B5WeRV0-RztAPAhRbphSAUrsIzy-eSfWGSM5FxOQGlJ"
+                  "cq-ECLA_-SIlH7NdWIEJY")
+        },
+        {
+            "kty": "EC",
+            "crv": "BP-512",
+            "x": ("aQXpvz7DH9OK5eFNO9dY3BdPY1v0-8Rg9KC322PY1Jy"
+                  "BJq3EhT0uR_-tgbL2E_aGP6k56lF1xIOOtQxo8zziGA"),
+            "y": ("l9XLHHncigOPr5Tvnj_mVzBFv6i7rdBQrLTq3RXZlCC"
+                  "_f_q6L2o79K9IrN_J2wWxAfS8ekuGPGlHZUzK-3D9sA"),
+            "d": ("F_LJ9rebAjOtxoMUfngIywYsnJlZNjy3gxNAEvHjSkL"
+                  "m6RUUdLXDwc50EMp0LeTh1ku039D5kldK3S9Xi0yKZA")
+        }
     ]
 }
 
@@ -385,6 +444,15 @@ class TestJWK(unittest.TestCase):
         # New secp256k curve
         key = jwk.JWK.generate(kty='EC', curve='secp256k1')
         key.get_op_key('verify', 'secp256k1')
+        # Brainpool256R1 curve
+        key = jwk.JWK.generate(kty='EC', crv='BP-256')
+        key.get_op_key('verify', 'BP-256')
+        # Brainpool384R1 curve
+        key = jwk.JWK.generate(kty='EC', crv='BP-384')
+        key.get_op_key('verify', 'BP-384')
+        # Brainpool256R1 curve
+        key = jwk.JWK.generate(kty='EC', crv='BP-512')
+        key.get_op_key('verify', 'BP-512')
 
     def test_generate_OKP_keys(self):
         for crv in jwk.ImplementedOkpCurves:
@@ -573,6 +641,16 @@ class TestJWK(unittest.TestCase):
 
     def test_create_priKeys_secp256k1(self):
         keylist = PrivateKeys_secp256k1['keys']
+        for key in keylist:
+            jwk.JWK(**key)
+
+    def test_create_pubKeys_brainpool(self):
+        keylist = PublicKeys_brainpool['keys']
+        for key in keylist:
+            jwk.JWK(**key)
+
+    def test_create_priKeys_brainpool(self):
+        keylist = PrivateKeys_brainpool['keys']
         for key in keylist:
             jwk.JWK(**key)
 
@@ -986,6 +1064,31 @@ class TestJWS(unittest.TestCase):
         jws_verify.deserialize(jws_test_serialization_compact)
         jws_verify.verify(key.public())
         self.assertEqual(jws_verify.payload, payload)
+
+    def test_brainpool_signing_and_verification(self):
+        for key_data in PrivateKeys_brainpool['keys']:
+            key = jwk.JWK(**key_data)
+            payload = bytes(bytearray(A1_payload))
+            jws_test = jws.JWS(payload)
+
+            curve_name = key.get('crv')
+            if curve_name == "BP-256":
+                alg = "BP256R1"
+            elif curve_name == "BP-384":
+                alg = "BP384R1"
+            else:
+                alg = "BP512R1"
+
+            jws_test.allowed_algs = [alg]
+            jws_test.add_signature(key, None, json_encode({"alg": alg}), None)
+            jws_test_serialization_compact = jws_test.serialize(compact=True)
+
+            jws_verify = jws.JWS()
+            jws_verify.allowed_algs = [alg]
+            jws_verify.deserialize(jws_test_serialization_compact)
+            jws_verify.verify(key.public())
+
+            self.assertEqual(jws_verify.payload, payload)
 
     def test_jws_issue_224(self):
         key = jwk.JWK().generate(kty='oct')
