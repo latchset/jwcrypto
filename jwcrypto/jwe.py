@@ -647,7 +647,7 @@ class JWE:
             algs = self._allowed_algs
             return (
                 f"JWE(plaintext={plaintext}, "
-                + f"protected={protected}, "
-                + f"unprotected={unprotected}, "
-                + f"aad={aad}, algs={algs})"
+                f"protected={protected}, "
+                f"unprotected={unprotected}, "
+                f"aad={aad}, algs={algs})"
             )

@@ -1473,27 +1473,27 @@ A5_example = {
 
 A6_serialized = (
     "{"
-    + '"payload":'
-    + '"eyJpc3MiOiJqb2UiLA0KICJleHAiOjEzMDA4MTkzODAsDQogImh0dHA6Ly9leGF'
-    + 'tcGxlLmNvbS9pc19yb290Ijp0cnVlfQ",'
-    + '"signatures":['
-    + '{"protected":"eyJhbGciOiJSUzI1NiJ9",'
-    + '"header":'
-    + '{"kid":"2010-12-29"},'
-    + '"signature":'
-    + '"cC4hiUPoj9Eetdgtv3hF80EGrhuB__dzERat0XF9g2VtQgr9PJbu3XOiZj5RZ'
-    + "mh7AAuHIm4Bh-0Qc_lF5YKt_O8W2Fp5jujGbds9uJdbF9CUAr7t1dnZcAcQjb"
-    + "KBYNX4BAynRFdiuB--f_nZLgrnbyTyWzO75vRK5h6xBArLIARNPvkSjtQBMHl"
-    + "b1L07Qe7K0GarZRmB_eSN9383LcOLn6_dO--xi12jzDwusC-eOkHWEsqtFZES"
-    + "c6BfI7noOPqvhJ1phCnvWh6IeYI2w9QOYEUipUTI8np6LbgGY9Fs98rqVt5AX"
-    + 'LIhWkWywlVmtVrBp0igcN_IoypGlUPQGe77Rw"},'
-    + '{"protected":"eyJhbGciOiJFUzI1NiJ9",'
-    + '"header":'
-    + '{"kid":"e9bc097a-ce51-4036-9562-d2ade882db0d"},'
-    + '"signature":'
-    + '"DtEhU3ljbEg8L38VWAfUAqOyKAM6-Xx-F4GawxaepmXFCgfTjDxw5djxLa8IS'
-    + 'lSApmWQxfKTUJqPP3-Kg6NU1Q"}]'
-    + "}"
+    '"payload":'
+    '"eyJpc3MiOiJqb2UiLA0KICJleHAiOjEzMDA4MTkzODAsDQogImh0dHA6Ly9leGF'
+    'tcGxlLmNvbS9pc19yb290Ijp0cnVlfQ",'
+    '"signatures":['
+    '{"protected":"eyJhbGciOiJSUzI1NiJ9",'
+    '"header":'
+    '{"kid":"2010-12-29"},'
+    '"signature":'
+    '"cC4hiUPoj9Eetdgtv3hF80EGrhuB__dzERat0XF9g2VtQgr9PJbu3XOiZj5RZ'
+    "mh7AAuHIm4Bh-0Qc_lF5YKt_O8W2Fp5jujGbds9uJdbF9CUAr7t1dnZcAcQjb"
+    "KBYNX4BAynRFdiuB--f_nZLgrnbyTyWzO75vRK5h6xBArLIARNPvkSjtQBMHl"
+    "b1L07Qe7K0GarZRmB_eSN9383LcOLn6_dO--xi12jzDwusC-eOkHWEsqtFZES"
+    "c6BfI7noOPqvhJ1phCnvWh6IeYI2w9QOYEUipUTI8np6LbgGY9Fs98rqVt5AX"
+    'LIhWkWywlVmtVrBp0igcN_IoypGlUPQGe77Rw"},'
+    '{"protected":"eyJhbGciOiJFUzI1NiJ9",'
+    '"header":'
+    '{"kid":"e9bc097a-ce51-4036-9562-d2ade882db0d"},'
+    '"signature":'
+    '"DtEhU3ljbEg8L38VWAfUAqOyKAM6-Xx-F4GawxaepmXFCgfTjDxw5djxLa8IS'
+    'lSApmWQxfKTUJqPP3-Kg6NU1Q"}]'
+    "}"
 )
 A6_example = {
     "payload": bytes(bytearray(A2_payload)),
@@ -1512,37 +1512,37 @@ A6_example = {
 
 A7_example = (
     "{"
-    + '"payload":'
-    + '"eyJpc3MiOiJqb2UiLA0KICJleHAiOjEzMDA4MTkzODAsDQogImh0dHA6Ly9leGF'
-    + 'tcGxlLmNvbS9pc19yb290Ijp0cnVlfQ",'
-    + '"protected":"eyJhbGciOiJFUzI1NiJ9",'
-    + '"header":'
-    + '{"kid":"e9bc097a-ce51-4036-9562-d2ade882db0d"},'
-    + '"signature":'
-    + '"DtEhU3ljbEg8L38VWAfUAqOyKAM6-Xx-F4GawxaepmXFCgfTjDxw5djxLa8IS'
-    + 'lSApmWQxfKTUJqPP3-Kg6NU1Q"'
-    + "}"
+    '"payload":'
+    '"eyJpc3MiOiJqb2UiLA0KICJleHAiOjEzMDA4MTkzODAsDQogImh0dHA6Ly9leGF'
+    'tcGxlLmNvbS9pc19yb290Ijp0cnVlfQ",'
+    '"protected":"eyJhbGciOiJFUzI1NiJ9",'
+    '"header":'
+    '{"kid":"e9bc097a-ce51-4036-9562-d2ade882db0d"},'
+    '"signature":'
+    '"DtEhU3ljbEg8L38VWAfUAqOyKAM6-Xx-F4GawxaepmXFCgfTjDxw5djxLa8IS'
+    'lSApmWQxfKTUJqPP3-Kg6NU1Q"'
+    "}"
 )
 
 E_negative = (
     "eyJhbGciOiJub25lIiwNCiAiY3JpdCI6WyJodHRwOi8vZXhhbXBsZS5jb20vVU5ERU"
-    + "ZJTkVEIl0sDQogImh0dHA6Ly9leGFtcGxlLmNvbS9VTkRFRklORUQiOnRydWUNCn0."
-    + "RkFJTA."
+    "ZJTkVEIl0sDQogImh0dHA6Ly9leGFtcGxlLmNvbS9VTkRFRklORUQiOnRydWUNCn0."
+    "RkFJTA."
 )
 
 customhdr_jws_example = (
     "{"
-    + '"payload":'
-    + '"eyJpc3MiOiJqb2UiLA0KICJleHAiOjEzMDA4MTkzODAsDQogImh0dHA6Ly9leGF'
-    + 'tcGxlLmNvbS9pc19yb290Ijp0cnVlfQ",'
-    + '"protected":"eyJhbGciOiJFUzI1NiJ9",'
-    + '"header":'
-    + '{"kid":"e9bc097a-ce51-4036-9562-d2ade882db0d", '
-    + '"custom1":"custom_val"},'
-    + '"signature":'
-    + '"DtEhU3ljbEg8L38VWAfUAqOyKAM6-Xx-F4GawxaepmXFCgfTjDxw5djxLa8IS'
-    + 'lSApmWQxfKTUJqPP3-Kg6NU1Q"'
-    + "}"
+    '"payload":'
+    '"eyJpc3MiOiJqb2UiLA0KICJleHAiOjEzMDA4MTkzODAsDQogImh0dHA6Ly9leGF'
+    'tcGxlLmNvbS9pc19yb290Ijp0cnVlfQ",'
+    '"protected":"eyJhbGciOiJFUzI1NiJ9",'
+    '"header":'
+    '{"kid":"e9bc097a-ce51-4036-9562-d2ade882db0d", '
+    '"custom1":"custom_val"},'
+    '"signature":'
+    '"DtEhU3ljbEg8L38VWAfUAqOyKAM6-Xx-F4GawxaepmXFCgfTjDxw5djxLa8IS'
+    'lSApmWQxfKTUJqPP3-Kg6NU1Q"'
+    "}"
 )
 
 
@@ -2268,39 +2268,39 @@ A1_claims = {"iss": "joe", "exp": 1300819380, "http://example.com/is_root": True
 
 A1_token = (
     "eyJhbGciOiJSU0ExXzUiLCJlbmMiOiJBMTI4Q0JDLUhTMjU2In0."
-    + "QR1Owv2ug2WyPBnbQrRARTeEk9kDO2w8qDcjiHnSJflSdv1iNqhWXaKH4MqAkQtM"
-    + "oNfABIPJaZm0HaA415sv3aeuBWnD8J-Ui7Ah6cWafs3ZwwFKDFUUsWHSK-IPKxLG"
-    + "TkND09XyjORj_CHAgOPJ-Sd8ONQRnJvWn_hXV1BNMHzUjPyYwEsRhDhzjAD26ima"
-    + "sOTsgruobpYGoQcXUwFDn7moXPRfDE8-NoQX7N7ZYMmpUDkR-Cx9obNGwJQ3nM52"
-    + "YCitxoQVPzjbl7WBuB7AohdBoZOdZ24WlN1lVIeh8v1K4krB8xgKvRU8kgFrEn_a"
-    + "1rZgN5TiysnmzTROF869lQ."
-    + "AxY8DCtDaGlsbGljb3RoZQ."
-    + "MKOle7UQrG6nSxTLX6Mqwt0orbHvAKeWnDYvpIAeZ72deHxz3roJDXQyhxx0wKaM"
-    + "HDjUEOKIwrtkHthpqEanSBNYHZgmNOV7sln1Eu9g3J8."
-    + "fiK51VwhsxJ-siBMR-YFiA"
+    "QR1Owv2ug2WyPBnbQrRARTeEk9kDO2w8qDcjiHnSJflSdv1iNqhWXaKH4MqAkQtM"
+    "oNfABIPJaZm0HaA415sv3aeuBWnD8J-Ui7Ah6cWafs3ZwwFKDFUUsWHSK-IPKxLG"
+    "TkND09XyjORj_CHAgOPJ-Sd8ONQRnJvWn_hXV1BNMHzUjPyYwEsRhDhzjAD26ima"
+    "sOTsgruobpYGoQcXUwFDn7moXPRfDE8-NoQX7N7ZYMmpUDkR-Cx9obNGwJQ3nM52"
+    "YCitxoQVPzjbl7WBuB7AohdBoZOdZ24WlN1lVIeh8v1K4krB8xgKvRU8kgFrEn_a"
+    "1rZgN5TiysnmzTROF869lQ."
+    "AxY8DCtDaGlsbGljb3RoZQ."
+    "MKOle7UQrG6nSxTLX6Mqwt0orbHvAKeWnDYvpIAeZ72deHxz3roJDXQyhxx0wKaM"
+    "HDjUEOKIwrtkHthpqEanSBNYHZgmNOV7sln1Eu9g3J8."
+    "fiK51VwhsxJ-siBMR-YFiA"
 )
 
 A2_token = (
     "eyJhbGciOiJSU0ExXzUiLCJlbmMiOiJBMTI4Q0JDLUhTMjU2IiwiY3R5IjoiSldU"
-    + "In0."
-    + "g_hEwksO1Ax8Qn7HoN-BVeBoa8FXe0kpyk_XdcSmxvcM5_P296JXXtoHISr_DD_M"
-    + "qewaQSH4dZOQHoUgKLeFly-9RI11TG-_Ge1bZFazBPwKC5lJ6OLANLMd0QSL4fYE"
-    + "b9ERe-epKYE3xb2jfY1AltHqBO-PM6j23Guj2yDKnFv6WO72tteVzm_2n17SBFvh"
-    + "DuR9a2nHTE67pe0XGBUS_TK7ecA-iVq5COeVdJR4U4VZGGlxRGPLRHvolVLEHx6D"
-    + "YyLpw30Ay9R6d68YCLi9FYTq3hIXPK_-dmPlOUlKvPr1GgJzRoeC9G5qCvdcHWsq"
-    + "JGTO_z3Wfo5zsqwkxruxwA."
-    + "UmVkbW9uZCBXQSA5ODA1Mg."
-    + "VwHERHPvCNcHHpTjkoigx3_ExK0Qc71RMEParpatm0X_qpg-w8kozSjfNIPPXiTB"
-    + "BLXR65CIPkFqz4l1Ae9w_uowKiwyi9acgVztAi-pSL8GQSXnaamh9kX1mdh3M_TT"
-    + "-FZGQFQsFhu0Z72gJKGdfGE-OE7hS1zuBD5oEUfk0Dmb0VzWEzpxxiSSBbBAzP10"
-    + "l56pPfAtrjEYw-7ygeMkwBl6Z_mLS6w6xUgKlvW6ULmkV-uLC4FUiyKECK4e3WZY"
-    + "Kw1bpgIqGYsw2v_grHjszJZ-_I5uM-9RA8ycX9KqPRp9gc6pXmoU_-27ATs9XCvr"
-    + "ZXUtK2902AUzqpeEUJYjWWxSNsS-r1TJ1I-FMJ4XyAiGrfmo9hQPcNBYxPz3GQb2"
-    + "8Y5CLSQfNgKSGt0A4isp1hBUXBHAndgtcslt7ZoQJaKe_nNJgNliWtWpJ_ebuOpE"
-    + "l8jdhehdccnRMIwAmU1n7SPkmhIl1HlSOpvcvDfhUN5wuqU955vOBvfkBOh5A11U"
-    + "zBuo2WlgZ6hYi9-e3w29bR0C2-pp3jbqxEDw3iWaf2dc5b-LnR0FEYXvI_tYk5rd"
-    + "_J9N0mg0tQ6RbpxNEMNoA9QWk5lgdPvbh9BaO195abQ."
-    + "AVO9iT5AV4CzvDJCdhSFlQ"
+    "In0."
+    "g_hEwksO1Ax8Qn7HoN-BVeBoa8FXe0kpyk_XdcSmxvcM5_P296JXXtoHISr_DD_M"
+    "qewaQSH4dZOQHoUgKLeFly-9RI11TG-_Ge1bZFazBPwKC5lJ6OLANLMd0QSL4fYE"
+    "b9ERe-epKYE3xb2jfY1AltHqBO-PM6j23Guj2yDKnFv6WO72tteVzm_2n17SBFvh"
+    "DuR9a2nHTE67pe0XGBUS_TK7ecA-iVq5COeVdJR4U4VZGGlxRGPLRHvolVLEHx6D"
+    "YyLpw30Ay9R6d68YCLi9FYTq3hIXPK_-dmPlOUlKvPr1GgJzRoeC9G5qCvdcHWsq"
+    "JGTO_z3Wfo5zsqwkxruxwA."
+    "UmVkbW9uZCBXQSA5ODA1Mg."
+    "VwHERHPvCNcHHpTjkoigx3_ExK0Qc71RMEParpatm0X_qpg-w8kozSjfNIPPXiTB"
+    "BLXR65CIPkFqz4l1Ae9w_uowKiwyi9acgVztAi-pSL8GQSXnaamh9kX1mdh3M_TT"
+    "-FZGQFQsFhu0Z72gJKGdfGE-OE7hS1zuBD5oEUfk0Dmb0VzWEzpxxiSSBbBAzP10"
+    "l56pPfAtrjEYw-7ygeMkwBl6Z_mLS6w6xUgKlvW6ULmkV-uLC4FUiyKECK4e3WZY"
+    "Kw1bpgIqGYsw2v_grHjszJZ-_I5uM-9RA8ycX9KqPRp9gc6pXmoU_-27ATs9XCvr"
+    "ZXUtK2902AUzqpeEUJYjWWxSNsS-r1TJ1I-FMJ4XyAiGrfmo9hQPcNBYxPz3GQb2"
+    "8Y5CLSQfNgKSGt0A4isp1hBUXBHAndgtcslt7ZoQJaKe_nNJgNliWtWpJ_ebuOpE"
+    "l8jdhehdccnRMIwAmU1n7SPkmhIl1HlSOpvcvDfhUN5wuqU955vOBvfkBOh5A11U"
+    "zBuo2WlgZ6hYi9-e3w29bR0C2-pp3jbqxEDw3iWaf2dc5b-LnR0FEYXvI_tYk5rd"
+    "_J9N0mg0tQ6RbpxNEMNoA9QWk5lgdPvbh9BaO195abQ."
+    "AVO9iT5AV4CzvDJCdhSFlQ"
 )
 
 
@@ -2818,7 +2818,7 @@ class ConformanceTests(unittest.TestCase):
     def test_none_key(self):
         e = (
             "eyJhbGciOiJub25lIn0."
-            + "eyJpc3MiOiJqb2UiLCJodHRwOi8vZXhhbXBsZS5jb20vaXNfcm9vdCI6dHJ1ZX0."
+            "eyJpc3MiOiJqb2UiLCJodHRwOi8vZXhhbXBsZS5jb20vaXNfcm9vdCI6dHJ1ZX0."
         )
         token = jwt.JWT(algs=["none"])
         k = jwk.JWK(generate="oct", size=0)
@@ -2932,8 +2932,7 @@ rfc7797_payload = "$.02"
 class TestUnencodedPayload(unittest.TestCase):
     def test_regular(self):
         result = (
-            "eyJhbGciOiJIUzI1NiJ9.JC4wMg."
-            + "5mvfOroL-g7HyqJoozehmsaqmvTYGEq5jTI1gVvoEoQ"
+            "eyJhbGciOiJIUzI1NiJ9.JC4wMg." "5mvfOroL-g7HyqJoozehmsaqmvTYGEq5jTI1gVvoEoQ"
         )
 
         s = jws.JWS(rfc7797_payload)
@@ -2944,7 +2943,7 @@ class TestUnencodedPayload(unittest.TestCase):
     def test_compat_unencoded(self):
         result = (
             "eyJhbGciOiJIUzI1NiIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19.."
-            + "A5dxf2s96_n5FLueVuW1Z_vh161FwXZC4YLPff6dmDY"
+            "A5dxf2s96_n5FLueVuW1Z_vh161FwXZC4YLPff6dmDY"
         )
 
         s = jws.JWS(rfc7797_payload)
@@ -2963,7 +2962,7 @@ class TestUnencodedPayload(unittest.TestCase):
     def test_detached_payload_verification(self):
         token = (
             "eyJhbGciOiJIUzI1NiIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19.."
-            + "A5dxf2s96_n5FLueVuW1Z_vh161FwXZC4YLPff6dmDY"
+            "A5dxf2s96_n5FLueVuW1Z_vh161FwXZC4YLPff6dmDY"
         )
 
         s = jws.JWS()
@@ -3068,9 +3067,9 @@ class TestOverloadedOperators(unittest.TestCase):
         )
         strrep = (
             "JWE(plaintext=b'My Encrypted message', "
-            + 'protected={"alg":"A256KW",'
-            + '"enc":"A256CBC-HS512"}, '
-            + "unprotected=None, aad=None, algs=None)"
+            'protected={"alg":"A256KW",'
+            '"enc":"A256CBC-HS512"}, '
+            "unprotected=None, aad=None, algs=None)"
         )
         self.assertEqual(str(token), strrep)
         self.assertEqual(repr(token), strrep)
@@ -3126,8 +3125,8 @@ class TestOverloadedOperators(unittest.TestCase):
         token = jwt.JWT(header={"alg": "HS256"}, claims={"info": "I'm a signed token"})
         strrep = (
             'JWT(header={"alg":"HS256"}, claims={"info":"I\'m a '
-            + 'signed token"}, jwt=None, key=None, algs=None, '
-            + "default_claims=None, check_claims=None)"
+            'signed token"}, jwt=None, key=None, algs=None, '
+            "default_claims=None, check_claims=None)"
         )
         self.assertEqual(str(token), strrep)
         self.assertEqual(repr(token), strrep)
@@ -3139,8 +3138,8 @@ class TestOverloadedOperators(unittest.TestCase):
 
         reprrep = (
             'JWT(header={"alg":"HS256"}, '
-            + 'claims={"info":"I\'m a signed token"}, '
-            + f'jwt=JWS.from_json_token("{ser2}"), key=None, '
-            + "algs=None, default_claims=None, check_claims=None)"
+            'claims={"info":"I\'m a signed token"}, '
+            f'jwt=JWS.from_json_token("{ser2}"), key=None, '
+            "algs=None, default_claims=None, check_claims=None)"
         )
         self.assertEqual(repr(token), reprrep)

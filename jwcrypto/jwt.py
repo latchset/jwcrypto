@@ -756,9 +756,9 @@ class JWT:
         jwt = repr(self.token)
         return (
             f"JWT(header={self._header}, "
-            + f"claims={self._claims}, "
-            + f"jwt={jwt}, "
-            + f"key=None, algs={self._algs}, "
-            + f"default_claims={self._reg_claims}, "
-            + f"check_claims={self._check_claims})"
+            f"claims={self._claims}, "
+            f"jwt={jwt}, "
+            f"key=None, algs={self._algs}, "
+            f"default_claims={self._reg_claims}, "
+            f"check_claims={self._check_claims})"
         )
