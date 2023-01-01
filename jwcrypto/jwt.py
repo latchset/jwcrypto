@@ -15,18 +15,17 @@ from jwcrypto.jws import JWS
 from jwcrypto.jws import default_allowed_algs as jws_algs
 
 
-
-
-
 # RFC 7519 - 4.1
 # name: description
-JWTClaimsRegistry = {'iss': 'Issuer',
-                     'sub': 'Subject',
-                     'aud': 'Audience',
-                     'exp': 'Expiration Time',
-                     'nbf': 'Not Before',
-                     'iat': 'Issued At',
-                     'jti': 'JWT ID'}
+JWTClaimsRegistry = {
+    "iss": "Issuer",
+    "sub": "Subject",
+    "aud": "Audience",
+    "exp": "Expiration Time",
+    "nbf": "Not Before",
+    "iat": "Issued At",
+    "jti": "JWT ID",
+}
 """Registry of RFC 7519 defined claims"""
 
 
@@ -51,9 +50,9 @@ class JWTExpired(JWException):
         if message:
             msg = str(message)
         else:
-            msg = 'Token expired'
+            msg = "Token expired"
         if exception:
-            msg += ' {%s}' % str(exception)
+            msg += " {%s}" % str(exception)
         super().__init__(msg)
 
 
@@ -69,9 +68,9 @@ class JWTNotYetValid(JWException):
         if message:
             msg = str(message)
         else:
-            msg = 'Token not yet valid'
+            msg = "Token not yet valid"
         if exception:
-            msg += ' {%s}' % str(exception)
+            msg += " {%s}" % str(exception)
         super().__init__(msg)
 
 
@@ -86,9 +85,9 @@ class JWTMissingClaim(JWException):
         if message:
             msg = str(message)
         else:
-            msg = 'Invalid Claim Value'
+            msg = "Invalid Claim Value"
         if exception:
-            msg += ' {%s}' % str(exception)
+            msg += " {%s}" % str(exception)
         super().__init__(msg)
 
 
@@ -103,9 +102,9 @@ class JWTInvalidClaimValue(JWException):
         if message:
             msg = str(message)
         else:
-            msg = 'Invalid Claim Value'
+            msg = "Invalid Claim Value"
         if exception:
-            msg += ' {%s}' % str(exception)
+            msg += " {%s}" % str(exception)
         super().__init__(msg)
 
 
@@ -120,9 +119,9 @@ class JWTInvalidClaimFormat(JWException):
         if message:
             msg = str(message)
         else:
-            msg = 'Invalid Claim Format'
+            msg = "Invalid Claim Format"
         if exception:
-            msg += ' {%s}' % str(exception)
+            msg += " {%s}" % str(exception)
         super().__init__(msg)
 
 
@@ -139,9 +138,9 @@ class JWTMissingKeyID(JWException):
         if message:
             msg = str(message)
         else:
-            msg = 'Missing Key ID'
+            msg = "Missing Key ID"
         if exception:
-            msg += ' {%s}' % str(exception)
+            msg += " {%s}" % str(exception)
         super().__init__(msg)
 
 
@@ -157,9 +156,9 @@ class JWTMissingKey(JWKeyNotFound):
         if message:
             msg = str(message)
         else:
-            msg = 'Missing Key'
+            msg = "Missing Key"
         if exception:
-            msg += ' {%s}' % str(exception)
+            msg += " {%s}" % str(exception)
         super().__init__(msg)
 
 
@@ -169,9 +168,17 @@ class JWT:
     This object represent a generic token.
     """
 
-    def __init__(self, header=None, claims=None, jwt=None, key=None,
-                 algs=None, default_claims=None, check_claims=None,
-                 expected_type=None):
+    def __init__(
+        self,
+        header=None,
+        claims=None,
+        jwt=None,
+        key=None,
+        algs=None,
+        default_claims=None,
+        check_claims=None,
+        expected_type=None,
+    ):
         """Creates a JWT object.
 
         :param header: A dict or a JSON string with the JWT Header data.
@@ -247,9 +254,10 @@ class JWT:
             eh = h
             h = json_decode(eh)
 
-        if h.get('b64') is False:
-            raise ValueError("b64 header is invalid."
-                             "JWTs cannot use unencoded payloads")
+        if h.get("b64") is False:
+            raise ValueError(
+                "b64 header is invalid." "JWTs cannot use unencoded payloads"
+            )
         self._header = eh
 
     @property
@@ -303,7 +311,7 @@ class JWT:
 
     def _expected_type_heuristics(self, key=None):
         if self._expected_type is None and self._algs:
-            if set(self._algs).issubset(jwe_algs + ['RSA1_5']):
+            if set(self._algs).issubset(jwe_algs + ["RSA1_5"]):
                 self._expected_type = "JWE"
             elif set(self._algs).issubset(jws_algs):
                 self._expected_type = "JWS"
@@ -312,50 +320,50 @@ class JWT:
                 self._expected_type = "JWE"
         if self._expected_type is None and key is not None:
             if isinstance(key, JWK):
-                use = key.get('use')
-                if use == 'sig':
+                use = key.get("use")
+                if use == "sig":
                     self._expected_type = "JWS"
-                elif use == 'enc':
+                elif use == "enc":
                     self._expected_type = "JWE"
             elif isinstance(key, JWKSet):
                 all_use = None
                 # we can infer only if all keys are of the same type
                 for k in key:
-                    use = k.get('use')
+                    use = k.get("use")
                     if all_use is None:
                         all_use = use
                     elif use != all_use:
                         all_use = None
                         break
-                if all_use == 'sig':
+                if all_use == "sig":
                     self._expected_type = "JWS"
-                elif all_use == 'enc':
+                elif all_use == "enc":
                     self._expected_type = "JWE"
         if self._expected_type is None and key is not None:
             if isinstance(key, JWK):
-                ops = key.get('key_ops')
+                ops = key.get("key_ops")
                 if ops:
                     if not isinstance(ops, list):
                         ops = [ops]
-                    if set(ops).issubset(['sign', 'verify']):
+                    if set(ops).issubset(["sign", "verify"]):
                         self._expected_type = "JWS"
-                    elif set(ops).issubset(['encrypt', 'decrypt']):
+                    elif set(ops).issubset(["encrypt", "decrypt"]):
                         self._expected_type = "JWE"
             elif isinstance(key, JWKSet):
                 all_ops = None
                 ttype = None
                 # we can infer only if all keys are of the same type
                 for k in key:
-                    ops = k.get('key_ops')
+                    ops = k.get("key_ops")
                     if ops:
                         if not isinstance(ops, list):
                             ops = [ops]
                         if all_ops is None:
-                            if set(ops).issubset(['sign', 'verify']):
-                                all_ops = {'sign', 'verify'}
+                            if set(ops).issubset(["sign", "verify"]):
+                                all_ops = {"sign", "verify"}
                                 ttype = "JWS"
-                            elif set(ops).issubset(['encrypt', 'decrypt']):
-                                all_ops = {'encrypt', 'decrypt'}
+                            elif set(ops).issubset(["encrypt", "decrypt"]):
+                                all_ops = {"encrypt", "decrypt"}
                                 ttype = "JWE"
                             else:
                                 ttype = None
@@ -408,21 +416,21 @@ class JWT:
                 claims[name] = self._reg_claims[name]
 
     def _add_jti_claim(self, claims):
-        if 'jti' in claims or 'jti' not in self._reg_claims:
+        if "jti" in claims or "jti" not in self._reg_claims:
             return
-        claims['jti'] = str(uuid.uuid4())
+        claims["jti"] = str(uuid.uuid4())
 
     def _add_default_claims(self, claims):
         if self._reg_claims is None:
             return
 
         now = int(time.time())
-        self._add_optional_claim('iss', claims)
-        self._add_optional_claim('sub', claims)
-        self._add_optional_claim('aud', claims)
-        self._add_time_claim('exp', claims, now + self.validity)
-        self._add_time_claim('nbf', claims, now)
-        self._add_time_claim('iat', claims, now)
+        self._add_optional_claim("iss", claims)
+        self._add_optional_claim("sub", claims)
+        self._add_optional_claim("aud", claims)
+        self._add_time_claim("exp", claims, now + self.validity)
+        self._add_time_claim("nbf", claims, now)
+        self._add_time_claim("iat", claims, now)
         self._add_jti_claim(claims)
 
     def _check_string_claim(self, name, claims):
@@ -437,10 +445,12 @@ class JWT:
         if isinstance(claims[name], list):
             if any(not isinstance(claim, str) for claim in claims):
                 raise JWTInvalidClaimFormat(
-                    "Claim {} contains non StringOrURI types".format(name))
+                    "Claim {} contains non StringOrURI types".format(name)
+                )
         elif not isinstance(claims[name], str):
             raise JWTInvalidClaimFormat(
-                "Claim {} is not a StringOrURI type".format(name))
+                "Claim {} is not a StringOrURI type".format(name)
+            )
 
     def _check_integer_claim(self, name, claims):
         if name not in claims or claims[name] is None:
@@ -449,43 +459,46 @@ class JWT:
             int(claims[name])
         except ValueError as e:
             raise JWTInvalidClaimFormat(
-                "Claim {} is not an integer".format(name)) from e
+                "Claim {} is not an integer".format(name)
+            ) from e
 
     def _check_exp(self, claim, limit, leeway):
         if claim < limit - leeway:
-            raise JWTExpired('Expired at %d, time: %d(leeway: %d)' % (
-                             claim, limit, leeway))
+            raise JWTExpired(
+                "Expired at %d, time: %d(leeway: %d)" % (claim, limit, leeway)
+            )
 
     def _check_nbf(self, claim, limit, leeway):
         if claim > limit + leeway:
-            raise JWTNotYetValid('Valid from %d, time: %d(leeway: %d)' % (
-                                 claim, limit, leeway))
+            raise JWTNotYetValid(
+                "Valid from %d, time: %d(leeway: %d)" % (claim, limit, leeway)
+            )
 
     def _check_default_claims(self, claims):
-        self._check_string_claim('iss', claims)
-        self._check_string_claim('sub', claims)
-        self._check_array_or_string_claim('aud', claims)
-        self._check_integer_claim('exp', claims)
-        self._check_integer_claim('nbf', claims)
-        self._check_integer_claim('iat', claims)
-        self._check_string_claim('jti', claims)
-        self._check_string_claim('typ', claims)
+        self._check_string_claim("iss", claims)
+        self._check_string_claim("sub", claims)
+        self._check_array_or_string_claim("aud", claims)
+        self._check_integer_claim("exp", claims)
+        self._check_integer_claim("nbf", claims)
+        self._check_integer_claim("iat", claims)
+        self._check_string_claim("jti", claims)
+        self._check_string_claim("typ", claims)
 
         if self._check_claims is None:
-            if 'exp' in claims:
-                self._check_exp(claims['exp'], time.time(), self._leeway)
-            if 'nbf' in claims:
-                self._check_nbf(claims['nbf'], time.time(), self._leeway)
+            if "exp" in claims:
+                self._check_exp(claims["exp"], time.time(), self._leeway)
+            if "nbf" in claims:
+                self._check_nbf(claims["nbf"], time.time(), self._leeway)
 
     def _check_check_claims(self, check_claims):
-        self._check_string_claim('iss', check_claims)
-        self._check_string_claim('sub', check_claims)
-        self._check_array_or_string_claim('aud', check_claims)
-        self._check_integer_claim('exp', check_claims)
-        self._check_integer_claim('nbf', check_claims)
-        self._check_integer_claim('iat', check_claims)
-        self._check_string_claim('jti', check_claims)
-        self._check_string_claim('typ', check_claims)
+        self._check_string_claim("iss", check_claims)
+        self._check_string_claim("sub", check_claims)
+        self._check_array_or_string_claim("aud", check_claims)
+        self._check_integer_claim("exp", check_claims)
+        self._check_integer_claim("nbf", check_claims)
+        self._check_integer_claim("iat", check_claims)
+        self._check_string_claim("jti", check_claims)
+        self._check_string_claim("typ", check_claims)
 
     def _check_provided_claims(self):
         # check_claims can be set to False to skip any check
@@ -498,9 +511,9 @@ class JWT:
                 raise ValueError()
         except ValueError as e:
             if self._check_claims is not None:
-                raise JWTInvalidClaimFormat("Claims check requested "
-                                            "but claims is not a json "
-                                            "dict") from e
+                raise JWTInvalidClaimFormat(
+                    "Claims check requested " "but claims is not a json " "dict"
+                ) from e
             return
 
         self._check_default_claims(claims)
@@ -512,13 +525,15 @@ class JWT:
             if name not in claims:
                 raise JWTMissingClaim("Claim {} is missing".format(name))
 
-            if name in ['iss', 'sub', 'jti']:
+            if name in ["iss", "sub", "jti"]:
                 if value is not None and value != claims[name]:
                     raise JWTInvalidClaimValue(
                         "Invalid '{}' value. Expected '{}' got '{}'".format(
-                            name, value, claims[name]))
+                            name, value, claims[name]
+                        )
+                    )
 
-            elif name == 'aud':
+            elif name == "aud":
                 if value is not None:
                     if isinstance(claims[name], list):
                         tclaims = claims[name]
@@ -536,41 +551,45 @@ class JWT:
                     if not found:
                         raise JWTInvalidClaimValue(
                             "Invalid '{}' value. Expected '{}' in '{}'".format(
-                                name, claims[name], value))
+                                name, claims[name], value
+                            )
+                        )
 
-            elif name == 'exp':
+            elif name == "exp":
                 if value is not None:
                     self._check_exp(claims[name], value, 0)
                 else:
                     self._check_exp(claims[name], time.time(), self._leeway)
 
-            elif name == 'nbf':
+            elif name == "nbf":
                 if value is not None:
                     self._check_nbf(claims[name], value, 0)
                 else:
                     self._check_nbf(claims[name], time.time(), self._leeway)
 
-            elif name == 'typ':
+            elif name == "typ":
                 if value is not None:
                     if self.norm_typ(value) != self.norm_typ(claims[name]):
-                        raise JWTInvalidClaimValue("Invalid '%s' value. '%s'"
-                                                   " does not normalize to "
-                                                   "'%s'" % (name,
-                                                             claims[name],
-                                                             value))
+                        raise JWTInvalidClaimValue(
+                            "Invalid '%s' value. '%s'"
+                            " does not normalize to "
+                            "'%s'" % (name, claims[name], value)
+                        )
 
             else:
                 if value is not None and value != claims[name]:
                     raise JWTInvalidClaimValue(
                         "Invalid '{}' value. Expected '{}' got '{}'".format(
-                            name, value, claims[name]))
+                            name, value, claims[name]
+                        )
+                    )
 
     def norm_typ(self, val):
         lc = val.lower()
-        if '/' in lc:
+        if "/" in lc:
             return lc
         else:
-            return 'application/' + lc
+            return "application/" + lc
 
     def make_signed_token(self, key):
         """Signs the payload.
@@ -639,8 +658,7 @@ class JWT:
                 self.deserializelog = self.token.verifylog
             elif isinstance(self.token, JWE):
                 self.deserializelog = self.token.decryptlog
-            self.deserializelog.append(
-                'Validation failed: [{}]'.format(repr(e)))
+            self.deserializelog.append("Validation failed: [{}]".format(repr(e)))
             if isinstance(e, JWKeyNotFound):
                 raise JWTMissingKey() from e
             raise
@@ -648,7 +666,7 @@ class JWT:
         self.header = self.token.jose_header
         payload = self.token.payload
         if isinstance(payload, bytes):
-            payload = payload.decode('utf-8')
+            payload = payload.decode("utf-8")
         self.claims = payload
         self._check_provided_claims()
 
@@ -663,7 +681,7 @@ class JWT:
          decryption key, or a (:class:`jwcrypto.jwk.JWKSet`) that
          contains a key indexed by the 'kid' header.
         """
-        c = jwt.count('.')
+        c = jwt.count(".")
         if c == 2:
             self.token = JWS()
         elif c == 4:
@@ -722,9 +740,11 @@ class JWT:
     def __eq__(self, other):
         if not isinstance(other, JWT):
             return False
-        return self._claims == other._claims and \
-            self._header == other._header and \
-            self.token == other.token
+        return (
+            self._claims == other._claims
+            and self._header == other._header
+            and self.token == other.token
+        )
 
     def __str__(self):
         try:
@@ -734,9 +754,11 @@ class JWT:
 
     def __repr__(self):
         jwt = repr(self.token)
-        return f'JWT(header={self._header}, ' + \
-               f'claims={self._claims}, ' + \
-               f'jwt={jwt}, ' + \
-               f'key=None, algs={self._algs}, ' + \
-               f'default_claims={self._reg_claims}, ' + \
-               f'check_claims={self._check_claims})'
+        return (
+            f"JWT(header={self._header}, "
+            + f"claims={self._claims}, "
+            + f"jwt={jwt}, "
+            + f"key=None, algs={self._algs}, "
+            + f"default_claims={self._reg_claims}, "
+            + f"check_claims={self._check_claims})"
+        )

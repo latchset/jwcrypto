@@ -10,37 +10,36 @@ from collections.abc import MutableMapping
 # RFC 7515 Appendix C
 
 
-
-
 def base64url_encode(payload):
     if not isinstance(payload, bytes):
-        payload = payload.encode('utf-8')
+        payload = payload.encode("utf-8")
     encode = urlsafe_b64encode(payload)
-    return encode.decode('utf-8').rstrip('=')
+    return encode.decode("utf-8").rstrip("=")
 
 
 def base64url_decode(payload):
     size = len(payload) % 4
     if size == 2:
-        payload += '=='
+        payload += "=="
     elif size == 3:
-        payload += '='
+        payload += "="
     elif size != 0:
-        raise ValueError('Invalid base64 string')
-    return urlsafe_b64decode(payload.encode('utf-8'))
+        raise ValueError("Invalid base64 string")
+    return urlsafe_b64decode(payload.encode("utf-8"))
 
 
 # JSON encoding/decoding helpers with good defaults
 
+
 def json_encode(string):
     if isinstance(string, bytes):
-        string = string.decode('utf-8')
-    return json.dumps(string, separators=(',', ':'), sort_keys=True)
+        string = string.decode("utf-8")
+    return json.dumps(string, separators=(",", ":"), sort_keys=True)
 
 
 def json_decode(string):
     if isinstance(string, bytes):
-        string = string.decode('utf-8')
+        string = string.decode("utf-8")
     return json.loads(string)
 
 
@@ -50,9 +49,9 @@ class JWException(Exception):
 
 class InvalidJWAAlgorithm(JWException):
     def __init__(self, message=None):
-        msg = 'Invalid JWA Algorithm name'
+        msg = "Invalid JWA Algorithm name"
         if message:
-            msg += ' (%s)' % message
+            msg += " (%s)" % message
         super().__init__(msg)
 
 
@@ -64,7 +63,7 @@ class InvalidCEKeyLength(JWException):
     """
 
     def __init__(self, expected, obtained):
-        msg = 'Expected key of length %d bits, got %d' % (expected, obtained)
+        msg = "Expected key of length %d bits, got %d" % (expected, obtained)
         super().__init__(msg)
 
 
@@ -80,9 +79,9 @@ class InvalidJWEOperation(JWException):
         if message:
             msg = message
         else:
-            msg = 'Unknown Operation Failure'
+            msg = "Unknown Operation Failure"
         if exception:
-            msg += ' {%s}' % repr(exception)
+            msg += " {%s}" % repr(exception)
         super().__init__(msg)
 
 
@@ -94,7 +93,7 @@ class InvalidJWEKeyType(JWException):
     """
 
     def __init__(self, expected, obtained):
-        msg = 'Expected key type {}, got {}'.format(expected, obtained)
+        msg = "Expected key type {}, got {}".format(expected, obtained)
         super().__init__(msg)
 
 
@@ -106,7 +105,7 @@ class InvalidJWEKeyLength(JWException):
     """
 
     def __init__(self, expected, obtained):
-        msg = 'Expected key of length %d, got %d' % (expected, obtained)
+        msg = "Expected key of length %d, got %d" % (expected, obtained)
         super().__init__(msg)
 
 
@@ -122,9 +121,9 @@ class InvalidJWSERegOperation(JWException):
         if message:
             msg = message
         else:
-            msg = 'Unknown Operation Failure'
+            msg = "Unknown Operation Failure"
         if exception:
-            msg += ' {%s}' % repr(exception)
+            msg += " {%s}" % repr(exception)
         super().__init__(msg)
 
 
@@ -140,7 +139,7 @@ class JWKeyNotFound(JWException):
         if message:
             msg = message
         else:
-            msg = 'Key Not Found'
+            msg = "Key Not Found"
         super().__init__(msg)
 
 
@@ -148,8 +147,9 @@ class JWKeyNotFound(JWException):
 
 # RFC 7515 - 9.1: JSON Web Signature and Encryption Header Parameters Registry
 # HeaderParameters are for both JWS and JWE
-JWSEHeaderParameter = namedtuple('Parameter',
-                                 'description mustprotect supported check_fn')
+JWSEHeaderParameter = namedtuple(
+    "Parameter", "description mustprotect supported check_fn"
+)
 
 
 class JWSEHeaderRegistry(MutableMapping):
@@ -158,7 +158,7 @@ class JWSEHeaderRegistry(MutableMapping):
             if isinstance(init_registry, dict):
                 self._registry = copy.deepcopy(init_registry)
             else:
-                raise InvalidJWSERegOperation('Unknown input type')
+                raise InvalidJWSERegOperation("Unknown input type")
         else:
             self._registry = {}
 
@@ -166,8 +166,7 @@ class JWSEHeaderRegistry(MutableMapping):
 
     def check_header(self, h, value):
         if h not in self._registry:
-            raise InvalidJWSERegOperation('No header "%s" found in registry'
-                                          % h)
+            raise InvalidJWSERegOperation('No header "%s" found in registry' % h)
 
         param = self._registry[h]
         if param.check_fn is None:
@@ -182,10 +181,10 @@ class JWSEHeaderRegistry(MutableMapping):
         return self._registry.__iter__()
 
     def __delitem__(self, key):
-        if self._registry[key].mustprotect or \
-           self._registry[key].supported:
-            raise InvalidJWSERegOperation('Unable to delete protected or '
-                                          'supported field')
+        if self._registry[key].mustprotect or self._registry[key].supported:
+            raise InvalidJWSERegOperation(
+                "Unable to delete protected or " "supported field"
+            )
         else:
             self._registry.__delitem__(key)
 
@@ -194,11 +193,13 @@ class JWSEHeaderRegistry(MutableMapping):
         if h in self._registry:
             p = self._registry[h]
             if p.supported:
-                raise InvalidJWSERegOperation('Supported header already exists'
-                                              ' in registry')
+                raise InvalidJWSERegOperation(
+                    "Supported header already exists" " in registry"
+                )
             elif p.mustprotect and not jwse_header_param.mustprotect:
-                raise InvalidJWSERegOperation('Header specified should be'
-                                              'a protected header')
+                raise InvalidJWSERegOperation(
+                    "Header specified should be" "a protected header"
+                )
             else:
                 del self._registry[h]
 
