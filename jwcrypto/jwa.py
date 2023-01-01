@@ -17,6 +17,8 @@ from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 from cryptography.hazmat.primitives.keywrap import aes_key_unwrap, aes_key_wrap
 from cryptography.hazmat.primitives.padding import PKCS7
 
+
+
 from jwcrypto.common import InvalidCEKeyLength
 from jwcrypto.common import InvalidJWAAlgorithm
 from jwcrypto.common import InvalidJWEKeyLength
@@ -171,7 +173,7 @@ class _HS256(_RawHMAC, JWAAlgorithm):
     algorithm_use = 'sig'
 
     def __init__(self):
-        super(_HS256, self).__init__(hashes.SHA256())
+        super().__init__(hashes.SHA256())
 
 
 class _HS384(_RawHMAC, JWAAlgorithm):
@@ -183,7 +185,7 @@ class _HS384(_RawHMAC, JWAAlgorithm):
     algorithm_use = 'sig'
 
     def __init__(self):
-        super(_HS384, self).__init__(hashes.SHA384())
+        super().__init__(hashes.SHA384())
 
 
 class _HS512(_RawHMAC, JWAAlgorithm):
@@ -195,7 +197,7 @@ class _HS512(_RawHMAC, JWAAlgorithm):
     algorithm_use = 'sig'
 
     def __init__(self):
-        super(_HS512, self).__init__(hashes.SHA512())
+        super().__init__(hashes.SHA512())
 
 
 class _RS256(_RawRSA, JWAAlgorithm):
@@ -207,7 +209,7 @@ class _RS256(_RawRSA, JWAAlgorithm):
     algorithm_use = 'sig'
 
     def __init__(self):
-        super(_RS256, self).__init__(padding.PKCS1v15(), hashes.SHA256())
+        super().__init__(padding.PKCS1v15(), hashes.SHA256())
 
 
 class _RS384(_RawRSA, JWAAlgorithm):
@@ -219,7 +221,7 @@ class _RS384(_RawRSA, JWAAlgorithm):
     algorithm_use = 'sig'
 
     def __init__(self):
-        super(_RS384, self).__init__(padding.PKCS1v15(), hashes.SHA384())
+        super().__init__(padding.PKCS1v15(), hashes.SHA384())
 
 
 class _RS512(_RawRSA, JWAAlgorithm):
@@ -231,7 +233,7 @@ class _RS512(_RawRSA, JWAAlgorithm):
     algorithm_use = 'sig'
 
     def __init__(self):
-        super(_RS512, self).__init__(padding.PKCS1v15(), hashes.SHA512())
+        super().__init__(padding.PKCS1v15(), hashes.SHA512())
 
 
 class _ES256(_RawEC, JWAAlgorithm):
@@ -243,7 +245,7 @@ class _ES256(_RawEC, JWAAlgorithm):
     algorithm_use = 'sig'
 
     def __init__(self):
-        super(_ES256, self).__init__('P-256', hashes.SHA256())
+        super().__init__('P-256', hashes.SHA256())
 
 
 class _ES256K(_RawEC, JWAAlgorithm):
@@ -255,7 +257,7 @@ class _ES256K(_RawEC, JWAAlgorithm):
     algorithm_use = 'sig'
 
     def __init__(self):
-        super(_ES256K, self).__init__('secp256k1', hashes.SHA256())
+        super().__init__('secp256k1', hashes.SHA256())
 
 
 class _ES384(_RawEC, JWAAlgorithm):
@@ -267,7 +269,7 @@ class _ES384(_RawEC, JWAAlgorithm):
     algorithm_use = 'sig'
 
     def __init__(self):
-        super(_ES384, self).__init__('P-384', hashes.SHA384())
+        super().__init__('P-384', hashes.SHA384())
 
 
 class _ES512(_RawEC, JWAAlgorithm):
@@ -279,7 +281,7 @@ class _ES512(_RawEC, JWAAlgorithm):
     algorithm_use = 'sig'
 
     def __init__(self):
-        super(_ES512, self).__init__('P-521', hashes.SHA512())
+        super().__init__('P-521', hashes.SHA512())
 
 
 class _PS256(_RawRSA, JWAAlgorithm):
@@ -293,7 +295,7 @@ class _PS256(_RawRSA, JWAAlgorithm):
     def __init__(self):
         padfn = padding.PSS(padding.MGF1(hashes.SHA256()),
                             hashes.SHA256.digest_size)
-        super(_PS256, self).__init__(padfn, hashes.SHA256())
+        super().__init__(padfn, hashes.SHA256())
 
 
 class _PS384(_RawRSA, JWAAlgorithm):
@@ -307,7 +309,7 @@ class _PS384(_RawRSA, JWAAlgorithm):
     def __init__(self):
         padfn = padding.PSS(padding.MGF1(hashes.SHA384()),
                             hashes.SHA384.digest_size)
-        super(_PS384, self).__init__(padfn, hashes.SHA384())
+        super().__init__(padfn, hashes.SHA384())
 
 
 class _PS512(_RawRSA, JWAAlgorithm):
@@ -321,7 +323,7 @@ class _PS512(_RawRSA, JWAAlgorithm):
     def __init__(self):
         padfn = padding.PSS(padding.MGF1(hashes.SHA512()),
                             hashes.SHA512.digest_size)
-        super(_PS512, self).__init__(padfn, hashes.SHA512())
+        super().__init__(padfn, hashes.SHA512())
 
 
 class _None(_RawNone, JWAAlgorithm):
@@ -380,7 +382,7 @@ class _Rsa15(_RSA, JWAAlgorithm):
     algorithm_use = 'kex'
 
     def __init__(self):
-        super(_Rsa15, self).__init__(padding.PKCS1v15())
+        super().__init__(padding.PKCS1v15())
 
     def unwrap(self, key, bitsize, ek, headers):
         self._check_key(key)
@@ -392,7 +394,7 @@ class _Rsa15(_RSA, JWAAlgorithm):
         # same time as in the exception side of the branch
         cek = _randombits(bitsize)
         try:
-            cek = super(_Rsa15, self).unwrap(key, bitsize, ek, headers)
+            cek = super().unwrap(key, bitsize, ek, headers)
             # always raise so we always run through the exception handling
             # code in all cases
             raise Exception('Dummy')
@@ -409,7 +411,7 @@ class _RsaOaep(_RSA, JWAAlgorithm):
     algorithm_use = 'kex'
 
     def __init__(self):
-        super(_RsaOaep, self).__init__(
+        super().__init__(
             padding.OAEP(padding.MGF1(hashes.SHA1()),
                          hashes.SHA1(), None))
 
@@ -423,7 +425,7 @@ class _RsaOaep256(_RSA, JWAAlgorithm):  # noqa: ignore=N801
     algorithm_use = 'kex'
 
     def __init__(self):
-        super(_RsaOaep256, self).__init__(
+        super().__init__(
             padding.OAEP(padding.MGF1(hashes.SHA256()),
                          hashes.SHA256(), None))
 
@@ -953,7 +955,7 @@ class _A128CbcHs256(_AesCbcHmacSha2, JWAAlgorithm):
     algorithm_use = 'enc'
 
     def __init__(self):
-        super(_A128CbcHs256, self).__init__(hashes.SHA256())
+        super().__init__(hashes.SHA256())
 
 
 class _A192CbcHs384(_AesCbcHmacSha2, JWAAlgorithm):
@@ -965,7 +967,7 @@ class _A192CbcHs384(_AesCbcHmacSha2, JWAAlgorithm):
     algorithm_use = 'enc'
 
     def __init__(self):
-        super(_A192CbcHs384, self).__init__(hashes.SHA384())
+        super().__init__(hashes.SHA384())
 
 
 class _A256CbcHs512(_AesCbcHmacSha2, JWAAlgorithm):
@@ -977,7 +979,7 @@ class _A256CbcHs512(_AesCbcHmacSha2, JWAAlgorithm):
     algorithm_use = 'enc'
 
     def __init__(self):
-        super(_A256CbcHs512, self).__init__(hashes.SHA512())
+        super().__init__(hashes.SHA512())
 
 
 class _AesGcm(_RawJWE):
@@ -1066,7 +1068,7 @@ class _BP256R1(_RawEC, JWAAlgorithm):
     algorithm_use = 'sig'
 
     def __init__(self):
-        super(_BP256R1, self).__init__('BP-256', hashes.SHA256())
+        super().__init__('BP-256', hashes.SHA256())
 
 
 class _BP384R1(_RawEC, JWAAlgorithm):
@@ -1082,7 +1084,7 @@ class _BP384R1(_RawEC, JWAAlgorithm):
     algorithm_use = 'sig'
 
     def __init__(self):
-        super(_BP384R1, self).__init__('BP-384', hashes.SHA384())
+        super().__init__('BP-384', hashes.SHA384())
 
 
 class _BP512R1(_RawEC, JWAAlgorithm):
@@ -1098,7 +1100,7 @@ class _BP512R1(_RawEC, JWAAlgorithm):
     algorithm_use = 'sig'
 
     def __init__(self):
-        super(_BP512R1, self).__init__('BP-512', hashes.SHA512())
+        super().__init__('BP-512', hashes.SHA512())
 
 
 class JWA:

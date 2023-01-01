@@ -1,6 +1,5 @@
 # Copyright (C) 2015  JWCrypto Project Contributors - see LICENSE file
 
-from __future__ import unicode_literals
 
 import copy
 import unittest
@@ -8,6 +7,9 @@ import unittest
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.hazmat.primitives.asymmetric import rsa
+
+
+
 
 from jwcrypto import jwa
 from jwcrypto import jwe

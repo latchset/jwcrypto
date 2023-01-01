@@ -15,6 +15,9 @@ from jwcrypto.jws import JWS
 from jwcrypto.jws import default_allowed_algs as jws_algs
 
 
+
+
+
 # RFC 7519 - 4.1
 # name: description
 JWTClaimsRegistry = {'iss': 'Issuer',
@@ -51,7 +54,7 @@ class JWTExpired(JWException):
             msg = 'Token expired'
         if exception:
             msg += ' {%s}' % str(exception)
-        super(JWTExpired, self).__init__(msg)
+        super().__init__(msg)
 
 
 class JWTNotYetValid(JWException):
@@ -69,7 +72,7 @@ class JWTNotYetValid(JWException):
             msg = 'Token not yet valid'
         if exception:
             msg += ' {%s}' % str(exception)
-        super(JWTNotYetValid, self).__init__(msg)
+        super().__init__(msg)
 
 
 class JWTMissingClaim(JWException):
@@ -86,7 +89,7 @@ class JWTMissingClaim(JWException):
             msg = 'Invalid Claim Value'
         if exception:
             msg += ' {%s}' % str(exception)
-        super(JWTMissingClaim, self).__init__(msg)
+        super().__init__(msg)
 
 
 class JWTInvalidClaimValue(JWException):
@@ -103,7 +106,7 @@ class JWTInvalidClaimValue(JWException):
             msg = 'Invalid Claim Value'
         if exception:
             msg += ' {%s}' % str(exception)
-        super(JWTInvalidClaimValue, self).__init__(msg)
+        super().__init__(msg)
 
 
 class JWTInvalidClaimFormat(JWException):
@@ -120,7 +123,7 @@ class JWTInvalidClaimFormat(JWException):
             msg = 'Invalid Claim Format'
         if exception:
             msg += ' {%s}' % str(exception)
-        super(JWTInvalidClaimFormat, self).__init__(msg)
+        super().__init__(msg)
 
 
 @deprecated
@@ -139,7 +142,7 @@ class JWTMissingKeyID(JWException):
             msg = 'Missing Key ID'
         if exception:
             msg += ' {%s}' % str(exception)
-        super(JWTMissingKeyID, self).__init__(msg)
+        super().__init__(msg)
 
 
 class JWTMissingKey(JWKeyNotFound):
@@ -157,7 +160,7 @@ class JWTMissingKey(JWKeyNotFound):
             msg = 'Missing Key'
         if exception:
             msg += ' {%s}' % str(exception)
-        super(JWTMissingKey, self).__init__(msg)
+        super().__init__(msg)
 
 
 class JWT:
@@ -349,10 +352,10 @@ class JWT:
                             ops = [ops]
                         if all_ops is None:
                             if set(ops).issubset(['sign', 'verify']):
-                                all_ops = set(['sign', 'verify'])
+                                all_ops = {'sign', 'verify'}
                                 ttype = "JWS"
                             elif set(ops).issubset(['encrypt', 'decrypt']):
-                                all_ops = set(['encrypt', 'decrypt'])
+                                all_ops = {'encrypt', 'decrypt'}
                                 ttype = "JWE"
                             else:
                                 ttype = None
@@ -434,10 +437,10 @@ class JWT:
         if isinstance(claims[name], list):
             if any(not isinstance(claim, str) for claim in claims):
                 raise JWTInvalidClaimFormat(
-                    "Claim %s contains non StringOrURI types" % (name, ))
+                    "Claim {} contains non StringOrURI types".format(name))
         elif not isinstance(claims[name], str):
             raise JWTInvalidClaimFormat(
-                "Claim %s is not a StringOrURI type" % (name, ))
+                "Claim {} is not a StringOrURI type".format(name))
 
     def _check_integer_claim(self, name, claims):
         if name not in claims or claims[name] is None:
@@ -446,7 +449,7 @@ class JWT:
             int(claims[name])
         except ValueError as e:
             raise JWTInvalidClaimFormat(
-                "Claim %s is not an integer" % (name, )) from e
+                "Claim {} is not an integer".format(name)) from e
 
     def _check_exp(self, claim, limit, leeway):
         if claim < limit - leeway:
@@ -507,12 +510,12 @@ class JWT:
 
         for name, value in self._check_claims.items():
             if name not in claims:
-                raise JWTMissingClaim("Claim %s is missing" % (name, ))
+                raise JWTMissingClaim("Claim {} is missing".format(name))
 
             if name in ['iss', 'sub', 'jti']:
                 if value is not None and value != claims[name]:
                     raise JWTInvalidClaimValue(
-                        "Invalid '%s' value. Expected '%s' got '%s'" % (
+                        "Invalid '{}' value. Expected '{}' got '{}'".format(
                             name, value, claims[name]))
 
             elif name == 'aud':
@@ -559,7 +562,7 @@ class JWT:
             else:
                 if value is not None and value != claims[name]:
                     raise JWTInvalidClaimValue(
-                        "Invalid '%s' value. Expected '%s' got '%s'" % (
+                        "Invalid '{}' value. Expected '{}' got '{}'".format(
                             name, value, claims[name]))
 
     def norm_typ(self, val):

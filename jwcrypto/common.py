@@ -10,6 +10,8 @@ from collections.abc import MutableMapping
 # RFC 7515 Appendix C
 
 
+
+
 def base64url_encode(payload):
     if not isinstance(payload, bytes):
         payload = payload.encode('utf-8')
@@ -51,7 +53,7 @@ class InvalidJWAAlgorithm(JWException):
         msg = 'Invalid JWA Algorithm name'
         if message:
             msg += ' (%s)' % message
-        super(InvalidJWAAlgorithm, self).__init__(msg)
+        super().__init__(msg)
 
 
 class InvalidCEKeyLength(JWException):
@@ -63,7 +65,7 @@ class InvalidCEKeyLength(JWException):
 
     def __init__(self, expected, obtained):
         msg = 'Expected key of length %d bits, got %d' % (expected, obtained)
-        super(InvalidCEKeyLength, self).__init__(msg)
+        super().__init__(msg)
 
 
 class InvalidJWEOperation(JWException):
@@ -81,7 +83,7 @@ class InvalidJWEOperation(JWException):
             msg = 'Unknown Operation Failure'
         if exception:
             msg += ' {%s}' % repr(exception)
-        super(InvalidJWEOperation, self).__init__(msg)
+        super().__init__(msg)
 
 
 class InvalidJWEKeyType(JWException):
@@ -92,8 +94,8 @@ class InvalidJWEKeyType(JWException):
     """
 
     def __init__(self, expected, obtained):
-        msg = 'Expected key type %s, got %s' % (expected, obtained)
-        super(InvalidJWEKeyType, self).__init__(msg)
+        msg = 'Expected key type {}, got {}'.format(expected, obtained)
+        super().__init__(msg)
 
 
 class InvalidJWEKeyLength(JWException):
@@ -105,7 +107,7 @@ class InvalidJWEKeyLength(JWException):
 
     def __init__(self, expected, obtained):
         msg = 'Expected key of length %d, got %d' % (expected, obtained)
-        super(InvalidJWEKeyLength, self).__init__(msg)
+        super().__init__(msg)
 
 
 class InvalidJWSERegOperation(JWException):
@@ -123,7 +125,7 @@ class InvalidJWSERegOperation(JWException):
             msg = 'Unknown Operation Failure'
         if exception:
             msg += ' {%s}' % repr(exception)
-        super(InvalidJWSERegOperation, self).__init__(msg)
+        super().__init__(msg)
 
 
 class JWKeyNotFound(JWException):
@@ -139,7 +141,7 @@ class JWKeyNotFound(JWException):
             msg = message
         else:
             msg = 'Key Not Found'
-        super(JWKeyNotFound, self).__init__(msg)
+        super().__init__(msg)
 
 
 # JWSE Header Registry definitions

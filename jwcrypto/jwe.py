@@ -11,6 +11,10 @@ from jwcrypto.jwa import JWA
 from jwcrypto.jwk import JWKSet
 
 
+
+
+
+
 # RFC 7516 - 4.1
 # name: (description, supported?)
 JWEHeaderRegistry = {
@@ -61,7 +65,7 @@ class InvalidJWEData(JWException):
             msg = 'Unknown Data Verification Failure'
         if exception:
             msg += ' {%s}' % str(exception)
-        super(InvalidJWEData, self).__init__(msg)
+        super().__init__(msg)
 
 
 # These have been moved to jwcrypto.common, maintain here for backwards compat

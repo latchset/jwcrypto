@@ -7,6 +7,11 @@ from jwcrypto.common import json_decode, json_encode
 from jwcrypto.jwa import JWA
 from jwcrypto.jwk import JWK, JWKSet
 
+
+
+
+
+
 JWSHeaderRegistry = {
     'alg': JWSEHeaderParameter('Algorithm', False, True, None),
     'jku': JWSEHeaderParameter('JWK Set URL', False, False, None),
@@ -48,7 +53,7 @@ class InvalidJWSSignature(JWException):
             msg = 'Unknown Signature Verification Failure'
         if exception:
             msg += ' {%s}' % str(exception)
-        super(InvalidJWSSignature, self).__init__(msg)
+        super().__init__(msg)
 
 
 class InvalidJWSObject(JWException):
@@ -64,7 +69,7 @@ class InvalidJWSObject(JWException):
             msg += ' [%s]' % message
         if exception:
             msg += ' {%s}' % str(exception)
-        super(InvalidJWSObject, self).__init__(msg)
+        super().__init__(msg)
 
 
 class InvalidJWSOperation(JWException):
@@ -82,7 +87,7 @@ class InvalidJWSOperation(JWException):
             msg = 'Unknown Operation Failure'
         if exception:
             msg += ' {%s}' % str(exception)
-        super(InvalidJWSOperation, self).__init__(msg)
+        super().__init__(msg)
 
 
 class JWSCore:

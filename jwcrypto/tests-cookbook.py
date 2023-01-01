@@ -10,6 +10,9 @@ from jwcrypto.common import json_decode, json_encode
 
 # Based on: RFC 7520
 
+
+
+
 EC_Public_Key_3_1 = {
     "kty": "EC",
     "kid": "bilbo.baggins@hobbiton.example",
@@ -119,7 +122,7 @@ JWS_Signature_4_1_2 = \
     "cIe8u9ipH84ogoree7vjbU5y18kDquDg"
 
 JWS_compact_4_1_3 = \
-    "%s.%s.%s" % (JWS_Protected_Header_4_1_2,
+    "{}.{}.{}".format(JWS_Protected_Header_4_1_2,
                   Payload_plaintext_b64_4,
                   JWS_Signature_4_1_2)
 
@@ -148,7 +151,7 @@ JWS_Signature_4_2_2 = \
     "6GYmJUAfmWjwZ6oD4ifKo8DYM-X72Eaw"
 
 JWS_compact_4_2_3 = \
-    "%s.%s.%s" % (JWS_Protected_Header_4_2_2,
+    "{}.{}.{}".format(JWS_Protected_Header_4_2_2,
                   Payload_plaintext_b64_4,
                   JWS_Signature_4_2_2)
 
@@ -174,7 +177,7 @@ JWS_Signature_4_3_2 = \
     "AD890jl8e2puQens_IEKBpHABlsbEPX6sFY8OcGDqoRuBomu9xQ2"
 
 JWS_compact_4_3_3 = \
-    "%s.%s.%s" % (JWS_Protected_Header_4_3_2,
+    "{}.{}.{}".format(JWS_Protected_Header_4_3_2,
                   Payload_plaintext_b64_4,
                   JWS_Signature_4_3_2)
 
@@ -197,7 +200,7 @@ JWS_Protected_Header_4_4_2 = \
 JWS_Signature_4_4_2 = "s0h6KThzkfBBBkLspW1h84VsJZFTsPPqMDA7g1Md7p0"
 
 JWS_compact_4_4_3 = \
-    "%s.%s.%s" % (JWS_Protected_Header_4_4_2,
+    "{}.{}.{}".format(JWS_Protected_Header_4_4_2,
                   Payload_plaintext_b64_4,
                   JWS_Signature_4_4_2)
 
@@ -488,7 +491,7 @@ JWE_Ciphertext_5_1_4 = \
 JWE_Authentication_Tag_5_1_4 = "kvKuFBXHe5mQr4lqgobAUg"
 
 JWE_compact_5_1_5 = \
-    "%s.%s.%s.%s.%s" % (JWE_Protected_Header_5_1_4,
+    "{}.{}.{}.{}.{}".format(JWE_Protected_Header_5_1_4,
                         JWE_Encrypted_Key_5_1_3,
                         JWE_IV_5_1_2,
                         JWE_Ciphertext_5_1_4,
@@ -609,7 +612,7 @@ JWE_Ciphertext_5_2_4 = \
 JWE_Authentication_Tag_5_2_4 = "UCGiqJxhBI3IFVdPalHHvA"
 
 JWE_compact_5_2_5 = \
-    "%s.%s.%s.%s.%s" % (JWE_Protected_Header_5_2_4,
+    "{}.{}.{}.{}.{}".format(JWE_Protected_Header_5_2_4,
                         JWE_Encrypted_Key_5_2_3,
                         JWE_IV_5_2_2,
                         JWE_Ciphertext_5_2_4,
@@ -671,7 +674,7 @@ JWE_Ciphertext_5_3_4 = \
 JWE_Authentication_Tag_5_3_4 = "0HlwodAhOCILG5SQ2LQ9dg"
 
 JWE_compact_5_3_5 = \
-    "%s.%s.%s.%s.%s" % (JWE_Protected_Header_5_3_4,
+    "{}.{}.{}.{}.{}".format(JWE_Protected_Header_5_3_4,
                         JWE_Encrypted_Key_5_3_3,
                         JWE_IV_5_3_2,
                         JWE_Ciphertext_5_3_4,
@@ -731,7 +734,7 @@ JWE_Ciphertext_5_4_4 = \
 JWE_Authentication_Tag_5_4_4 = "WuGzxmcreYjpHGJoa17EBg"
 
 JWE_compact_5_4_5 = \
-    "%s.%s.%s.%s.%s" % (JWE_Protected_Header_5_4_4,
+    "{}.{}.{}.{}.{}".format(JWE_Protected_Header_5_4_4,
                         JWE_Encrypted_Key_5_4_3,
                         JWE_IV_5_4_2,
                         JWE_Ciphertext_5_4_4,
@@ -789,7 +792,7 @@ JWE_Ciphertext_5_5_4 = \
 JWE_Authentication_Tag_5_5_4 = "WCCkNa-x4BeB9hIDIfFuhg"
 
 JWE_compact_5_5_5 = \
-    "%s..%s.%s.%s" % (JWE_Protected_Header_5_5_4,
+    "{}..{}.{}.{}".format(JWE_Protected_Header_5_5_4,
                       JWE_IV_5_5_2,
                       JWE_Ciphertext_5_5_4,
                       JWE_Authentication_Tag_5_5_4)
@@ -825,7 +828,7 @@ JWE_Ciphertext_5_6_3 = \
 JWE_Authentication_Tag_5_6_3 = "vbb32Xvllea2OtmHAdccRQ"
 
 JWE_compact_5_6_4 = \
-    "%s..%s.%s.%s" % (JWE_Protected_Header_5_6_3,
+    "{}..{}.{}.{}".format(JWE_Protected_Header_5_6_3,
                       JWE_IV_5_6_2,
                       JWE_Ciphertext_5_6_3,
                       JWE_Authentication_Tag_5_6_3)
@@ -871,7 +874,7 @@ JWE_Ciphertext_5_7_4 = \
 JWE_Authentication_Tag_5_7_4 = "DKW7jrb4WaRSNfbXVPlT5g"
 
 JWE_compact_5_7_5 = \
-    "%s.%s.%s.%s.%s" % (JWE_Protected_Header_5_7_4,
+    "{}.{}.{}.{}.{}".format(JWE_Protected_Header_5_7_4,
                         JWE_Encrypted_Key_5_7_3,
                         JWE_IV_5_7_2,
                         JWE_Ciphertext_5_7_4,
@@ -919,7 +922,7 @@ JWE_Ciphertext_5_8_4 = \
 JWE_Authentication_Tag_5_8_4 = "ER7MWJZ1FBI_NKvn7Zb1Lw"
 
 JWE_compact_5_8_5 = \
-    "%s.%s.%s.%s.%s" % (JWE_Protected_Header_5_8_4,
+    "{}.{}.{}.{}.{}".format(JWE_Protected_Header_5_8_4,
                         JWE_Encrypted_Key_5_8_3,
                         JWE_IV_5_8_2,
                         JWE_Ciphertext_5_8_4,
@@ -958,7 +961,7 @@ JWE_Ciphertext_5_9_4 = \
 JWE_Authentication_Tag_5_9_4 = "VILuUwuIxaLVmh5X-T7kmA"
 
 JWE_compact_5_9_5 = \
-    "%s.%s.%s.%s.%s" % (JWE_Protected_Header_5_9_4,
+    "{}.{}.{}.{}.{}".format(JWE_Protected_Header_5_9_4,
                         JWE_Encrypted_Key_5_9_3,
                         JWE_IV_5_9_2,
                         JWE_Ciphertext_5_9_4,

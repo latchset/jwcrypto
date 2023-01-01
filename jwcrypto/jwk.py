@@ -13,6 +13,7 @@ from cryptography.hazmat.primitives.asymmetric import rsa
 
 from deprecated import deprecated
 
+
 from jwcrypto.common import JWException
 from jwcrypto.common import base64url_decode, base64url_encode
 from jwcrypto.common import json_decode, json_encode
@@ -227,11 +228,11 @@ class InvalidJWKType(JWException):
     """
 
     def __init__(self, value=None):
-        super(InvalidJWKType, self).__init__()
+        super().__init__()
         self.value = value
 
     def __str__(self):
-        return 'Unknown type "%s", valid types are: %s' % (
+        return 'Unknown type "{}", valid types are: {}'.format(
             self.value, list(JWKTypesRegistry.keys()))
 
 
@@ -243,7 +244,7 @@ class InvalidJWKUsage(JWException):
     """
 
     def __init__(self, use, value):
-        super(InvalidJWKUsage, self).__init__()
+        super().__init__()
         self.value = value
         self.use = use
 
@@ -256,7 +257,7 @@ class InvalidJWKUsage(JWException):
             valid = JWKUseRegistry[self.value]
         else:
             valid = 'Unknown(%s)' % self.value
-        return 'Invalid usage requested: "%s". Valid for: "%s"' % (usage,
+        return 'Invalid usage requested: "{}". Valid for: "{}"'.format(usage,
                                                                    valid)
 
 
@@ -268,7 +269,7 @@ class InvalidJWKOperation(JWException):
     """
 
     def __init__(self, operation, values):
-        super(InvalidJWKOperation, self).__init__()
+        super().__init__()
         self.op = operation
         self.values = values
 
@@ -283,7 +284,7 @@ class InvalidJWKOperation(JWException):
                 valid.append(JWKOperationsRegistry[v])
             else:
                 valid.append('Unknown(%s)' % v)
-        return 'Invalid operation requested: "%s". Valid for: "%s"' % (op,
+        return 'Invalid operation requested: "{}". Valid for: "{}"'.format(op,
                                                                        valid)
 
 
@@ -336,7 +337,7 @@ class JWK(dict):
         :raises InvalidJWKValue: if incorrect or inconsistent parameters
             are provided.
         """
-        super(JWK, self).__init__()
+        super().__init__()
         self._cache_pub_k = None
         self._cache_pri_k = None
 
@@ -1117,7 +1118,7 @@ class JWK(dict):
             if kty is None:
                 if value not in JWKTypesRegistry:
                     raise InvalidJWKType(value)
-                super(JWK, self).__setitem__(item, value)
+                super().__setitem__(item, value)
                 return
             elif kty != value:
                 raise ValueError('Cannot change key type')
@@ -1146,12 +1147,12 @@ class JWK(dict):
                     raise InvalidJWKValue(
                         '"%s" is not Base64urlUInt encoded' % item
                     ) from e
-            super(JWK, self).__setitem__(item, value)
+            super().__setitem__(item, value)
             return
 
         # If not a key param check if it is a know parameter
         if item in list(JWKParamsRegistry.keys()):
-            super(JWK, self).__setitem__(item, value)
+            super().__setitem__(item, value)
             return
 
         # if neither a key param nor a known parameter, check if we are
@@ -1165,7 +1166,7 @@ class JWK(dict):
                                item, kty))
 
         # ok if we've come this far it means we have an unknown parameter
-        super(JWK, self).__setitem__(item, value)
+        super().__setitem__(item, value)
 
     def update(self, *args, **kwargs):
         r"""
@@ -1196,7 +1197,7 @@ class JWK(dict):
             self._cache_pub_k = None
             self._cache_pri_k = None
 
-        super(JWK, self).__delitem__(item)
+        super().__delitem__(item)
 
     def __eq__(self, other):
         if not isinstance(other, JWK):
@@ -1229,7 +1230,7 @@ class JWK(dict):
             for name in list(JWKTypesRegistry.keys()):
                 if item in list(JWKValuesRegistry[name].keys()):
                     self.__setitem__(item, value)
-            super(JWK, self).__setattr__(item, value)
+            super().__setattr__(item, value)
         except KeyError:
             raise AttributeError(item) from None
 
@@ -1281,8 +1282,8 @@ class JWKSet(dict):
     The 'keys' attribute accepts only :class:`jwcrypto.jwk.JWK` elements.
     """
     def __init__(self, *args, **kwargs):
-        super(JWKSet, self).__init__()
-        super(JWKSet, self).__setitem__('keys', _JWKkeys())
+        super().__init__()
+        super().__setitem__('keys', _JWKkeys())
         self.update(*args, **kwargs)
 
     def __iter__(self):
@@ -1295,7 +1296,7 @@ class JWKSet(dict):
         if key == 'keys' and not isinstance(val, _JWKkeys):
             self['keys'].add(val)
         else:
-            super(JWKSet, self).__setitem__(key, val)
+            super().__setitem__(key, val)
 
     def update(self, *args, **kwargs):
         r"""
