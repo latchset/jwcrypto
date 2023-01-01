@@ -148,7 +148,7 @@ class JWKeyNotFound(JWException):
 # RFC 7515 - 9.1: JSON Web Signature and Encryption Header Parameters Registry
 # HeaderParameters are for both JWS and JWE
 JWSEHeaderParameter = namedtuple(
-    "Parameter", "description mustprotect supported check_fn"
+    "JWSEHeaderParameter", "description mustprotect supported check_fn"
 )
 
 

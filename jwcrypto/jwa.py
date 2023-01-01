@@ -422,7 +422,7 @@ class _RsaOaep256(_RSA, JWAAlgorithm):  # noqa: ignore=N801
 
 class _AesKw(_RawKeyMgmt):
 
-    keysize = None
+    keysize: int | None = None
 
     def __init__(self):
         self.backend = default_backend()
@@ -484,7 +484,7 @@ class _A256KW(_AesKw, JWAAlgorithm):
 
 class _AesGcmKw(_RawKeyMgmt):
 
-    keysize = None
+    keysize: int | None = None
 
     def __init__(self):
         self.backend = default_backend()
@@ -563,9 +563,9 @@ class _A256GcmKw(_AesGcmKw, JWAAlgorithm):
 
 class _Pbes2HsAesKw(_RawKeyMgmt):
 
-    name = None
-    keysize = None
-    hashsize = None
+    name: str | None = None
+    keysize: int | None = None
+    hashsize: int | None = None
 
     def __init__(self):
         self.backend = default_backend()
@@ -708,7 +708,7 @@ class _EcdhEs(_RawKeyMgmt, JWAAlgorithm):
     description = "ECDH-ES using Concat KDF"
     algorithm_usage_location = "alg"
     algorithm_use = "kex"
-    keysize = None
+    keysize: int | None = None
 
     def __init__(self):
         self.backend = default_backend()
@@ -876,7 +876,7 @@ class _RawJWE:
 
 class _AesCbcHmacSha2(_RawJWE):
 
-    keysize = None
+    keysize: int | None = None
 
     def __init__(self, hashfn):
         self.backend = default_backend()
@@ -985,7 +985,7 @@ class _A256CbcHs512(_AesCbcHmacSha2, JWAAlgorithm):
 
 class _AesGcm(_RawJWE):
 
-    keysize = None
+    keysize: int | None = None
 
     def __init__(self):
         self.backend = default_backend()

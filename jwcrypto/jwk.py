@@ -83,10 +83,10 @@ except ImportError:
     X448PrivateKey = UnimplementedOKPCurveKey
 
 
-_Ed25519_CURVE = namedtuple("Ed25519", "pubkey privkey")
-_Ed448_CURVE = namedtuple("Ed448", "pubkey privkey")
-_X25519_CURVE = namedtuple("X25519", "pubkey privkey")
-_X448_CURVE = namedtuple("X448", "pubkey privkey")
+_Ed25519_CURVE = namedtuple("_Ed25519_CURVE", "pubkey privkey")
+_Ed448_CURVE = namedtuple("_Ed448_CURVE", "pubkey privkey")
+_X25519_CURVE = namedtuple("_X25519_CURVE", "pubkey privkey")
+_X448_CURVE = namedtuple("_X448_CURVE", "pubkey privkey")
 _OKP_CURVES_TABLE = {
     "Ed25519": _Ed25519_CURVE(Ed25519PublicKey, Ed25519PrivateKey),
     "Ed448": _Ed448_CURVE(Ed448PublicKey, Ed448PrivateKey),
@@ -115,7 +115,7 @@ class ParmType(Enum):
     unsupported = "Unsupported Parameter"
 
 
-JWKParameter = namedtuple("Parameter", "description public required type")
+JWKParameter = namedtuple("JWKParameter", "description public required type")
 JWKValuesRegistry = {
     "EC": {
         "crv": JWKParameter("Curve", True, True, ParmType.name),
