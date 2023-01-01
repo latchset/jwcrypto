@@ -6,3 +6,4 @@ cscope.out
 .tox
 .coverage
 *.egg-info
+.venv
