@@ -6,3 +6,5 @@ cscope.out
 .tox
 .coverage
 *.egg-info
+.venv
+.mypy_cache/
