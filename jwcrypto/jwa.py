@@ -395,7 +395,7 @@ class _Rsa15(_RSA, JWAAlgorithm):
             cek = super(_Rsa15, self).unwrap(key, bitsize, ek, headers)
             # always raise so we always run through the exception handling
             # code in all cases
-            raise Exception('Dummy')
+            raise ValueError('Dummy')
         except Exception:  # pylint: disable=broad-except
             return cek
 
