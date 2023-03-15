@@ -426,7 +426,8 @@ class JWT:
         if name not in claims or claims[name] is None:
             return
         if not isinstance(claims[name], str):
-            raise JWTInvalidClaimFormat("Claim %s is not a StringOrURI type")
+            raise JWTInvalidClaimFormat(
+                "Claim %s is not a StringOrURI type" % (name, ))
 
     def _check_array_or_string_claim(self, name, claims):
         if name not in claims or claims[name] is None:
