@@ -262,7 +262,7 @@ class JWS:
             p = json_decode(protected)
             if not isinstance(p, dict):
                 raise InvalidJWSSignature('Invalid Protected header')
-        # merge heders, and verify there are no duplicates
+        # merge headers, and verify there are no duplicates
         if header:
             if not isinstance(header, dict):
                 raise InvalidJWSSignature('Invalid Unprotected header')
