@@ -2,7 +2,7 @@
     "name": "ppc64le CI",
     "on": {
         "push": {
-            "branches": [ "master" ]
+            "branches": [ "main" ]
         },
     },
     "jobs": {
