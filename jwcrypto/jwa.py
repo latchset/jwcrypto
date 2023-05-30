@@ -44,7 +44,7 @@ class JWAAlgorithm(metaclass=ABCMeta):
     @property
     @abstractmethod
     def keysize(self):
-        """The actual/recommended/minimum key size"""
+        """The algorithm key size"""
 
     @property
     @abstractmethod
@@ -894,7 +894,7 @@ class _AesCbcHmacSha2(_RawJWE):
         """ Encrypt according to the selected encryption and hashing
         functions.
 
-        :param k: Encryption key (optional)
+        :param k: Encryption key
         :param a: Additional Authentication Data
         :param m: Plaintext
 
@@ -920,7 +920,7 @@ class _AesCbcHmacSha2(_RawJWE):
     def decrypt(self, k, a, iv, e, t):
         """ Decrypt according to the selected encryption and hashing
         functions.
-        :param k: Encryption key (optional)
+        :param k: Encryption key
         :param a: Additional Authenticated Data
         :param iv: Initialization Vector
         :param e: Ciphertext
@@ -993,7 +993,7 @@ class _AesGcm(_RawJWE):
         """ Encrypt according to the selected encryption and hashing
         functions.
 
-        :param k: Encryption key (optional)
+        :param k: Encryption key
         :param a: Additional Authentication Data
         :param m: Plaintext
 
@@ -1011,7 +1011,7 @@ class _AesGcm(_RawJWE):
     def decrypt(self, k, a, iv, e, t):
         """ Decrypt according to the selected encryption and hashing
         functions.
-        :param k: Encryption key (optional)
+        :param k: Encryption key
         :param a: Additional Authenticated Data
         :param iv: Initialization Vector
         :param e: Ciphertext

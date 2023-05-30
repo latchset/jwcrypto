@@ -20,14 +20,13 @@ testlong: export JWCRYPTO_TESTS_ENABLE_MMA=True
 testlong: export TOX_TESTENV_PASSENV=JWCRYPTO_TESTS_ENABLE_MMA
 testlong:
 	rm -f .coverage
-	tox -e py36
+	tox -e py310
 
 test:
 	rm -f .coverage
-	tox -e py36 --skip-missing-interpreter
-	tox -e py37 --skip-missing-interpreter
 	tox -e py38 --skip-missing-interpreter
 	tox -e py39 --skip-missing-interpreter
+	tox -e py310 --skip-missing-interpreter
 
 DOCS_DIR = docs
 .PHONY: docs
