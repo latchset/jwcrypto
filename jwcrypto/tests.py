@@ -431,6 +431,15 @@ class TestJWK(unittest.TestCase):
         e.deserialize(enc, key)
         self.assertEqual(e.payload.decode('utf-8'), 'test')
 
+        # also test key generation with input_keysize != keysize
+        key = jwk.JWK.generate(kty='oct', alg="A128CBC-HS256")
+        self.assertEqual(len(base64url_decode(key['k'])), 32)
+        e = jwe.JWE('test', '{"alg":"A256KW","enc":"A128CBC-HS256"}')
+        e.add_recipient(key)
+        enc = e.serialize()
+        e.deserialize(enc, key)
+        self.assertEqual(e.payload.decode('utf-8'), 'test')
+
     def test_generate_EC_key(self):
         # Backwards compat curve
         key = jwk.JWK.generate(kty='EC', curve='P-256')
