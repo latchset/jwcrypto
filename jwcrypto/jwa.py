@@ -56,6 +56,14 @@ class JWAAlgorithm(metaclass=ABCMeta):
     def algorithm_use(self):
         """One of 'sig', 'kex', 'enc'"""
 
+    @property
+    def input_keysize(self):
+        """The input key size"""
+        try:
+            return self.wrap_key_size
+        except AttributeError:
+            return self.keysize
+
 
 def _bitsize(x):
     return len(x) * 8
@@ -900,6 +908,9 @@ class _AesCbcHmacSha2(_RawJWE):
 
         Returns a dictionary with the computed data.
         """
+        if len(k) != _inbytes(self.wrap_key_size):
+            raise ValueError("Invalid input key size")
+
         hkey = k[:_inbytes(self.keysize)]
         ekey = k[_inbytes(self.keysize):]
 
@@ -928,6 +939,9 @@ class _AesCbcHmacSha2(_RawJWE):
 
         Returns plaintext or raises an error
         """
+        if len(k) != _inbytes(self.wrap_key_size):
+            raise ValueError("Invalid input key size")
+
         hkey = k[:_inbytes(self.keysize)]
         dkey = k[_inbytes(self.keysize):]
 
