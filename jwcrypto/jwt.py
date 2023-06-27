@@ -3,6 +3,7 @@
 import copy
 import time
 import uuid
+from datetime import datetime
 
 from deprecated import deprecated
 
@@ -172,7 +173,9 @@ class JWT:
         """Creates a JWT object.
 
         :param header: A dict or a JSON string with the JWT Header data.
-        :param claims: A dict or a string with the JWT Claims data.
+        :param claims: A dict or a string with the JWT Claims data. If
+         the 'exp' or 'nbf' are datetime objects, they are automatically
+         converted to integer unix timestamps. Otherwise, they are left as is.
         :param jwt: a 'raw' JWT token
         :param key: A (:class:`jwcrypto.jwk.JWK`) key to deserialize
          the token. A (:class:`jwcrypto.jwk.JWKSet`) can also be used.
@@ -225,6 +228,14 @@ class JWT:
             self._check_claims = check_claims
 
         if claims is not None:
+            # Check for datetime objects
+            if 'exp' in claims and isinstance(claims['exp'], datetime):
+                # Check if timezone aware
+                claims['exp'] = self._check_and_convert_dt(claims['exp'], 'exp')
+            if 'nbf' in claims and isinstance(claims['nbf'], datetime):
+                # Check if timezone aware
+                claims['nbf'] = self._check_and_convert_dt(claims['nbf'], 'nbf')
+
             self.claims = claims
 
         if jwt is not None:
@@ -387,6 +398,18 @@ class JWT:
             self._expected_type = v
         else:
             raise ValueError("Invalid value, must be 'JWS' or 'JWE'")
+
+    def _check_and_convert_dt(self, dt, claim_prop):
+        if (
+            dt.tzinfo is not None
+            and dt.tzinfo.utcoffset(dt) is not None
+        ):
+            dt_timestamp = int(dt.timestamp())
+            return dt_timestamp
+        else:
+            raise ValueError(
+                f"'{claim_prop}' datetime object must be timezone aware"
+            )
 
     def _add_optional_claim(self, name, claims):
         if name in claims:
