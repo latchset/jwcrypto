@@ -870,10 +870,10 @@ class _EdDsa(_RawJWS, JWAAlgorithm):
 
 class _RawJWE:
 
-    def encrypt(self, k, a, m):
+    def encrypt(self, k, aad, m):
         raise NotImplementedError
 
-    def decrypt(self, k, a, iv, e, t):
+    def decrypt(self, k, aad, iv, e, t):
         raise NotImplementedError
 
 
@@ -887,10 +887,10 @@ class _AesCbcHmacSha2(_RawJWE):
         self.blocksize = algorithms.AES.block_size
         self.wrap_key_size = self.keysize * 2
 
-    def _mac(self, k, a, iv, e):
-        al = _encode_int(_bitsize(a), 64)
+    def _mac(self, k, ai, iv, e):
+        al = _encode_int(_bitsize(ai), 64)
         h = hmac.HMAC(k, self.hashfn, backend=self.backend)
-        h.update(a)
+        h.update(ai)
         h.update(iv)
         h.update(e)
         h.update(al)
@@ -898,7 +898,7 @@ class _AesCbcHmacSha2(_RawJWE):
         return m[:_inbytes(self.keysize)]
 
     # RFC 7518 - 5.2.2
-    def encrypt(self, k, a, m):
+    def encrypt(self, k, ai, m):
         """ Encrypt according to the selected encryption and hashing
         functions.
 
@@ -924,11 +924,11 @@ class _AesCbcHmacSha2(_RawJWE):
         e = encryptor.update(padded_data) + encryptor.finalize()
 
         # mac
-        t = self._mac(hkey, a, iv, e)
+        t = self._mac(hkey, ai, iv, e)
 
         return (iv, e, t)
 
-    def decrypt(self, k, a, iv, e, t):
+    def decrypt(self, k, ai, iv, e, t):
         """ Decrypt according to the selected encryption and hashing
         functions.
         :param k: Encryption key
@@ -946,7 +946,7 @@ class _AesCbcHmacSha2(_RawJWE):
         dkey = k[_inbytes(self.keysize):]
 
         # verify mac
-        if not constant_time.bytes_eq(t, self._mac(hkey, a, iv, e)):
+        if not constant_time.bytes_eq(t, self._mac(hkey, ai, iv, e)):
             raise InvalidSignature('Failed to verify MAC')
 
         # decrypt
@@ -1003,7 +1003,7 @@ class _AesGcm(_RawJWE):
         self.wrap_key_size = self.keysize
 
     # RFC 7518 - 5.3
-    def encrypt(self, k, a, m):
+    def encrypt(self, k, ai, m):
         """ Encrypt according to the selected encryption and hashing
         functions.
 
@@ -1017,16 +1017,16 @@ class _AesGcm(_RawJWE):
         cipher = Cipher(algorithms.AES(k), modes.GCM(iv),
                         backend=self.backend)
         encryptor = cipher.encryptor()
-        encryptor.authenticate_additional_data(a)
+        encryptor.authenticate_additional_data(ai)
         e = encryptor.update(m) + encryptor.finalize()
 
         return (iv, e, encryptor.tag)
 
-    def decrypt(self, k, a, iv, e, t):
+    def decrypt(self, k, ai, iv, e, t):
         """ Decrypt according to the selected encryption and hashing
         functions.
         :param k: Encryption key
-        :param a: Additional Authenticated Data
+        :param ai: Additional Authenticated Data
         :param iv: Initialization Vector
         :param e: Ciphertext
         :param t: Authentication Tag
@@ -1036,7 +1036,7 @@ class _AesGcm(_RawJWE):
         cipher = Cipher(algorithms.AES(k), modes.GCM(iv, t),
                         backend=self.backend)
         decryptor = cipher.decryptor()
-        decryptor.authenticate_additional_data(a)
+        decryptor.authenticate_additional_data(ai)
         return decryptor.update(e) + decryptor.finalize()
 
 

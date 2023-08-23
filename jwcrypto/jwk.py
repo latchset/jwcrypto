@@ -606,11 +606,11 @@ class JWK(dict):
         # check key_ops
         if 'key_ops' in newkey:
             for ko in newkey['key_ops']:
-                c = 0
+                cnt = 0
                 for cko in newkey['key_ops']:
                     if ko == cko:
-                        c += 1
-                if c != 1:
+                        cnt += 1
+                if cnt != 1:
                     raise InvalidJWKValue('Duplicate values in "key_ops"')
 
         # check use/key_ops consistency
@@ -1032,26 +1032,26 @@ class JWK(dict):
         :return: A serialized bytes buffer containing a PEM formatted key.
         :rtype: `bytes`
         """
-        e = serialization.Encoding.PEM
+        enc = serialization.Encoding.PEM
         if private_key:
             if not self.has_private:
                 raise InvalidJWKType("No private key available")
             f = serialization.PrivateFormat.PKCS8
             if password is None:
-                a = serialization.NoEncryption()
+                enc_alg = serialization.NoEncryption()
             elif isinstance(password, bytes):
-                a = serialization.BestAvailableEncryption(password)
+                enc_alg = serialization.BestAvailableEncryption(password)
             elif password is False:
                 raise ValueError("The password must be None or a bytes string")
             else:
                 raise TypeError("The password string must be bytes")
             return self._get_private_key().private_bytes(
-                encoding=e, format=f, encryption_algorithm=a)
+                encoding=enc, format=f, encryption_algorithm=enc_alg)
         else:
             if not self.has_public:
                 raise InvalidJWKType("No public key available")
             f = serialization.PublicFormat.SubjectPublicKeyInfo
-            return self._get_public_key().public_bytes(encoding=e, format=f)
+            return self._get_public_key().public_bytes(encoding=enc, format=f)
 
     @classmethod
     def from_pyca(cls, key):
@@ -1284,6 +1284,7 @@ class JWKSet(dict):
     Creates a special key 'keys' that is of a type derived from 'set'
     The 'keys' attribute accepts only :class:`jwcrypto.jwk.JWK` elements.
     """
+
     def __init__(self, *args, **kwargs):
         super(JWKSet, self).__init__()
         super(JWKSet, self).__setitem__('keys', _JWKkeys())
