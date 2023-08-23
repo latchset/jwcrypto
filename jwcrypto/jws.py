@@ -279,18 +279,20 @@ class JWS:
             raise InvalidJWSSignature('No "alg" in headers')
         if alg:
             if 'alg' in p and alg != p['alg']:
-                raise InvalidJWSSignature('"alg" mismatch, requested '
-                                          '"%s", found "%s"' % (alg,
-                                                                p['alg']))
-            a = alg
+                raise InvalidJWSSignature(
+                    '"alg" mismatch, requested'
+                    f''' "{alg}", found "{p['alg']}"'''
+                )
+            resulting_alg = alg
         else:
-            a = p['alg']
+            resulting_alg = p['alg']
 
         # the following will verify the "alg" is supported and the signature
         # verifies
         if isinstance(key, JWK):
-            c = JWSCore(a, key, protected, payload, self._allowed_algs)
-            c.verify(signature)
+            signer = JWSCore(resulting_alg, key, protected,
+                             payload, self._allowed_algs)
+            signer.verify(signature)
             self.verifylog.append("Success")
         elif isinstance(key, JWKSet):
             keys = key
@@ -303,8 +305,11 @@ class JWS:
 
             for k in keys:
                 try:
-                    c = JWSCore(a, k, protected, payload, self._allowed_algs)
-                    c.verify(signature)
+                    signer2 = JWSCore(
+                        resulting_alg, k, protected,
+                        payload, self._allowed_algs
+                    )
+                    signer2.verify(signature)
                     self.verifylog.append("Success")
                     break
                 except Exception as e:  # pylint: disable=broad-except
@@ -455,16 +460,16 @@ class JWS:
                         o['payload'] = djws['payload']
 
             except ValueError:
-                c = raw_jws.split('.')
-                if len(c) != 3:
+                data = raw_jws.split('.')
+                if len(data) != 3:
                     raise InvalidJWSObject('Unrecognized'
                                            ' representation') from None
-                p = base64url_decode(str(c[0]))
+                p = base64url_decode(str(data[0]))
                 if len(p) > 0:
                     o['protected'] = p.decode('utf-8')
                     self._deserialize_b64(o, o['protected'])
-                o['payload'] = base64url_decode(str(c[1]))
-                o['signature'] = base64url_decode(str(c[2]))
+                o['payload'] = base64url_decode(str(data[1]))
+                o['signature'] = base64url_decode(str(data[2]))
 
             self.objects = o
 

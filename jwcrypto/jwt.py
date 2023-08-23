@@ -256,20 +256,20 @@ class JWT:
         return self._claims
 
     @claims.setter
-    def claims(self, c):
-        if not isinstance(c, dict):
+    def claims(self, data):
+        if not isinstance(data, dict):
             if not self._reg_claims:
                 # no default_claims, can return immediately
-                self._claims = c
+                self._claims = data
                 return
-            c = json_decode(c)
+            data = json_decode(data)
         else:
             # _add_default_claims modifies its argument
             # so we must always copy it.
-            c = copy.deepcopy(c)
+            data = copy.deepcopy(data)
 
-        self._add_default_claims(c)
-        self._claims = json_encode(c)
+        self._add_default_claims(data)
+        self._claims = json_encode(data)
 
     @property
     def token(self):
@@ -661,10 +661,10 @@ class JWT:
          decryption key, or a (:class:`jwcrypto.jwk.JWKSet`) that
          contains a key indexed by the 'kid' header.
         """
-        c = jwt.count('.')
-        if c == 2:
+        data = jwt.count('.')
+        if data == 2:
             self.token = JWS()
-        elif c == 4:
+        elif data == 4:
             self.token = JWE()
         else:
             raise ValueError("Token format unrecognized")

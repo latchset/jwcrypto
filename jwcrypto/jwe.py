@@ -525,17 +525,17 @@ class JWE:
                         o['header'] = json_encode(djwe['header'])
 
             except ValueError as e:
-                c = raw_jwe.split('.')
-                if len(c) != 5:
+                data = raw_jwe.split('.')
+                if len(data) != 5:
                     raise InvalidJWEData() from e
-                p = base64url_decode(c[0])
+                p = base64url_decode(data[0])
                 o['protected'] = p.decode('utf-8')
-                ekey = base64url_decode(c[1])
+                ekey = base64url_decode(data[1])
                 if ekey != b'':
-                    o['encrypted_key'] = base64url_decode(c[1])
-                o['iv'] = base64url_decode(c[2])
-                o['ciphertext'] = base64url_decode(c[3])
-                o['tag'] = base64url_decode(c[4])
+                    o['encrypted_key'] = base64url_decode(data[1])
+                o['iv'] = base64url_decode(data[2])
+                o['ciphertext'] = base64url_decode(data[3])
+                o['tag'] = base64url_decode(data[4])
 
             self.objects = o
 
@@ -581,11 +581,11 @@ class JWE:
         try:
             return self.serialize() == other.serialize()
         except Exception:  # pylint: disable=broad-except
-            a = {'plaintext': self.plaintext}
-            a.update(self.objects)
-            b = {'plaintext': other.plaintext}
-            b.update(other.objects)
-            return a == b
+            data1 = {'plaintext': self.plaintext}
+            data1.update(self.objects)
+            data2 = {'plaintext': other.plaintext}
+            data2.update(other.objects)
+            return data1 == data2
 
     def __str__(self):
         try:

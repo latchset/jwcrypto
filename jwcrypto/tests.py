@@ -681,10 +681,10 @@ class TestJWK(unittest.TestCase):
         pubkey = jwk.JWK.from_pem(Ed25519PublicPEM)
         self.assertTrue(pubkey.has_public)
         self.assertFalse(pubkey.has_private)
-        c = jws.JWS()
-        c.deserialize(sig, pubkey, alg="EdDSA")
-        self.assertTrue(c.objects['valid'])
-        self.assertEqual(c.payload, payload)
+        jws_token = jws.JWS()
+        jws_token.deserialize(sig, pubkey, alg="EdDSA")
+        self.assertTrue(jws_token.objects['valid'])
+        self.assertEqual(jws_token.payload, payload)
 
     def test_jwk_as_dict(self):
         key = jwk.JWK(**PublicKeys['keys'][0])
@@ -1796,9 +1796,9 @@ class TestJWT(unittest.TestCase):
         t.make_signed_token(key)
         token = t.serialize()
 
-        c = jwt.JWT()
-        c.deserialize(token, key)
-        self.assertEqual('{}', c.claims)
+        _jwt = jwt.JWT()
+        _jwt.deserialize(token, key)
+        self.assertEqual('{}', _jwt.claims)
 
         # empty string is also valid
         t = jwt.JWT('{"alg":"HS256"}', '')
@@ -1811,9 +1811,9 @@ class TestJWT(unittest.TestCase):
         t.make_signed_token(key)
         token = t.serialize()
 
-        c = jwt.JWT()
-        c.deserialize(token, key)
-        self.assertEqual(' ', c.claims)
+        _jwt = jwt.JWT()
+        _jwt.deserialize(token, key)
+        self.assertEqual(' ', _jwt.claims)
 
     def test_Issue_209(self):
         key = jwk.JWK(**A3_key)
@@ -2189,26 +2189,26 @@ class TestOverloadedOperators(unittest.TestCase):
     def test_jws_equality(self):
         key = jwk.JWK.generate(kty='oct', size=256)
         payload = "My Integrity protected message"
-        a = jws.JWS(payload.encode('utf-8'))
-        b = jws.JWS(payload.encode('utf-8'))
-        self.assertEqual(a, b)
+        signer_a = jws.JWS(payload.encode('utf-8'))
+        signer_b = jws.JWS(payload.encode('utf-8'))
+        self.assertEqual(signer_a, signer_b)
 
-        a.add_signature(key, None,
-                        json_encode({"alg": "HS256"}),
-                        json_encode({"kid": key.thumbprint()}))
+        signer_a.add_signature(key, None,
+                               json_encode({"alg": "HS256"}),
+                               json_encode({"kid": key.thumbprint()}))
         # One is signed, the other is not
-        self.assertNotEqual(a, b)
+        self.assertNotEqual(signer_a, signer_b)
 
-        b.add_signature(key, None,
-                        json_encode({"alg": "HS256"}),
-                        json_encode({"kid": key.thumbprint()}))
+        signer_b.add_signature(key, None,
+                               json_encode({"alg": "HS256"}),
+                               json_encode({"kid": key.thumbprint()}))
         # This kind of signature is deterministic so they should be equal
-        self.assertEqual(a, b)
+        self.assertEqual(signer_a, signer_b)
 
-        c = jws.JWS.from_jose_token(a.serialize())
-        self.assertNotEqual(a, c)
-        c.verify(key)
-        self.assertEqual(a, c)
+        signer_c = jws.JWS.from_jose_token(signer_a.serialize())
+        self.assertNotEqual(signer_a, signer_c)
+        signer_c.verify(key)
+        self.assertEqual(signer_a, signer_c)
 
     def test_jws_representations(self):
         key = jwk.JWK.generate(kty='oct', size=256)
@@ -2228,24 +2228,24 @@ class TestOverloadedOperators(unittest.TestCase):
     def test_jwe_equality(self):
         key = jwk.JWK.generate(kty='oct', size=256)
         payload = "My Encrypted message"
-        a = jwe.JWE(payload.encode('utf-8'),
-                    json_encode({"alg": "A256KW",
-                                 "enc": "A256CBC-HS512"}))
-        b = jwe.JWE(payload.encode('utf-8'),
-                    json_encode({"alg": "A256KW",
-                                 "enc": "A256CBC-HS512"}))
-        self.assertEqual(a, b)
+        signer_a = jwe.JWE(payload.encode('utf-8'),
+                           json_encode({"alg": "A256KW",
+                                        "enc": "A256CBC-HS512"}))
+        signer_b = jwe.JWE(payload.encode('utf-8'),
+                           json_encode({"alg": "A256KW",
+                                        "enc": "A256CBC-HS512"}))
+        self.assertEqual(signer_a, signer_b)
 
-        a.add_recipient(key)
+        signer_a.add_recipient(key)
         # One is encrypted, the other is not
-        self.assertNotEqual(a, b)
+        self.assertNotEqual(signer_a, signer_b)
 
-        b.add_recipient(key)
+        signer_b.add_recipient(key)
         # Encryption generates a random CEK so tokens will always differ
-        self.assertNotEqual(a, b)
+        self.assertNotEqual(signer_a, signer_b)
 
-        c = jwe.JWE.from_jose_token(a.serialize())
-        self.assertEqual(a, c)
+        signer_c = jwe.JWE.from_jose_token(signer_a.serialize())
+        self.assertEqual(signer_a, signer_c)
 
     def test_jwe_representations(self):
         key = jwk.JWK.generate(kty='oct', size=256)
@@ -2267,29 +2267,29 @@ class TestOverloadedOperators(unittest.TestCase):
 
     def test_jwt_equality(self):
         key = jwk.JWK.generate(kty='oct', size=256)
-        a = jwt.JWT(header={"alg": "HS256"},
-                    claims={"info": "I'm a signed token"})
-        b = jwt.JWT(header={"alg": "HS256"},
-                    claims={"info": "I'm a signed token"})
-        self.assertEqual(a, b)
+        signer_a = jwt.JWT(header={"alg": "HS256"},
+                           claims={"info": "I'm a signed token"})
+        signer_b = jwt.JWT(header={"alg": "HS256"},
+                           claims={"info": "I'm a signed token"})
+        self.assertEqual(signer_a, signer_b)
 
-        a.make_signed_token(key)
+        signer_a.make_signed_token(key)
         # One is signed, the other is not
-        self.assertNotEqual(a, b)
+        self.assertNotEqual(signer_a, signer_b)
 
-        b.make_signed_token(key)
+        signer_b.make_signed_token(key)
         # This kind of signature is deterministic so they should be equal
-        self.assertEqual(a, b)
+        self.assertEqual(signer_a, signer_b)
 
-        c = jwt.JWT.from_jose_token(a.serialize())
-        self.assertNotEqual(a, c)
-        c.validate(key)
-        self.assertEqual(a, c)
+        signer_c = jwt.JWT.from_jose_token(signer_a.serialize())
+        self.assertNotEqual(signer_a, signer_c)
+        signer_c.validate(key)
+        self.assertEqual(signer_a, signer_c)
 
         ea = jwt.JWT(header={"alg": "A256KW", "enc": "A256CBC-HS512"},
-                     claims=a.serialize())
+                     claims=signer_a.serialize())
         eb = jwt.JWT(header={"alg": "A256KW", "enc": "A256CBC-HS512"},
-                     claims=b.serialize())
+                     claims=signer_b.serialize())
         self.assertEqual(ea, eb)
 
         ea.make_encrypted_token(key)
