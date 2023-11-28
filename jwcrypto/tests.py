@@ -367,6 +367,16 @@ MCowBQYDK2VwAyEAlsRcb1mVVIUcDjNqZU27N+iPXihH1EQDa/O3utHLtqc=
 -----END PUBLIC KEY-----
 """
 
+X25519PrivatePEM = b"""-----BEGIN PRIVATE KEY-----
+MC4CAQAwBQYDK2VuBCIEIBjAbPTtNY6CUuR5FG1+xb1u5nSRokrNaQYEsgu9O+hP
+-----END PRIVATE KEY-----
+"""
+
+X25519PublicPEM = b"""-----BEGIN PUBLIC KEY-----
+MCowBQYDK2VuAyEAW+m9ugi1psQFx6dtTl6J/XZ4JFP019S+oq4wyAoWPnQ=
+-----END PUBLIC KEY-----
+"""
+
 ECPublicPEM = b"""-----BEGIN PUBLIC KEY-----
 MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEhvGzt82WMJxqTuXCZxnvwrx4enQj
 6xc+erlhbTq8gTMAJBzNRPbpuj4NOwTCwjohrtY0TAkthwTuixuojpGKmw==
@@ -379,6 +389,13 @@ ECPublicJWK = {
     "kty": "EC",
     "x": "hvGzt82WMJxqTuXCZxnvwrx4enQj6xc-erlhbTq8gTM",
     "y": "ACQczUT26bo-DTsEwsI6Ia7WNEwJLYcE7osbqI6Rips"
+}
+
+X25519PublicJWK = {
+    'crv': 'X25519',
+    'kid': '9cgLEZD5VsaV9dUPNehs2pOwxtmH-EWHJY-pC74Wjak',
+    'kty': 'OKP',
+    'x': 'W-m9ugi1psQFx6dtTl6J_XZ4JFP019S-oq4wyAoWPnQ'
 }
 
 
@@ -569,6 +586,11 @@ class TestJWK(unittest.TestCase):
         pub_ec = jwk.JWK.from_pem(ECPublicPEM)
         self.assertEqual(pub_ec.export_to_pem(), ECPublicPEM)
         self.assertEqual(json_decode(pub_ec.export()), ECPublicJWK)
+
+    def test_import_x25519_from_pem(self):
+        pub_x25519 = jwk.JWK.from_pem(X25519PublicPEM)
+        self.assertEqual(pub_x25519.export_to_pem(), X25519PublicPEM)
+        self.assertEqual(json_decode(pub_x25519.export()), X25519PublicJWK)
 
     def test_export_symmetric(self):
         key = jwk.JWK(**SymmetricKeys['keys'][0])

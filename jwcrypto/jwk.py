@@ -971,9 +971,13 @@ class JWK(dict):
             self._import_pyca_pri_ec(key)
         elif isinstance(key, ec.EllipticCurvePublicKey):
             self._import_pyca_pub_ec(key)
-        elif isinstance(key, (Ed25519PrivateKey, Ed448PrivateKey)):
+        elif isinstance(key, (Ed25519PrivateKey,
+                              Ed448PrivateKey,
+                              X25519PrivateKey)):
             self._import_pyca_pri_okp(key)
-        elif isinstance(key, (Ed25519PublicKey, Ed448PublicKey)):
+        elif isinstance(key, (Ed25519PublicKey,
+                              Ed448PublicKey,
+                              X25519PublicKey)):
             self._import_pyca_pub_okp(key)
         else:
             raise InvalidJWKValue('Unknown key object %r' % key)
