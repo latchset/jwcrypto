@@ -2099,6 +2099,18 @@ class ConformanceTests(unittest.TestCase):
         key = jwk.JWK.from_password('password')
         self.assertRaises(ValueError, enc.add_recipient, key)
 
+        # Test p2c iteration checks
+        maxiter = jwa.default_max_pbkdf2_iterations
+        p2cenc = jwe.JWE(plaintext='plain',
+                         protected={"alg": "PBES2-HS256+A128KW",
+                                    "enc": "A256CBC-HS512",
+                                    "p2c": maxiter + 1,
+                                    "p2s": base64url_encode("A" * 16)})
+        with self.assertRaisesRegex(ValueError, 'too large'):
+            p2cenc.add_recipient(key)
+        jwa.default_max_pbkdf2_iterations += 2
+        p2cenc.add_recipient(key)
+
 
 class JWATests(unittest.TestCase):
     def test_jwa_create(self):
