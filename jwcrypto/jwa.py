@@ -887,10 +887,10 @@ class _AesCbcHmacSha2(_RawJWE):
         self.blocksize = algorithms.AES.block_size
         self.wrap_key_size = self.keysize * 2
 
-    def _mac(self, k, ai, iv, e):
-        al = _encode_int(_bitsize(ai), 64)
+    def _mac(self, k, aad, iv, e):
+        al = _encode_int(_bitsize(aad), 64)
         h = hmac.HMAC(k, self.hashfn, backend=self.backend)
-        h.update(ai)
+        h.update(aad)
         h.update(iv)
         h.update(e)
         h.update(al)
@@ -898,12 +898,12 @@ class _AesCbcHmacSha2(_RawJWE):
         return m[:_inbytes(self.keysize)]
 
     # RFC 7518 - 5.2.2
-    def encrypt(self, k, ai, m):
+    def encrypt(self, k, aad, m):
         """ Encrypt according to the selected encryption and hashing
         functions.
 
         :param k: Encryption key
-        :param a: Additional Authentication Data
+        :param aad: Additional Authentication Data
         :param m: Plaintext
 
         Returns a dictionary with the computed data.
@@ -924,15 +924,15 @@ class _AesCbcHmacSha2(_RawJWE):
         e = encryptor.update(padded_data) + encryptor.finalize()
 
         # mac
-        t = self._mac(hkey, ai, iv, e)
+        t = self._mac(hkey, aad, iv, e)
 
         return (iv, e, t)
 
-    def decrypt(self, k, ai, iv, e, t):
+    def decrypt(self, k, aad, iv, e, t):
         """ Decrypt according to the selected encryption and hashing
         functions.
         :param k: Encryption key
-        :param a: Additional Authenticated Data
+        :param aad: Additional Authenticated Data
         :param iv: Initialization Vector
         :param e: Ciphertext
         :param t: Authentication Tag
@@ -946,7 +946,7 @@ class _AesCbcHmacSha2(_RawJWE):
         dkey = k[_inbytes(self.keysize):]
 
         # verify mac
-        if not constant_time.bytes_eq(t, self._mac(hkey, ai, iv, e)):
+        if not constant_time.bytes_eq(t, self._mac(hkey, aad, iv, e)):
             raise InvalidSignature('Failed to verify MAC')
 
         # decrypt
@@ -1003,12 +1003,12 @@ class _AesGcm(_RawJWE):
         self.wrap_key_size = self.keysize
 
     # RFC 7518 - 5.3
-    def encrypt(self, k, ai, m):
+    def encrypt(self, k, aad, m):
         """ Encrypt according to the selected encryption and hashing
         functions.
 
         :param k: Encryption key
-        :param a: Additional Authentication Data
+        :param aad: Additional Authentication Data
         :param m: Plaintext
 
         Returns a dictionary with the computed data.
@@ -1017,16 +1017,16 @@ class _AesGcm(_RawJWE):
         cipher = Cipher(algorithms.AES(k), modes.GCM(iv),
                         backend=self.backend)
         encryptor = cipher.encryptor()
-        encryptor.authenticate_additional_data(ai)
+        encryptor.authenticate_additional_data(aad)
         e = encryptor.update(m) + encryptor.finalize()
 
         return (iv, e, encryptor.tag)
 
-    def decrypt(self, k, ai, iv, e, t):
+    def decrypt(self, k, aad, iv, e, t):
         """ Decrypt according to the selected encryption and hashing
         functions.
         :param k: Encryption key
-        :param ai: Additional Authenticated Data
+        :param aad: Additional Authenticated Data
         :param iv: Initialization Vector
         :param e: Ciphertext
         :param t: Authentication Tag
@@ -1036,7 +1036,7 @@ class _AesGcm(_RawJWE):
         cipher = Cipher(algorithms.AES(k), modes.GCM(iv, t),
                         backend=self.backend)
         decryptor = cipher.decryptor()
-        decryptor.authenticate_additional_data(ai)
+        decryptor.authenticate_additional_data(aad)
         return decryptor.update(e) + decryptor.finalize()
 
 
