@@ -28,6 +28,8 @@ from jwcrypto.jwk import JWK
 
 # Implements RFC 7518 - JSON Web Algorithms (JWA)
 
+default_max_pbkdf2_iterations = 16384
+
 
 class JWAAlgorithm(metaclass=ABCMeta):
 
@@ -588,6 +590,9 @@ class _Pbes2HsAesKw(_RawKeyMgmt):
         self.aeskwmap = {128: _A128KW, 192: _A192KW, 256: _A256KW}
 
     def _get_key(self, alg, key, p2s, p2c):
+        if p2c > default_max_pbkdf2_iterations:
+            raise ValueError('Invalid p2c value, too large')
+
         if not isinstance(key, JWK):
             # backwards compatibility for old interface
             if isinstance(key, bytes):
