@@ -4,7 +4,7 @@ import copy
 import time
 import uuid
 
-from deprecated import deprecated
+from typing_extensions import deprecated
 
 from jwcrypto.common import JWException, JWKeyNotFound
 from jwcrypto.common import json_decode, json_encode
@@ -123,7 +123,7 @@ class JWTInvalidClaimFormat(JWException):
         super(JWTInvalidClaimFormat, self).__init__(msg)
 
 
-@deprecated
+@deprecated('')
 class JWTMissingKeyID(JWException):
     """JSON Web Token is missing key id.
 

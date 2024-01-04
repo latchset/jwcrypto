@@ -11,7 +11,7 @@ from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.hazmat.primitives.asymmetric import rsa
 
-from deprecated import deprecated
+from typing_extensions import deprecated
 
 from jwcrypto.common import JWException
 from jwcrypto.common import base64url_decode, base64url_encode
@@ -764,13 +764,13 @@ class JWK(dict):
         return self.get('kty') == 'oct'
 
     @property
-    @deprecated
+    @deprecated('')
     def key_type(self):
         """The Key type"""
         return self.get('kty')
 
     @property
-    @deprecated
+    @deprecated('')
     def key_id(self):
         """The Key ID.
         Provided by the kid parameter if present, otherwise returns None.
@@ -778,14 +778,14 @@ class JWK(dict):
         return self.get('kid')
 
     @property
-    @deprecated
+    @deprecated('')
     def key_curve(self):
         """The Curve Name."""
         if self.get('kty') not in ['EC', 'OKP']:
             raise InvalidJWKType('Not an EC or OKP key')
         return self.get('crv')
 
-    @deprecated
+    @deprecated('')
     def get_curve(self, arg):
         """Gets the Elliptic Curve associated with the key.
 
