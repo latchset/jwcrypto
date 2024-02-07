@@ -14,10 +14,10 @@
                 "fail-fast": false,
                 "matrix": {
                     "name": [
-                        "python-37",
                         "python-38",
                         "python-39",
                         "python-310",
+                        "python-311",
                         "doc",
                         "doctest",
                         "sphinx",
@@ -26,12 +26,6 @@
                         "codespell",
                     ],
                     "include": [
-                        {
-                            "name": "python-37",
-                            "python": "3.7",
-                            "toxenv": "py37",
-                            "arch": "x64",
-                        },
                         {
                             "name": "python-38",
                             "python": "3.8",
@@ -51,38 +45,44 @@
                             "arch": "x64",
                         },
                         {
+                            "name": "python-311",
+                            "python": "3.11",
+                            "toxenv": "py311",
+                            "arch": "x64",
+                        },
+                        {
                             "name": "doc",
-                            "python": "3.10",
+                            "python": "3.11",
                             "toxenv": "doc",
                             "arch": "x64",
                         },
                         {
                             "name": "doctest",
-                            "python": "3.10",
+                            "python": "3.11",
                             "toxenv": "doctest",
                             "arch": "x64",
                         },
                         {
                             "name": "sphinx",
-                            "python": "3.10",
+                            "python": "3.11",
                             "toxenv": "sphinx",
                             "arch": "x64",
                         },
                         {
                             "name": "lint",
-                            "python": "3.10",
+                            "python": "3.11",
                             "toxenv": "lint",
                             "arch": "x64",
                         },
                         {
                             "name": "pep8",
-                            "python": "3.10",
+                            "python": "3.11",
                             "toxenv": "pep8",
                             "arch": "x64",
                         },
                         {
                             "name": "codespell",
-                            "python": "3.10",
+                            "python": "3.11",
                             "toxenv": "codespell",
                             "arch": "x64",
                         },
