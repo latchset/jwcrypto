@@ -26,11 +26,10 @@ setup(
     long_description=long_description,
     long_description_content_type='text/markdown',
     classifiers = [
-        'Programming Language :: Python :: 3.6',
-        'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: 3.9',
         'Programming Language :: Python :: 3.10',
+        'Programming Language :: Python :: 3.11',
         'Intended Audience :: Developers',
         'Topic :: Security',
         'Topic :: Software Development :: Libraries :: Python Modules'
@@ -40,5 +39,5 @@ setup(
         'cryptography >= 3.4',
         'typing_extensions',
     ],
-    python_requires = '>= 3.6',
+    python_requires = '>= 3.8',
 )
