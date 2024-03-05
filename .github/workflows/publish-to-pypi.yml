@@ -1,36 +1,37 @@
-{
-    "name": "Release to PyPI",
-    "on": {
-        "push": {
-            "tags": [ "v*.*" ]
-        },
-    },
-    "jobs": {
-        "pypi": {
-            "name": "Publish Release",
-            "runs-on": "ubuntu-latest",
-            "steps": [
-                { "uses": "actions/checkout@v2" },
-                {
-                    "uses": "actions/setup-python@v2",
-                    "with": {
-                        "python-version": "3.10"
-                    },
-                },
-                { "run": "sudo apt-get update" },
-                { "run": "sudo apt-get install cargo" },
-                { "run": "pip --version" },
-                { "run": "python setup.py sdist" },
-                { "run": "python setup.py bdist_wheel" },
-                {
-                    "uses": "pypa/gh-action-pypi-publish@release/v1",
-                    "with": {
-                        "user": "__token__",
-                        "password": "${{secrets.PYPI_API_TOKEN}}",
-                        "skip-existing": true,
-                    },
-                },
-            ],
-        },
-    },
-}
+---
+name: Release to PyPI
+
+on:
+  push:
+    tags: [ "v*.*" ]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  pypi:
+    name: Publish Release
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+      - name: Setup
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Make distribution
+        run: |
+          sudo apt-get update
+          sudo apt-get install cargo
+          pip --version
+          pip install wheel
+          python setup.py sdist
+          python setup.py bdist_wheel
+      - name: Publish on pypi (only for tag pushes)
+        if: startsWith(github.ref, 'refs/tags')
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          user: __token__
+          password: ${{secrets.PYPI_API_TOKEN}}
+          skip-existing: true
