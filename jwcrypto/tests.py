@@ -2111,6 +2111,32 @@ class ConformanceTests(unittest.TestCase):
         jwa.default_max_pbkdf2_iterations += 2
         p2cenc.add_recipient(key)
 
+    def test_jwe_decompression_max(self):
+        key = jwk.JWK(kty='oct', k=base64url_encode(b'A' * (128 // 8)))
+        payload = '{"u": "' + "u" * 400000000 + '", "uu":"' \
+            + "u" * 400000000 + '"}'
+        protected_header = {
+            "alg": "A128KW",
+            "enc": "A128GCM",
+            "typ": "JWE",
+            "zip": "DEF",
+        }
+        enc = jwe.JWE(payload.encode('utf-8'),
+                      recipient=key,
+                      protected=protected_header).serialize(compact=True)
+        with self.assertRaises(jwe.InvalidJWEData):
+            check = jwe.JWE()
+            check.deserialize(enc)
+            check.decrypt(key)
+
+        defmax = jwe.default_max_compressed_size
+        jwe.default_max_compressed_size = 1000000000
+        # ensure we can eraise the limit and decrypt
+        check = jwe.JWE()
+        check.deserialize(enc)
+        check.decrypt(key)
+        jwe.default_max_compressed_size = defmax
+
 
 class JWATests(unittest.TestCase):
     def test_jwa_create(self):

@@ -10,6 +10,9 @@ from jwcrypto.common import json_decode, json_encode
 from jwcrypto.jwa import JWA
 from jwcrypto.jwk import JWKSet
 
+# Limit the amount of data we are willing to decompress by default.
+default_max_compressed_size = 256 * 1024
+
 
 # RFC 7516 - 4.1
 # name: (description, supported?)
@@ -422,6 +425,10 @@ class JWE:
 
         compress = jh.get('zip', None)
         if compress == 'DEF':
+            if len(data) > default_max_compressed_size:
+                raise InvalidJWEData(
+                    'Compressed data exceeds maximum allowed'
+                    'size' + f' ({default_max_compressed_size})')
             self.plaintext = zlib.decompress(data, -zlib.MAX_WBITS)
         elif compress is None:
             self.plaintext = data
