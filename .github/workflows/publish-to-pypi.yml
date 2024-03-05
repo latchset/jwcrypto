@@ -21,11 +21,13 @@
                 { "run": "sudo apt-get install cargo" },
                 { "run": "pip --version" },
                 { "run": "python setup.py sdist" },
+                { "run": "python setup.py bdist_wheel" },
                 {
                     "uses": "pypa/gh-action-pypi-publish@release/v1",
                     "with": {
                         "user": "__token__",
                         "password": "${{secrets.PYPI_API_TOKEN}}",
+                        "skip-existing": true,
                     },
                 },
             ],
