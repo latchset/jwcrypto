@@ -1509,6 +1509,18 @@ class TestJWE(unittest.TestCase):
         with self.assertRaises(JWKeyNotFound):
             e4.deserialize(e3.serialize(), ks)
 
+    def test_serialize_not_flattened(self):
+        # JWE with flattened=False adds recipients in objects and in serialized
+        e = jwe.JWE(E_A1_ex['plaintext'], flattened=False)
+        e.add_recipient(E_A1_ex['key'], E_A1_ex['protected'])
+        self.assertIn('recipients', e.objects)
+        self.assertIn('recipients', e.serialize())
+
+        e = jwe.JWE(E_A1_ex['plaintext'])
+        e.add_recipient(E_A1_ex['key'], E_A1_ex['protected'])
+        self.assertNotIn('recipients', e.objects)
+        self.assertNotIn('recipients', e.serialize())
+
 
 MMA_vector_key = jwk.JWK(**E_A2_key)
 MMA_vector_ok_cek =  \
