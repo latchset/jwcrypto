@@ -82,7 +82,7 @@ class JWE:
 
     def __init__(self, plaintext=None, protected=None, unprotected=None,
                  aad=None, algs=None, recipient=None, header=None,
-                 header_registry=None):
+                 header_registry=None, flattened=True):
         """Creates a JWE token.
 
         :param plaintext(bytes): An arbitrary plaintext to be encrypted.
@@ -93,11 +93,13 @@ class JWE:
         :param recipient: An optional, default recipient key
         :param header: An optional header for the default recipient
         :param header_registry: Optional additions to the header registry
+        :param flattened: Use flattened serialization syntax (default True)
         """
         self._allowed_algs = None
         self.objects = {}
         self.plaintext = None
         self.header_registry = JWSEHeaderRegistry(JWEHeaderRegistry)
+        self.flattened = flattened
         if header_registry:
             self.header_registry.update(header_registry)
         if plaintext is not None:
@@ -253,17 +255,20 @@ class JWE:
 
         if 'recipients' in self.objects:
             self.objects['recipients'].append(rec)
-        elif 'encrypted_key' in self.objects or 'header' in self.objects:
-            self.objects['recipients'] = []
-            n = {}
-            if 'encrypted_key' in self.objects:
-                n['encrypted_key'] = self.objects.pop('encrypted_key')
-            if 'header' in self.objects:
-                n['header'] = self.objects.pop('header')
-            self.objects['recipients'].append(n)
-            self.objects['recipients'].append(rec)
+        elif self.flattened:
+            if 'encrypted_key' in self.objects or 'header' in self.objects:
+                self.objects['recipients'] = []
+                n = {}
+                if 'encrypted_key' in self.objects:
+                    n['encrypted_key'] = self.objects.pop('encrypted_key')
+                if 'header' in self.objects:
+                    n['header'] = self.objects.pop('header')
+                self.objects['recipients'].append(n)
+                self.objects['recipients'].append(rec)
+            else:
+                self.objects.update(rec)
         else:
-            self.objects.update(rec)
+            self.objects['recipients'] = [rec]
 
     def serialize(self, compact=False):
         """Serializes the object into a JWE token.
