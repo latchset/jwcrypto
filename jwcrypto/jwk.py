@@ -339,6 +339,7 @@ class JWK(dict):
         super(JWK, self).__init__()
         self._cache_pub_k = None
         self._cache_pri_k = None
+        self.unsafe_skip_rsa_key_validation = False
 
         if 'generate' in kwargs:
             self.generate_key(**kwargs)
@@ -838,7 +839,9 @@ class JWK(dict):
     def _rsa_pri(self):
         k = self._cache_pri_k
         if k is None:
-            k = self._rsa_pri_n().private_key(default_backend())
+            u = self.unsafe_skip_rsa_key_validation
+            k = self._rsa_pri_n().private_key(default_backend(),
+                                              unsafe_skip_rsa_key_validation=u)
             self._cache_pri_k = k
         return k
 
@@ -993,8 +996,10 @@ class JWK(dict):
         """
 
         try:
+            u = self.unsafe_skip_rsa_key_validation
             key = serialization.load_pem_private_key(
-                data, password=password, backend=default_backend())
+                data, password=password, backend=default_backend(),
+                unsafe_skip_rsa_key_validation=u)
         except ValueError as e:
             if password is not None:
                 raise e
