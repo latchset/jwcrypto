@@ -757,6 +757,16 @@ class TestJWK(unittest.TestCase):
             "urn:ietf:params:oauth:jwk-thumbprint:sha-256:{}".format(
                 PublicKeys['thumbprints'][1]))
 
+    def test_unsafe_rsa(self):
+        key = jwk.JWK()
+        key.unsafe_skip_rsa_key_validation = True
+        key.import_from_pem(RSAPrivatePEM, password=RSAPrivatePassword)
+        self.assertTrue(key.has_private)
+        # finally check private works
+        s = jws.JWS(payload='plaintext')
+        s.add_signature(key, None, {"alg": "PS256"})
+        s.serialize()
+
 
 # RFC 7515 - A.1
 A1_protected = \
