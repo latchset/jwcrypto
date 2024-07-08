@@ -1977,6 +1977,68 @@ class TestJWT(unittest.TestCase):
         jwt.JWT(jwt=enctok, key=key)
         key.key_ops = None
 
+    def test_claims_scope(self):
+        key = jwk.JWK().generate(kty='oct')
+
+        string_header = '{"alg":"HS256"}'
+
+        # no scopes provided
+        claims = '{}'
+        t = jwt.JWT(string_header, claims)
+        t.make_signed_token(key)
+        token = t.serialize()
+        self.assertRaises(jwt.JWTMissingClaim, jwt.JWT, jwt=token,
+                          key=key, check_claims={"scope": "read"})
+
+        # non-string scopes
+        claims = '{"scope": 12345}'
+        t = jwt.JWT(string_header, claims)
+        t.make_signed_token(key)
+        token = t.serialize()
+        self.assertRaises(jwt.JWTInvalidClaimValue, jwt.JWT, jwt=token,
+                          key=key, check_claims={"scope": "read"})
+
+        # empty scopes
+        claims = '{"scope": ""}'
+        t = jwt.JWT(string_header, claims)
+        t.make_signed_token(key)
+        token = t.serialize()
+        self.assertRaises(jwt.JWTInvalidClaimValue, jwt.JWT, jwt=token,
+                          key=key, check_claims={"scope": "read"})
+
+        # one correct scope
+        claims = '{"scope":"read"}'
+        t = jwt.JWT(string_header, claims)
+        t.make_signed_token(key)
+        token = t.serialize()
+        jwt.JWT(jwt=token, key=key, check_claims={"scope": "read"})
+        self.assertRaises(jwt.JWTInvalidClaimValue, jwt.JWT, jwt=token,
+                          key=key, check_claims={"scope": "write"})
+
+        # multiple scopes including the correct one
+        claims = '{"scope":"view read write"}'
+        t = jwt.JWT(string_header, claims)
+        t.make_signed_token(key)
+        token = t.serialize()
+        jwt.JWT(jwt=token, key=key, check_claims={"scope": "view"})
+        jwt.JWT(jwt=token, key=key, check_claims={"scope": "read"})
+        jwt.JWT(jwt=token, key=key, check_claims={"scope": "write"})
+        self.assertRaises(jwt.JWTInvalidClaimValue, jwt.JWT, jwt=token,
+                          key=key, check_claims={"scope": "wrong"})
+
+        # one correct scope, invalid value
+        claims = '{"scope":"read"}'
+        t = jwt.JWT(string_header, claims)
+        t.make_signed_token(key)
+        token = t.serialize()
+        self.assertRaises(jwt.JWTInvalidClaimFormat, jwt.JWT, jwt=token,
+                          key=key, check_claims={"scope": 123})
+        self.assertRaises(jwt.JWTInvalidClaimFormat, jwt.JWT, jwt=token,
+                          key=key, check_claims={"scope": ["test", "wrong"]})
+
+        # finally make sure it doesn't raise if not checked.
+        jwt.JWT(jwt=token, key=key)
+
 
 class ConformanceTests(unittest.TestCase):
 
