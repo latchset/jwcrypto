@@ -479,6 +479,7 @@ class JWT:
         self._check_string_claim('iss', check_claims)
         self._check_string_claim('sub', check_claims)
         self._check_array_or_string_claim('aud', check_claims)
+        self._check_string_claim('scope', check_claims)
         self._check_integer_claim('exp', check_claims)
         self._check_integer_claim('nbf', check_claims)
         self._check_integer_claim('iat', check_claims)
@@ -556,7 +557,26 @@ class JWT:
                                                    "'%s'" % (name,
                                                              claims[name],
                                                              value))
+            elif name == 'scope':
+                if value is not None:
+                    if not isinstance(claims[name], str):
+                        raise JWTInvalidClaimValue(
+                            "Invalid '%s' value. Scope list has to be "
+                            "a string, got a %s instead: %s" % (
+                                name, type(claims[name]), str(claims[name])))
 
+                    found = False
+                    got_scopes = claims[name].split()
+                    for s in got_scopes:
+                        if s == value:
+                            found = True
+                            break
+
+                    if not found:
+                        raise JWTInvalidClaimValue(
+                            "Invalid '%s' value. Scope list '%s' does not "
+                            "contain the required scope '%s'" % (
+                                name, claims[name], value))
             else:
                 if value is not None and value != claims[name]:
                     raise JWTInvalidClaimValue(
