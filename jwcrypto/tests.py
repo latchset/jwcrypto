@@ -515,6 +515,61 @@ class TestJWK(unittest.TestCase):
         with self.assertRaises(jwk.InvalidJWKValue):
             jwk.JWK.from_json('1')
 
+    def test_generate_similar(self):
+        key_params = [
+            {
+                "kty": "oct",
+                "size": 192
+            },
+            {
+                "kty": "RSA",
+                "size": 3072
+            },
+            {
+                "kty": "EC",
+                "crv": "P-256"
+            },
+            {
+                "kty": "EC",
+                "crv": "P-384",
+            },
+            {
+                "kty": "OKP",
+                "crv": "Ed25519"
+            },
+            {
+                "kty": "OKP",
+                "crv": "Ed448"
+            },
+            {
+                "kty": "OKP",
+                "crv": "X25519"
+            },
+            {
+                "kty": "OKP",
+                "crv": "X448"
+            },
+            {
+                "kty": "RSA",
+                "size": 3072,
+                "use": "sig"
+            },
+            {
+                "kty": "oct",
+                "size": 256,
+                "key_ops": "sign"
+            },
+        ]
+        for params in key_params:
+            key1 = jwk.JWK.generate(**params)
+            key2 = jwk.JWK.generate_similar(key1)
+            for prop in ["kty", "crv", "use", "key_ops"]:
+                self.assertEqual(key1.get(prop), key2.get(prop))
+            self.assertEqual(
+                type(key1.get_op_key("sign")),
+                type(key2.get_op_key("sign"))
+            )
+
     def test_jwkset(self):
         k = jwk.JWK(**RSAPrivateKey)
         ks = jwk.JWKSet()
