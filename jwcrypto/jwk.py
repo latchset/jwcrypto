@@ -17,6 +17,7 @@ from jwcrypto.common import JWException
 from jwcrypto.common import base64url_decode, base64url_encode
 from jwcrypto.common import json_decode, json_encode
 
+__all__ = ['JWK']
 
 class UnimplementedOKPCurveKey:
     @classmethod

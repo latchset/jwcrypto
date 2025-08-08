@@ -14,6 +14,7 @@ from jwcrypto.jwk import JWK, JWKSet
 from jwcrypto.jws import JWS
 from jwcrypto.jws import default_allowed_algs as jws_algs
 
+__all__ = ['JWT']
 
 # RFC 7519 - 4.1
 # name: description

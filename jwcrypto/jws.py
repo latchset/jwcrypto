@@ -7,6 +7,8 @@ from jwcrypto.common import json_decode, json_encode
 from jwcrypto.jwa import JWA
 from jwcrypto.jwk import JWK, JWKSet
 
+__all__ = ['JWS']
+
 JWSHeaderRegistry = {
     'alg': JWSEHeaderParameter('Algorithm', False, True, None),
     'jku': JWSEHeaderParameter('JWK Set URL', False, False, None),

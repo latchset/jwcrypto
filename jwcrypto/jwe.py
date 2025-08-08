@@ -10,6 +10,8 @@ from jwcrypto.common import json_decode, json_encode
 from jwcrypto.jwa import JWA
 from jwcrypto.jwk import JWKSet
 
+__all__ = ['JWE']
+
 # Limit the amount of data we are willing to decompress by default.
 default_max_compressed_size = 256 * 1024
 

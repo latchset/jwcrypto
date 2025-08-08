@@ -26,6 +26,8 @@ from jwcrypto.common import base64url_decode, base64url_encode
 from jwcrypto.common import json_decode
 from jwcrypto.jwk import JWK
 
+__all__ = ['JWA']
+
 # Implements RFC 7518 - JSON Web Algorithms (JWA)
 
 default_max_pbkdf2_iterations = 16384
