@@ -984,6 +984,7 @@ class JWK(dict):
             self._import_pyca_pub_okp(key)
         else:
             raise InvalidJWKValue('Unknown key object %r' % key)
+        self.__setitem__('kid', self.thumbprint())
 
     def import_from_pem(self, data, password=None, kid=None):
         """Imports a key from data loaded from a PEM file.
@@ -1016,9 +1017,8 @@ class JWK(dict):
                     raise e
 
         self.import_from_pyca(key)
-        if kid is None:
-            kid = self.thumbprint()
-        self.__setitem__('kid', kid)
+        if kid is not None:
+            self.__setitem__('kid', kid)
 
     def export_to_pem(self, private_key=False, password=False):
         """Exports keys to a data buffer suitable to be stored as a PEM file.
