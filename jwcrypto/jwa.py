@@ -29,6 +29,7 @@ from jwcrypto.jwk import JWK
 # Implements RFC 7518 - JSON Web Algorithms (JWA)
 
 default_max_pbkdf2_iterations = 16384
+default_enforce_hmac_key_length = True
 
 
 class JWAAlgorithm(metaclass=ABCMeta):
@@ -111,7 +112,7 @@ class _RawHMAC(_RawJWS):
 
     def _hmac_setup(self, key, payload):
         # Ensure key size matches RFC 7518 requirements
-        if _bitsize(key) < self.keysize:
+        if default_enforce_hmac_key_length and _bitsize(key) < self.keysize:
             raise InvalidJWEKeyLength(self.keysize, _bitsize(key))
         h = hmac.HMAC(key, self.hashfn, backend=self.backend)
         h.update(payload)
