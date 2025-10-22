@@ -2228,6 +2228,22 @@ class ConformanceTests(unittest.TestCase):
         with self.assertRaises(jwe.InvalidJWEKeyLength):
             sign.add_signature(key, alg="HS256")
 
+    def test_jws_small_hmac_key_allowed(self):
+        # This is a bad idea, but we allow it if the user
+        # explicitly asks for it.
+        self.addCleanup(setattr, jwa, 'default_enforce_hmac_key_length',
+                        jwa.default_enforce_hmac_key_length)
+        jwa.default_enforce_hmac_key_length = False
+
+        sign = jws.JWS(payload='message')
+        # HS256 requires a 256 bit key, this is 128
+        key = jwk.JWK(kty='oct', k=base64url_encode(b'A' * 16))
+        sign.add_signature(key, alg="HS256")
+        o = sign.serialize()
+        check = jws.JWS()
+        check.deserialize(o, key, alg="HS256")
+        self.assertTrue(check.objects['valid'])
+
 
 class JWATests(unittest.TestCase):
     def test_jwa_create(self):
