@@ -15,16 +15,21 @@ JWCrypto uses the Cryptography_ package for all the crypto functions.
 .. _JOSE: https://datatracker.ietf.org/wg/jose/charter/
 .. _Cryptography: https://cryptography.io/
 
-Contents:
-
 .. toctree::
    :maxdepth: 2
+   :caption: Public APIs
 
    jwk
    jws
    jwe
    jwt
    common
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Internals
+
+   jwa
 
 
 Note: In the examples, random or generated output values are replaced
@@ -37,4 +42,3 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
-

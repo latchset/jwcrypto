@@ -29,7 +29,19 @@ from jwcrypto.jwk import JWK
 # Implements RFC 7518 - JSON Web Algorithms (JWA)
 
 default_max_pbkdf2_iterations = 16384
+"""The maximum number of iterations allowed for PBKDF2 key derivation.
+
+This is a security measure to prevent denial-of-service attacks by malicious
+actors providing a very high iteration count.
+"""
+
 default_enforce_hmac_key_length = True
+"""Enforces that the HMAC key length is at least the size of the hash
+function's output, as recommended by RFC 7518.
+
+This can be disabled for compatibility with legacy or non-compliant systems
+that use shorter keys.
+"""
 
 
 class JWAAlgorithm(metaclass=ABCMeta):
