@@ -1132,7 +1132,7 @@ class TestJWS(unittest.TestCase):
             self.assertEqual(jws_verify.payload, payload)
 
     def test_jws_issue_224(self):
-        key = jwk.JWK().generate(kty='oct')
+        key = jwk.JWK().generate(kty='oct', alg='HS256')
 
         # Test Empty payload is supported for creating and verifying signatures
         s = jws.JWS(payload='')
@@ -1150,7 +1150,7 @@ class TestJWS(unittest.TestCase):
         header = {"alg": "HS256"}
         header_copy = copy.deepcopy(header)
 
-        key = jwk.JWK().generate(kty='oct')
+        key = jwk.JWK().generate(kty='oct', alg='HS256')
 
         s = jws.JWS(payload='test')
         s.add_signature(key, protected=header,
@@ -1800,7 +1800,7 @@ class TestJWT(unittest.TestCase):
                               "string_claim": "test"})
 
     def test_claims_typ(self):
-        key = jwk.JWK().generate(kty='oct')
+        key = jwk.JWK().generate(kty='oct', alg='HS256')
         claims = '{"typ":"application/test"}'
         string_header = '{"alg":"HS256"}'
         t = jwt.JWT(string_header, claims)
@@ -1832,7 +1832,7 @@ class TestJWT(unittest.TestCase):
         jwt.JWT(jwt=token, key=key)
 
     def test_empty_claims(self):
-        key = jwk.JWK().generate(kty='oct')
+        key = jwk.JWK().generate(kty='oct', alg='HS256')
 
         # empty dict is valid
         t = jwt.JWT('{"alg":"HS256"}', {})
@@ -1978,7 +1978,7 @@ class TestJWT(unittest.TestCase):
         key.key_ops = None
 
     def test_claims_scope(self):
-        key = jwk.JWK().generate(kty='oct')
+        key = jwk.JWK().generate(kty='oct', alg='HS256')
 
         string_header = '{"alg":"HS256"}'
 
@@ -2089,17 +2089,17 @@ class ConformanceTests(unittest.TestCase):
 
     def test_jws_loopback(self):
         sign = jws.JWS(payload='message')
-        sign.add_signature(jwk.JWK(kty='oct', k=base64url_encode(b'A' * 16)),
+        sign.add_signature(jwk.JWK(kty='oct', k=base64url_encode(b'A' * 64)),
                            alg="HS512")
         o = sign.serialize()
         check = jws.JWS()
-        check.deserialize(o, jwk.JWK(kty='oct', k=base64url_encode(b'A' * 16)),
+        check.deserialize(o, jwk.JWK(kty='oct', k=base64url_encode(b'A' * 64)),
                           alg="HS512")
         self.assertTrue(check.objects['valid'])
 
     def test_jws_headers_as_dicts(self):
         sign = jws.JWS(payload='message')
-        key = jwk.JWK(kty='oct', k=base64url_encode(b'A' * 16))
+        key = jwk.JWK(kty='oct', k=base64url_encode(b'A' * 64))
         sign.add_signature(key, protected={'alg': 'HS512'},
                            header={'kid': key.thumbprint()})
         o = sign.serialize()
@@ -2221,6 +2221,13 @@ class ConformanceTests(unittest.TestCase):
         check.decrypt(key)
         jwe.default_max_compressed_size = defmax
 
+    def test_jws_small_hmac_key_rejected(self):
+        sign = jws.JWS(payload='message')
+        # HS256 requires a 256 bit key, this is 128
+        key = jwk.JWK(kty='oct', k=base64url_encode(b'A' * 16))
+        with self.assertRaises(jwe.InvalidJWEKeyLength):
+            sign.add_signature(key, alg="HS256")
+
 
 class JWATests(unittest.TestCase):
     def test_jwa_create(self):
@@ -2321,7 +2328,7 @@ class TestUnencodedPayload(unittest.TestCase):
 
     def test_mismatching_encoding(self):
         s = jws.JWS(rfc7797_payload)
-        s.add_signature(jwk.JWK(**SymmetricKeys['keys'][0]),
+        s.add_signature(jwk.JWK(**SymmetricKeys['keys'][1]),
                         protected=rfc7797_e_header)
         with self.assertRaises(jws.InvalidJWSObject):
             s.add_signature(jwk.JWK(**SymmetricKeys['keys'][1]),

@@ -7,3 +7,4 @@ cscope.out
 .coverage
 *.egg-info
 env
+*.swp

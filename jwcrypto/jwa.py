@@ -103,11 +103,16 @@ class _RawJWS:
 
 class _RawHMAC(_RawJWS):
 
+    keysize = None
+
     def __init__(self, hashfn):
         self.backend = default_backend()
         self.hashfn = hashfn
 
     def _hmac_setup(self, key, payload):
+        # Ensure key size matches RFC 7518 requirements
+        if _bitsize(key) < self.keysize:
+            raise InvalidJWEKeyLength(self.keysize, _bitsize(key))
         h = hmac.HMAC(key, self.hashfn, backend=self.backend)
         h.update(payload)
         return h
