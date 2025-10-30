@@ -2250,9 +2250,7 @@ class JWATests(unittest.TestCase):
         for name, cls in jwa.JWA.algorithms_registry.items():
             self.assertEqual(cls.name, name)
             self.assertIn(cls.algorithm_usage_location, {'alg', 'enc'})
-            if name == 'ECDH-ES':
-                self.assertIs(cls.keysize, None)
-            elif name == 'EdDSA':
+            if name in ('ECDH-ES', 'EdDSA', 'Ed25519', 'Ed448'):
                 self.assertIs(cls.keysize, None)
             else:
                 self.assertIsInstance(cls.keysize, int)
@@ -2493,3 +2491,36 @@ class TestOverloadedOperators(unittest.TestCase):
                   f'jwt=JWS.from_json_token("{ser2}"), key=None, ' + \
                   'algs=None, default_claims=None, check_claims=None)'
         self.assertEqual(repr(token), reprrep)
+
+
+class TestRfc9864(unittest.TestCase):
+
+    def test_jws_ed25519(self):
+        payload = b'My Integrity protected message'
+        if 'Ed25519' not in jwk.ImplementedOkpCurves:
+            self.skipTest('Ed25519 not supported')
+        key = jwk.JWK.generate(kty='OKP', crv='Ed25519')
+        protected_header = {"alg": "Ed25519"}
+        jws_token = jws.JWS(payload)
+        jws_token.add_signature(key, None,
+                                json_encode(protected_header), None)
+        serialized_jws = jws_token.serialize(compact=True)
+        jws_obj = jws.JWS()
+        jws_obj.deserialize(serialized_jws, key)
+        self.assertTrue(jws_obj.is_valid)
+        self.assertEqual(jws_obj.payload, payload)
+
+    def test_jws_ed448(self):
+        payload = b'My Integrity protected message'
+        if 'Ed448' not in jwk.ImplementedOkpCurves:
+            self.skipTest('Ed448 not supported')
+        key = jwk.JWK.generate(kty='OKP', crv='Ed448')
+        protected_header = {"alg": "Ed448"}
+        jws_token = jws.JWS(payload)
+        jws_token.add_signature(key, None,
+                                json_encode(protected_header), None)
+        serialized_jws = jws_token.serialize(compact=True)
+        jws_obj = jws.JWS()
+        jws_obj.deserialize(serialized_jws, key)
+        self.assertTrue(jws_obj.is_valid)
+        self.assertEqual(jws_obj.payload, payload)
