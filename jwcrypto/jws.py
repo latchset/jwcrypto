@@ -30,7 +30,8 @@ default_allowed_algs = [
     'RS256', 'RS384', 'RS512',
     'ES256', 'ES384', 'ES512',
     'PS256', 'PS384', 'PS512',
-    'EdDSA', 'ES256K']
+    'EdDSA', 'ES256K', 'Ed25519',
+    'Ed448']
 """Default allowed algorithms"""
 
 
