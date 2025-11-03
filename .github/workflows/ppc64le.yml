@@ -1,10 +1,6 @@
 {
     "name": "ppc64le CI",
-    "on": {
-        "push": {
-            "branches": [ ]
-        },
-    },
+    "on": [ "push", "pull" ],
     "jobs": {
         "ppc64le": {
             "name": "CI on ppc64le",
