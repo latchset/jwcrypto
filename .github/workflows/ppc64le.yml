@@ -4,6 +4,7 @@
         "push": {
             "branches": [ "main" ]
         },
+        "pull_request": null,
     },
     "jobs": {
         "ppc64le": {
