@@ -2,13 +2,13 @@
     "name": "ppc64le CI",
     "on": {
         "push": {
-            "branches": [ "main" ]
+            "branches": [ ]
         },
     },
     "jobs": {
         "ppc64le": {
             "name": "CI on ppc64le",
-            "runs-on": "ubuntu-20.04",
+            "runs-on": "ubuntu-latest",
             "strategy": {
                 "fail-fast": false,
                 "matrix": {
@@ -27,7 +27,7 @@
             "steps": [
                 { "uses": "actions/checkout@v4" },
                 {
-                    "uses": "uraimo/run-on-arch-action@v2.0.5",
+                    "uses": "uraimo/run-on-arch-action@v3.0.1",
                     "with": {
                         "arch": "${{matrix.arch}}",
                         "distro": "fedora_latest",
