@@ -1,3 +1,2 @@
 include LICENSE README.md
 include tox.ini setup.cfg
-include jwcrypto/VERSION

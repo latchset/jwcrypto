@@ -1,0 +1,42 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "jwcrypto"
+dynamic = ["version"]
+description = "Implementation of JOSE Web standards"
+readme = "README.md"
+license = "LGPL-3.0-or-later"
+requires-python = ">= 3.8"
+maintainers = [
+    { name = "JWCrypto Project Contributors", email = "simo@redhat.com" },
+]
+classifiers = [
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Security",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+dependencies = [
+    "cryptography >= 3.4",
+    "typing_extensions >= 4.5.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/latchset/jwcrypto"
+
+[tool.hatch.version]
+path = "jwcrypto/version.py"
+
+[tool.hatch.build.targets.wheel.shared-data]
+LICENSE = "share/doc/jwcrypto/LICENSE"
+"README.md" = "share/doc/jwcrypto/README.md"
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "/jwcrypto",
+]

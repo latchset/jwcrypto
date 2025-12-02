@@ -2,17 +2,17 @@
 #
 # Copyright (C) 2015  JWCrypto Project Contributors, see  LICENSE file
 
-import os
-from setuptools import setup
-
 # read the contents of your README file
 from pathlib import Path
+
+from setuptools import setup
+
+from jwcrypto import version
+
 this_directory = Path(__file__).parent
 long_description = (this_directory / "README.md").read_text()
 
-version = None
-with open(os.path.join('jwcrypto', 'VERSION')) as verfile:
-    version = verfile.read().strip()
+version = version.__version__
 
 setup(
     name = 'jwcrypto',

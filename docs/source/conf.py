@@ -12,8 +12,8 @@
 # All configuration values have a default; values that are commented out
 # serve to show the default.
 
-import sys
 import os
+import sys
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -21,6 +21,7 @@ import os
 #sys.path.insert(0, os.path.abspath('.'))
 
 sys.path.insert(0, os.path.abspath('../..'))
+from jwcrypto.version import __version__ as version
 
 # -- General configuration ------------------------------------------------
 
@@ -57,8 +58,6 @@ copyright = u'2016-2021, JWCrypto Contributors'
 # built documents.
 #
 # The short X.Y version.
-with open(os.path.join('../../jwcrypto', 'VERSION')) as verfile:
-    version = verfile.read().strip()
 # The full version, including alpha/beta/rc tags.
 release = version
 
