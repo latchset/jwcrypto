@@ -12,7 +12,8 @@ from jwcrypto.jwk import JWKSet
 
 # Limit the amount of data we are willing to decompress by default.
 default_max_compressed_size = 256 * 1024
-
+# Limit the maximum plaintext size to 100MB by default.
+default_max_plaintext_size = 100 * 1024 * 1024
 
 # RFC 7516 - 4.1
 # name: (description, supported?)
@@ -376,7 +377,7 @@ class JWE:
         return data
 
     # FIXME: allow to specify which algorithms to accept as valid
-    def _decrypt(self, key, ppe):
+    def _decrypt(self, key, ppe, max_plaintext=default_max_plaintext_size):
 
         jh = self._get_jose_header(ppe.get('header', None))
 
@@ -434,25 +435,39 @@ class JWE:
                 raise InvalidJWEData(
                     'Compressed data exceeds maximum allowed'
                     'size' + f' ({default_max_compressed_size})')
-            self.plaintext = zlib.decompress(data, -zlib.MAX_WBITS)
+            do = zlib.decompressobj(wbits=-zlib.MAX_WBITS)
+            self.plaintext = do.decompress(data, max_plaintext)
+            if do.unconsumed_tail or not do.eof:
+                self.plaintext = None
+                raise InvalidJWEData(
+                    'Compressed data exceeds maximum allowed'
+                    'output size' + f' ({max_plaintext})')
         elif compress is None:
             self.plaintext = data
         else:
             raise ValueError('Unknown compression')
 
-    def decrypt(self, key):
+    def decrypt(self, key, max_plaintext=0):
         """Decrypt a JWE token.
 
         :param key: The (:class:`jwcrypto.jwk.JWK`) decryption key.
         :param key: A (:class:`jwcrypto.jwk.JWK`) decryption key,
          or a (:class:`jwcrypto.jwk.JWKSet`) that contains a key indexed
          by the 'kid' header or (deprecated) a string containing a password.
+        :param max_plaintext: Maximum plaintext size allowed, 0 means
+         the library default applies. Application writers are recommended
+         to set a limit here if they know what is the max plaintext size
+         for their application.
 
         :raises InvalidJWEOperation: if the key is not a JWK object.
         :raises InvalidJWEData: if the ciphertext can't be decrypted or
          the object is otherwise malformed.
         :raises JWKeyNotFound: if key is a JWKSet and the key is not found.
         """
+
+        self.plaintext = None
+        if max_plaintext == 0:
+            max_plaintext = default_max_plaintext_size
 
         if 'ciphertext' not in self.objects:
             raise InvalidJWEOperation("No available ciphertext")
@@ -462,14 +477,14 @@ class JWE:
         if 'recipients' in self.objects:
             for rec in self.objects['recipients']:
                 try:
-                    self._decrypt(key, rec)
+                    self._decrypt(key, rec, max_plaintext=max_plaintext)
                 except Exception as e:  # pylint: disable=broad-except
                     if isinstance(e, JWKeyNotFound):
                         missingkey = True
                     self.decryptlog.append('Failed: [%s]' % repr(e))
         else:
             try:
-                self._decrypt(key, self.objects)
+                self._decrypt(key, self.objects, max_plaintext=max_plaintext)
             except Exception as e:  # pylint: disable=broad-except
                 if isinstance(e, JWKeyNotFound):
                     missingkey = True

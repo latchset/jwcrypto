@@ -2208,18 +2208,36 @@ class ConformanceTests(unittest.TestCase):
         enc = jwe.JWE(payload.encode('utf-8'),
                       recipient=key,
                       protected=protected_header).serialize(compact=True)
-        with self.assertRaises(jwe.InvalidJWEData):
-            check = jwe.JWE()
-            check.deserialize(enc)
-            check.decrypt(key)
-
-        defmax = jwe.default_max_compressed_size
-        jwe.default_max_compressed_size = 1000000000
-        # ensure we can eraise the limit and decrypt
         check = jwe.JWE()
         check.deserialize(enc)
+        with self.assertRaises(jwe.InvalidJWEData):
+            check.decrypt(key)
+
+        # raise the limit on compressed token size so we can decrypt
+        defcmax = jwe.default_max_compressed_size
+        jwe.default_max_compressed_size = 10 * 1024 * 1024
+
+        # this passes if we explicitly allow larger plaintext via API
+        check.decrypt(key, max_plaintext=1000000000)
+
+        # this will still fail because the max plaintext length clamps this
+        with self.assertRaises(jwe.InvalidJWEData):
+            check.decrypt(key)
+
+        # ensure that now this can work with changed defaults
+        defpmax = jwe.default_max_plaintext_size
+        jwe.default_max_plaintext_size = 1000000000
         check.decrypt(key)
-        jwe.default_max_compressed_size = defmax
+
+        # restore limits
+        jwe.default_max_compressed_size = defcmax
+
+        # check that this fails the max compressed header limits
+        with self.assertRaises(jwe.InvalidJWEData):
+            check.decrypt(key)
+
+        # restore plaintext limits
+        jwe.default_max_plaintext_size = defpmax
 
     def test_jws_small_hmac_key_rejected(self):
         sign = jws.JWS(payload='message')
