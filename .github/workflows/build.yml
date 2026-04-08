@@ -20,6 +20,7 @@
                         "python-311",
                         "python-312",
                         "python-313",
+                        "python-314",
                         "doc",
                         "doctest",
                         "sphinx",
@@ -65,38 +66,44 @@
                             "arch": "x64",
                         },
                         {
+                            "name": "python-314",
+                            "python": "3.14",
+                            "toxenv": "py314",
+                            "arch": "x64",
+                        },
+                        {
                             "name": "doc",
-                            "python": "3.13",
+                            "python": "3.14",
                             "toxenv": "doc",
                             "arch": "x64",
                         },
                         {
                             "name": "doctest",
-                            "python": "3.13",
+                            "python": "3.14",
                             "toxenv": "doctest",
                             "arch": "x64",
                         },
                         {
                             "name": "sphinx",
-                            "python": "3.13",
+                            "python": "3.14",
                             "toxenv": "sphinx",
                             "arch": "x64",
                         },
                         {
                             "name": "lint",
-                            "python": "3.13",
+                            "python": "3.14",
                             "toxenv": "lint",
                             "arch": "x64",
                         },
                         {
                             "name": "pep8",
-                            "python": "3.13",
+                            "python": "3.14",
                             "toxenv": "pep8",
                             "arch": "x64",
                         },
                         {
                             "name": "codespell",
-                            "python": "3.13",
+                            "python": "3.14",
                             "toxenv": "codespell",
                             "arch": "x64",
                         },
@@ -104,9 +111,9 @@
                 },
             },
             "steps": [
-                { "uses": "actions/checkout@v4" },
+                { "uses": "actions/checkout@v6" },
                 {
-                    "uses": "actions/setup-python@v5",
+                    "uses": "actions/setup-python@v6",
                     "with": {
                         "python-version": "${{ matrix.python }}",
                         "architecture": "${{ matrix.arch }}"
