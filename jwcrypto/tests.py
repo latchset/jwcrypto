@@ -1895,6 +1895,18 @@ class TestJWT(unittest.TestCase):
                           jwt=sertok, check_claims={"aud": ["nomatch",
                                                             "failmatch"]})
 
+    def test_claim_aud(self):
+        claims = {"aud": "www.example.com"}
+        key = jwk.JWK(generate='oct', size=256)
+        token = jwt.JWT(header={"alg": "HS256"}, claims=claims)
+        token.make_signed_token(key)
+        sertok = token.serialize()
+        check_claim = {"aud": ["www.example.com", 123]}
+        self.assertRaises(jwt.JWTInvalidClaimFormat, jwt.JWT, key=key,
+                          jwt=sertok, check_claims=check_claim)
+        check_claim = {"aud": ["www.example.com", "123"]}
+        jwt.JWT(key=key, jwt=sertok, check_claims=check_claim)
+
     def test_unexpected(self):
         key = jwk.JWK(generate='oct', size=256)
         claims = {"testclaim": "test"}

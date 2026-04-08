@@ -433,7 +433,7 @@ class JWT:
         if name not in claims or claims[name] is None:
             return
         if isinstance(claims[name], list):
-            if any(not isinstance(claim, str) for claim in claims):
+            if any(not isinstance(claim, str) for claim in claims[name]):
                 raise JWTInvalidClaimFormat(
                     "Claim %s contains non StringOrURI types" % (name, ))
         elif not isinstance(claims[name], str):
