@@ -4,11 +4,12 @@
         "push": {
             "branches": [ "main" ]
         },
+        "pull_request": null,
     },
     "jobs": {
         "ppc64le": {
             "name": "CI on ppc64le",
-            "runs-on": "ubuntu-20.04",
+            "runs-on": "ubuntu-latest",
             "strategy": {
                 "fail-fast": false,
                 "matrix": {
