@@ -562,6 +562,21 @@ class TestJWK(unittest.TestCase):
         self.assertEqual(len(ks['keys']), 2)
         self.assertEqual(len(ks['keys']), len(ks2['keys']))
 
+    def test_import_keyset_invalid(self):
+        ks = jwk.JWKSet()
+        invalid_inputs = [
+            '',
+            'null',
+            '[]',
+            '{}',
+            '{"keys": 1}',
+            '{"keys": [1]}',
+            '{"keys": [{"kty": "invalid"}]}'
+        ]
+        for inp in invalid_inputs:
+            with self.assertRaises(jwk.InvalidJWKValue):
+                ks.import_keyset(inp)
+
     def test_thumbprint(self):
         for i in range(0, len(PublicKeys['keys'])):
             k = jwk.JWK(**PublicKeys['keys'][i])
