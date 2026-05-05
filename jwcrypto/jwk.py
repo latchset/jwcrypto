@@ -1356,18 +1356,17 @@ class JWKSet(dict):
         """
         try:
             jwkset = json_decode(keyset)
+            if 'keys' not in jwkset:
+                raise ValueError("'keys' not in set")
+
+            for k, v in jwkset.items():
+                if k == 'keys':
+                    for jwk in v:
+                        self['keys'].add(JWK(**jwk))
+                else:
+                    self[k] = v
         except Exception as e:  # pylint: disable=broad-except
             raise InvalidJWKValue from e
-
-        if 'keys' not in jwkset:
-            raise InvalidJWKValue
-
-        for k, v in jwkset.items():
-            if k == 'keys':
-                for jwk in v:
-                    self['keys'].add(JWK(**jwk))
-            else:
-                self[k] = v
 
     @classmethod
     def from_json(cls, keyset):
