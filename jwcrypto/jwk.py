@@ -368,6 +368,18 @@ class JWK(dict):
 
         gen(params)
 
+    @classmethod
+    def generate_similar(cls, key):
+        return cls.generate(**key.get_generate_params())
+
+    def get_generate_params(self):
+        params = {param: self.get(param) for param in ["kty", "crv", "use", "key_ops"] if param in self}
+        if self.get("kty") == "RSA":
+            params["size"] = self._get_public_key().key_size
+        elif self.get("kty") == "oct":
+            params["size"] = len(base64url_decode(self.k)) * 8
+        return params
+
     def _get_gen_size(self, params, default_size=None):
         size = default_size
         if 'size' in params:
