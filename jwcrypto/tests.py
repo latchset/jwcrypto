@@ -2537,6 +2537,74 @@ class TestOverloadedOperators(unittest.TestCase):
                   'algs=None, default_claims=None, check_claims=None)'
         self.assertEqual(repr(token), reprrep)
 
+    def test_jwt_strict_serialization_jws(self):
+        # RFC 7519 mandates the Compact Serialization for JWTs. With the
+        # opt-in strict_serialization flag a JSON-serialized JWS must be
+        # rejected, while the compact one keeps working. Without the flag
+        # the previous (lenient) behavior is preserved.
+        key = jwk.JWK.generate(kty='oct', size=256)
+        signer = jws.JWS(payload='{"sub":"alice"}')
+        # The unprotected header carries a dotted value so that the JSON
+        # serialization happens to contain exactly two '.' characters and
+        # is therefore routed to the JWS branch by the legacy dot-count
+        # heuristic. This is the case the lenient path used to accept.
+        signer.add_signature(key, alg='HS256',
+                             protected='{"alg":"HS256"}',
+                             header={'kid': 'a.b.c'})
+        json_token = signer.serialize(compact=False)
+        compact_token = signer.serialize(compact=True)
+
+        # Default behavior is unchanged: the JSON serialization is accepted.
+        lenient = jwt.JWT()
+        lenient.deserialize(json_token, key)
+        self.assertEqual(json_decode(lenient.claims)['sub'], 'alice')
+
+        # Strict mode rejects the JSON serialization.
+        strict = jwt.JWT(strict_serialization=True)
+        with self.assertRaises(ValueError):
+            strict.deserialize(json_token, key)
+
+        # Strict mode also rejects it through the constructor jwt= path.
+        with self.assertRaises(ValueError):
+            jwt.JWT(jwt=json_token, key=key, check_claims=False,
+                    strict_serialization=True)
+
+        # The compact serialization works in both modes.
+        strict_ok = jwt.JWT(strict_serialization=True)
+        strict_ok.deserialize(compact_token, key)
+        self.assertEqual(json_decode(strict_ok.claims)['sub'], 'alice')
+        lenient_ok = jwt.JWT()
+        lenient_ok.deserialize(compact_token, key)
+        self.assertEqual(json_decode(lenient_ok.claims)['sub'], 'alice')
+
+    def test_jwt_strict_serialization_jwe(self):
+        key = jwk.JWK.generate(kty='oct', size=256)
+        algs = ['A256KW', 'A256CBC-HS512']
+        enc = jwe.JWE(plaintext='{"sub":"bob"}',
+                      protected='{"enc":"A256CBC-HS512"}')
+        # A per-recipient dotted header value yields a JSON serialization
+        # with exactly four '.' characters, routed to the JWE branch.
+        enc.add_recipient(key, header={'alg': 'A256KW', 'kid': 'a.b.c.d.e'})
+        json_token = enc.serialize(compact=False)
+
+        enc2 = jwe.JWE(plaintext='{"sub":"bob"}',
+                       protected='{"alg":"A256KW","enc":"A256CBC-HS512"}')
+        enc2.add_recipient(key)
+        compact_token = enc2.serialize(compact=True)
+
+        # Default behavior is unchanged: JSON serialization is accepted.
+        lenient = jwt.JWT(algs=algs)
+        lenient.deserialize(json_token, key)
+        self.assertEqual(json_decode(lenient.claims)['sub'], 'bob')
+
+        # Strict mode rejects the JSON serialization but accepts compact.
+        strict = jwt.JWT(algs=algs, strict_serialization=True)
+        with self.assertRaises(ValueError):
+            strict.deserialize(json_token, key)
+        strict_ok = jwt.JWT(algs=algs, strict_serialization=True)
+        strict_ok.deserialize(compact_token, key)
+        self.assertEqual(json_decode(strict_ok.claims)['sub'], 'bob')
+
 
 class TestRfc9864(unittest.TestCase):
 
