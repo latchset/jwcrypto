@@ -168,7 +168,7 @@ class JWT:
 
     def __init__(self, header=None, claims=None, jwt=None, key=None,
                  algs=None, default_claims=None, check_claims=None,
-                 expected_type=None):
+                 expected_type=None, strict_serialization=False):
         """Creates a JWT object.
 
         :param header: A dict or a JSON string with the JWT Header data.
@@ -190,6 +190,13 @@ class JWT:
          If left to None the code will try to detect what the expected
          type is based on other parameters like 'algs' and will default
          to JWS if no hints are found. It has no effect on token creation.
+        :param strict_serialization: An optional boolean (default False).
+         RFC 7519 mandates that a JWT uses the JWS/JWE Compact
+         Serialization. When set to True any token presented in the
+         JWS/JWE JSON Serialization is rejected at deserialization time,
+         so only the compact representation is accepted. The default is
+         False to preserve backwards compatibility. It has no effect on
+         token creation, which always produces the compact serialization.
 
         Note: either the header,claims or jwt,key parameters should be
         provided as a deserialization operation (which occurs if the jwt
@@ -212,6 +219,7 @@ class JWT:
         self._validity = 600  # 10 minutes validity (up to 11 with leeway)
         self.deserializelog = None
         self._expected_type = expected_type
+        self._strict_serialization = strict_serialization
 
         if header:
             self.header = header
@@ -670,6 +678,18 @@ class JWT:
         self.claims = payload
         self._check_provided_claims()
 
+    @staticmethod
+    def _is_json_serialization(jwt):
+        # The JWS/JWE Compact Serialization is a sequence of base64url
+        # encoded parts joined by dots, so it never decodes as a JSON
+        # object. The JWS/JWE JSON Serialization always is a JSON object.
+        # This mirrors how JWS.deserialize and JWE.deserialize themselves
+        # tell the two representations apart.
+        try:
+            return isinstance(json_decode(jwt), dict)
+        except ValueError:
+            return False
+
     def deserialize(self, jwt, key=None):
         """Deserialize a JWT token.
 
@@ -680,7 +700,16 @@ class JWT:
         :param key: A (:class:`jwcrypto.jwk.JWK`) verification or
          decryption key, or a (:class:`jwcrypto.jwk.JWKSet`) that
          contains a key indexed by the 'kid' header.
+
+        :raises ValueError: if strict_serialization is enabled and the
+         token is not in the JWS/JWE Compact Serialization (for example
+         when a JSON Serialization is provided).
         """
+        if self._strict_serialization and self._is_json_serialization(jwt):
+            raise ValueError("Only the JWS/JWE Compact Serialization is "
+                             "allowed for JWTs (RFC 7519), but a JSON "
+                             "Serialization was provided")
+
         data = jwt.count('.')
         if data == 2:
             self.token = JWS()
