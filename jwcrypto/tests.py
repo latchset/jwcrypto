@@ -20,6 +20,7 @@ from jwcrypto.common import JWSEHeaderParameter
 from jwcrypto.common import base64url_decode, base64url_encode
 from jwcrypto.common import json_decode, json_encode
 
+
 jwe_algs_and_rsa1_5 = jwe.default_allowed_algs + ['RSA1_5']
 
 # RFC 7517 - A.1
@@ -2295,7 +2296,11 @@ class JWATests(unittest.TestCase):
         for name, cls in jwa.JWA.algorithms_registry.items():
             self.assertEqual(cls.name, name)
             self.assertIn(cls.algorithm_usage_location, {'alg', 'enc'})
-            if name in ('ECDH-ES', 'EdDSA', 'Ed25519', 'Ed448'):
+            keysize_must_be_none = (
+                'ECDH-ES', 'EdDSA', 'Ed25519', 'Ed448',
+                'ML-DSA-44', 'ML-DSA-65', 'ML-DSA-87',
+            )
+            if name in keysize_must_be_none:
                 self.assertIs(cls.keysize, None)
             else:
                 self.assertIsInstance(cls.keysize, int)
