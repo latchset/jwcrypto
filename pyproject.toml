@@ -8,16 +8,18 @@ dynamic = ["version"]
 description = "Implementation of JOSE Web standards"
 readme = "README.md"
 license = "LGPL-3.0-or-later"
-requires-python = ">= 3.8"
+requires-python = ">= 3.9"
 maintainers = [
     { name = "JWCrypto Project Contributors", email = "simo@redhat.com" },
 ]
 classifiers = [
     "Intended Audience :: Developers",
-    "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Topic :: Security",
     "Topic :: Software Development :: Libraries :: Python Modules",
 ]
