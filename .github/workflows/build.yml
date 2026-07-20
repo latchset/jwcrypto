@@ -14,7 +14,6 @@
                 "fail-fast": false,
                 "matrix": {
                     "name": [
-                        "python-38",
                         "python-39",
                         "python-310",
                         "python-311",
@@ -29,12 +28,6 @@
                         "codespell",
                     ],
                     "include": [
-                        {
-                            "name": "python-38",
-                            "python": "3.8",
-                            "toxenv": "py38",
-                            "arch": "x64",
-                        },
                         {
                             "name": "python-39",
                             "python": "3.9",
