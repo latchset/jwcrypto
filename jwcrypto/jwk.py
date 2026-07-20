@@ -86,11 +86,61 @@ _OKP_CURVES_TABLE = {
 }
 
 
+class UnimplementedAKPAlgorithm:
+    @classmethod
+    def generate(cls):
+        raise NotImplementedError
+
+    @classmethod
+    def from_public_bytes(cls, *args):
+        raise NotImplementedError
+
+    @classmethod
+    def from_seed_bytes(cls, *args):
+        raise NotImplementedError
+
+
+ImplementedAKPAlgorithms = []
+
+try:
+    from cryptography.hazmat.primitives.asymmetric.mldsa import (
+        MLDSA44PublicKey, MLDSA44PrivateKey
+    )
+    ImplementedAKPAlgorithms.append('ML-DSA-44')
+except ImportError:
+    MLDSA44PublicKey = UnimplementedAKPAlgorithm
+    MLDSA44PrivateKey = UnimplementedAKPAlgorithm
+try:
+    from cryptography.hazmat.primitives.asymmetric.mldsa import (
+        MLDSA65PublicKey, MLDSA65PrivateKey
+    )
+    ImplementedAKPAlgorithms.append('ML-DSA-65')
+except ImportError:
+    MLDSA65PublicKey = UnimplementedAKPAlgorithm
+    MLDSA65PrivateKey = UnimplementedAKPAlgorithm
+try:
+    from cryptography.hazmat.primitives.asymmetric.mldsa import (
+        MLDSA87PublicKey, MLDSA87PrivateKey
+    )
+    ImplementedAKPAlgorithms.append('ML-DSA-87')
+except ImportError:
+    MLDSA87PublicKey = UnimplementedAKPAlgorithm
+    MLDSA87PrivateKey = UnimplementedAKPAlgorithm
+
+_AKPAlg = namedtuple('AKPAlg', 'pubkey privkey')
+_AKP_ALG_TABLE = {
+    'ML-DSA-44': _AKPAlg(MLDSA44PublicKey, MLDSA44PrivateKey),
+    'ML-DSA-65': _AKPAlg(MLDSA65PublicKey, MLDSA65PrivateKey),
+    'ML-DSA-87': _AKPAlg(MLDSA87PublicKey, MLDSA87PrivateKey),
+}
+
+
 # RFC 7518 - 7.4 , RFC 8037 - 5
 JWKTypesRegistry = {'EC': 'Elliptic Curve',
                     'RSA': 'RSA',
                     'oct': 'Octet sequence',
-                    'OKP': 'Octet Key Pair'}
+                    'OKP': 'Octet Key Pair',
+                    'AKP': 'Algorithm Key Pair'}
 """Registry of valid Key Types"""
 
 
@@ -134,6 +184,10 @@ JWKValuesRegistry = {
         'crv': JWKParameter('Curve', True, True, ParmType.name),
         'x': JWKParameter('Public Key', True, True, ParmType.b64),
         'd': JWKParameter('Private Key', False, False, ParmType.b64),
+    },
+    'AKP': {
+        'pub': JWKParameter('Public Key', True, True, ParmType.b64),
+        'priv': JWKParameter('Private Key Seed', False, False, ParmType.b64),
     }
 }
 """Registry of valid key values"""
@@ -550,6 +604,42 @@ class JWK(dict):
         )
         self.import_key(**params)
 
+    def _generate_AKP(self, params):
+        alg = params.pop('alg', None)
+        if alg not in _AKP_ALG_TABLE:
+            raise InvalidJWKValue(
+                'Must specify a valid "alg" for AKP key generation. '
+                'Valid values: %s' % list(_AKP_ALG_TABLE.keys()))
+        if alg not in ImplementedAKPAlgorithms:
+            raise NotImplementedError(
+                'Algorithm "%s" is not available' % alg)
+        privkey_class = _AKP_ALG_TABLE[alg].privkey
+        key = privkey_class.generate()
+        self._import_pyca_pri_akp(key, alg, **params)
+
+    def _akp_alg_from_pyca_key(self, key):
+        for name, val in _AKP_ALG_TABLE.items():
+            if isinstance(key, (val.pubkey, val.privkey)):
+                return name
+        raise InvalidJWKValue('Invalid AKP Key object %r' % key)
+
+    def _import_pyca_pri_akp(self, key, alg, **params):
+        params.update(
+            kty='AKP',
+            alg=alg,
+            pub=base64url_encode(key.public_key().public_bytes_raw()),
+            priv=base64url_encode(key.private_bytes_raw()),
+        )
+        self.import_key(**params)
+
+    def _import_pyca_pub_akp(self, key, alg, **params):
+        params.update(
+            kty='AKP',
+            alg=alg,
+            pub=base64url_encode(key.public_bytes_raw()),
+        )
+        self.import_key(**params)
+
     def import_key(self, **kwargs):
         newkey = {}
         key_vals = 0
@@ -596,6 +686,17 @@ class JWK(dict):
                     raise InvalidJWKValue(
                         '"%s" is not Base64urlUInt encoded' % name
                     ) from e
+
+        # RFC 9964: 'alg' is required for AKP keys
+        if kty == 'AKP':
+            alg = newkey.get('alg')
+            if alg is None:
+                raise InvalidJWKValue(
+                    '"alg" is required for AKP key type')
+            if alg not in _AKP_ALG_TABLE:
+                raise InvalidJWKValue(
+                    'Invalid "alg" for AKP key type: "%s". '
+                    'Valid values: %s' % (alg, list(_AKP_ALG_TABLE.keys())))
 
         # Unknown key parameters are allowed
         for name in names:
@@ -897,6 +998,30 @@ class JWK(dict):
             self._cache_pri_k = k
         return k
 
+    def _akp_pub(self):
+        k = self._cache_pub_k
+        if k is None:
+            alg = self.get('alg')
+            if alg not in _AKP_ALG_TABLE:
+                raise InvalidJWKValue('Unknown algorithm "%s"' % alg)
+            pubkey_class = _AKP_ALG_TABLE[alg].pubkey
+            pub_bytes = base64url_decode(self.get('pub'))
+            k = pubkey_class.from_public_bytes(pub_bytes)
+            self._cache_pub_k = k
+        return k
+
+    def _akp_pri(self):
+        k = self._cache_pri_k
+        if k is None:
+            alg = self.get('alg')
+            if alg not in _AKP_ALG_TABLE:
+                raise InvalidJWKValue('Unknown algorithm "%s"' % alg)
+            privkey_class = _AKP_ALG_TABLE[alg].privkey
+            seed = base64url_decode(self.get('priv'))
+            k = privkey_class.from_seed_bytes(seed)
+            self._cache_pri_k = k
+        return k
+
     def _get_public_key(self, arg=None):
         ktype = self.get('kty')
         if ktype == 'oct':
@@ -907,6 +1032,8 @@ class JWK(dict):
             return self._ec_pub(arg)
         elif ktype == 'OKP':
             return self._okp_pub()
+        elif ktype == 'AKP':
+            return self._akp_pub()
         else:
             raise NotImplementedError
 
@@ -920,6 +1047,8 @@ class JWK(dict):
             return self._ec_pri(arg)
         elif ktype == 'OKP':
             return self._okp_pri()
+        elif ktype == 'AKP':
+            return self._akp_pri()
         else:
             raise NotImplementedError
 
@@ -982,6 +1111,16 @@ class JWK(dict):
                               Ed448PublicKey,
                               X25519PublicKey)):
             self._import_pyca_pub_okp(key)
+        elif isinstance(key, (MLDSA44PrivateKey,
+                              MLDSA65PrivateKey,
+                              MLDSA87PrivateKey)):
+            alg = self._akp_alg_from_pyca_key(key)
+            self._import_pyca_pri_akp(key, alg)
+        elif isinstance(key, (MLDSA44PublicKey,
+                              MLDSA65PublicKey,
+                              MLDSA87PublicKey)):
+            alg = self._akp_alg_from_pyca_key(key)
+            self._import_pyca_pub_akp(key, alg)
         else:
             raise InvalidJWKValue('Unknown key object %r' % key)
         self.__setitem__('kid', self.thumbprint())
@@ -1092,6 +1231,9 @@ class JWK(dict):
         for name, val in JWKValuesRegistry[t['kty']].items():
             if val.required:
                 t[name] = self.get(name)
+        # RFC 9964 Section 6: AKP thumbprint includes 'alg'
+        if t['kty'] == 'AKP':
+            t['alg'] = self.get('alg')
         digest = hashes.Hash(hashalg, backend=default_backend())
         digest.update(bytes(json_encode(t).encode('utf8')))
         return base64url_encode(digest.finalize())

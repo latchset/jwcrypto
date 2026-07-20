@@ -939,6 +939,57 @@ class _Ed448(_RawJWS, JWAAlgorithm):
         return pkey.verify(signature, payload)
 
 
+class _RawMLDSA(_RawJWS):
+
+    _alg_name = None
+
+    def _check_key(self, key):
+        if key['kty'] != 'AKP':
+            raise InvalidJWEKeyType('AKP', key['kty'])
+        if key.get('alg') != self._alg_name:
+            raise InvalidJWEKeyType(self._alg_name, key.get('alg'))
+
+    def sign(self, key, payload):
+        self._check_key(key)
+        skey = key.get_op_key('sign')
+        return skey.sign(payload, context=b"")
+
+    def verify(self, key, payload, signature):
+        self._check_key(key)
+        pkey = key.get_op_key('verify')
+        pkey.verify(signature, payload, context=b"")
+
+
+class _MLDSA44(_RawMLDSA, JWAAlgorithm):
+
+    name = 'ML-DSA-44'
+    description = 'ML-DSA using ML-DSA-44 parameter set'
+    algorithm_usage_location = 'alg'
+    algorithm_use = 'sig'
+    keysize = None
+    _alg_name = 'ML-DSA-44'
+
+
+class _MLDSA65(_RawMLDSA, JWAAlgorithm):
+
+    name = 'ML-DSA-65'
+    description = 'ML-DSA using ML-DSA-65 parameter set'
+    algorithm_usage_location = 'alg'
+    algorithm_use = 'sig'
+    keysize = None
+    _alg_name = 'ML-DSA-65'
+
+
+class _MLDSA87(_RawMLDSA, JWAAlgorithm):
+
+    name = 'ML-DSA-87'
+    description = 'ML-DSA using ML-DSA-87 parameter set'
+    algorithm_usage_location = 'alg'
+    algorithm_use = 'sig'
+    keysize = None
+    _alg_name = 'ML-DSA-87'
+
+
 class _RawJWE:
 
     def encrypt(self, k, aad, m):
@@ -1235,7 +1286,10 @@ class JWA:
         'BP384R1': _BP384R1,
         'BP512R1': _BP512R1,
         'Ed25519': _Ed25519,
-        'Ed448': _Ed448
+        'Ed448': _Ed448,
+        'ML-DSA-44': _MLDSA44,
+        'ML-DSA-65': _MLDSA65,
+        'ML-DSA-87': _MLDSA87,
     }
 
     @classmethod
