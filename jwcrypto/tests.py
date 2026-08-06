@@ -572,11 +572,25 @@ class TestJWK(unittest.TestCase):
             '{}',
             '{"keys": 1}',
             '{"keys": [1]}',
-            '{"keys": [{"kty": "invalid"}]}'
         ]
         for inp in invalid_inputs:
             with self.assertRaises(jwk.InvalidJWKValue):
                 ks.import_keyset(inp)
+
+    def test_import_keyset_skips_unknown_kty(self):
+        keyset = '{"keys": [{"kty": "unknown"}, %s]}' % json_encode(
+            PublicKeys['keys'][0])
+        ks = jwk.JWKSet.from_json(keyset)
+        self.assertEqual(len(ks['keys']), 1)
+
+    def test_import_keyset_unknown_kty_then_ec(self):
+        ec_key = PublicKeys['keys'][0]
+        keyset = '{"keys": [{"kty": "future"}, %s]}' % json_encode(ec_key)
+        ks = jwk.JWKSet.from_json(keyset)
+        self.assertEqual(len(ks['keys']), 1)
+        imported = list(ks['keys'])[0]
+        self.assertEqual(imported['kty'], 'EC')
+        self.assertEqual(imported['kid'], ec_key['kid'])
 
     def test_thumbprint(self):
         for i in range(0, len(PublicKeys['keys'])):
