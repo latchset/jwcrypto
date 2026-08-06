@@ -1504,7 +1504,10 @@ class JWKSet(dict):
             for k, v in jwkset.items():
                 if k == 'keys':
                     for jwk in v:
-                        self['keys'].add(JWK(**jwk))
+                        try:
+                            self['keys'].add(JWK(**jwk))
+                        except InvalidJWKType:
+                            pass
                 else:
                     self[k] = v
         except Exception as e:  # pylint: disable=broad-except
