@@ -2,6 +2,7 @@
 
 import os
 import struct
+import warnings
 from abc import ABCMeta, abstractmethod
 from binascii import hexlify, unhexlify
 
@@ -41,6 +42,15 @@ This is a security measure to prevent denial-of-service attacks by malicious
 actors providing a very high iteration count.
 """
 
+default_warn_deprecated_algorithms = False
+"""When True, emit a DeprecationWarning when instantiating an algorithm
+whose status is 'deprecated'.
+
+Disabled by default so that consumers are not disrupted by warnings for
+algorithms that remain in wide use (e.g. EdDSA). Set to True to audit
+your code for deprecated algorithm usage.
+"""
+
 default_enforce_hmac_key_length = True
 """Enforces that the HMAC key length is at least the size of the hash
 function's output, as recommended by RFC 7518.
@@ -76,6 +86,12 @@ class JWAAlgorithm(metaclass=ABCMeta):
     @abstractmethod
     def algorithm_use(self):
         """One of 'sig', 'kex', 'enc'"""
+
+    status = 'active'
+    """Algorithm status: 'active', 'deprecated', or 'prohibited'"""
+
+    deprecated_by = None
+    """Replacement algorithm(s) for deprecated algorithms"""
 
     @property
     def input_keysize(self):
@@ -883,6 +899,8 @@ class _EdDsa(_RawJWS, JWAAlgorithm):
     algorithm_usage_location = 'alg'
     algorithm_use = 'sig'
     keysize = None
+    status = 'deprecated'
+    deprecated_by = 'Ed25519 or Ed448'
 
     def sign(self, key, payload):
         if key['crv'] in ['Ed25519', 'Ed448']:
@@ -1297,6 +1315,14 @@ class JWA:
         alg = cls.algorithms_registry[name]
         if use is not None and alg.algorithm_use != use:
             raise KeyError
+        if alg.status == 'prohibited':
+            raise InvalidJWAAlgorithm(
+                '%s is prohibited and must not be used' % name)
+        if alg.status == 'deprecated' and default_warn_deprecated_algorithms:
+            msg = '%s is deprecated' % name
+            if alg.deprecated_by:
+                msg += '; use %s instead' % alg.deprecated_by
+            warnings.warn(msg, DeprecationWarning, stacklevel=4)
         return alg()
 
     @classmethod
