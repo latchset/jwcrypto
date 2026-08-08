@@ -2642,3 +2642,30 @@ class TestRfc9864(unittest.TestCase):
         jws_obj.deserialize(serialized_jws, key)
         self.assertTrue(jws_obj.is_valid)
         self.assertEqual(jws_obj.payload, payload)
+
+    def test_eddsa_deprecation_warning(self):
+        import warnings
+        old = jwa.default_warn_deprecated_algorithms
+        try:
+            jwa.default_warn_deprecated_algorithms = True
+            with warnings.catch_warnings(record=True) as w:
+                warnings.simplefilter("always")
+                jwa.JWA.signing_alg('EdDSA')
+                self.assertEqual(len(w), 1)
+                self.assertTrue(issubclass(w[0].category, DeprecationWarning))
+                self.assertIn('EdDSA', str(w[0].message))
+                self.assertIn('Ed25519 or Ed448', str(w[0].message))
+        finally:
+            jwa.default_warn_deprecated_algorithms = old
+
+    def test_eddsa_no_warning_by_default(self):
+        import warnings
+        old = jwa.default_warn_deprecated_algorithms
+        try:
+            jwa.default_warn_deprecated_algorithms = False
+            with warnings.catch_warnings(record=True) as w:
+                warnings.simplefilter("always")
+                jwa.JWA.signing_alg('EdDSA')
+                self.assertEqual(len(w), 0)
+        finally:
+            jwa.default_warn_deprecated_algorithms = old
