@@ -8,7 +8,7 @@ from binascii import hexlify, unhexlify
 
 from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.backends import default_backend
-from cryptography.hazmat.primitives import constant_time, hashes, hmac
+from cryptography.hazmat.primitives import constant_time, hashes, hmac, hpke
 from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.hazmat.primitives.asymmetric import padding
 from cryptography.hazmat.primitives.asymmetric import utils as ec_utils
@@ -34,6 +34,8 @@ from jwcrypto.jwk import JWK
 # - RFC 9864: Fully-Specified Algorithms for JSON Object Signing and
 #             Encryption (JOSE) and CBOR Object Signing and Encryption
 #             (COSE)
+# - draft-ietf-jose-hpke-encrypt-22: Use of Hybrid Public Key Encryption
+#             (HPKE) with JSON Web Encryption (JWE)
 
 default_max_pbkdf2_iterations = 16384
 """The maximum number of iterations allowed for PBKDF2 key derivation.
@@ -892,6 +894,122 @@ class _EcdhEsAes256Kw(_EcdhEs):
     algorithm_use = 'kex'
 
 
+class _HpkeKe(_RawKeyMgmt, JWAAlgorithm):
+
+    name = None
+    description = None
+    keysize = None
+    algorithm_usage_location = 'alg'
+    algorithm_use = 'kex'
+    kem = None
+    kdf = None
+    aead = None
+    kty = None
+    crv = None
+
+    def _check_key(self, key):
+        if not isinstance(key, JWK):
+            raise ValueError('key is not a JWK object')
+        if key['kty'] != self.kty:
+            raise InvalidJWEKeyType(self.kty, key['kty'])
+        if key['crv'] != self.crv:
+            raise InvalidJWEKeyType(self.crv, key['crv'])
+
+    def recipient_structure(self, enc_alg):
+        return b'JOSE-HPKE rcpt\xff' + enc_alg.encode('ascii') + b'\xff'
+
+    def wrap(self, key, bitsize, cek, headers):
+        self._check_key(key)
+        if not cek:
+            cek = _randombits(bitsize)
+        suite = hpke.Suite(self.kem, self.kdf, self.aead)
+        info = self.recipient_structure(headers['enc'])
+        pubkey = key.get_op_key('wrapKey')
+        result = suite.encrypt(cek, pubkey, info=info)
+        enc_len = self.kem.enc_length()
+        enc = result[:enc_len]
+        encrypted_cek = result[enc_len:]
+        return {
+            'cek': cek,
+            'ek': encrypted_cek,
+            'header': {'ek': base64url_encode(enc)},
+        }
+
+    def unwrap(self, key, bitsize, ek, headers):
+        self._check_key(key)
+        if 'ek' not in headers:
+            raise ValueError('Invalid Header, missing "ek" parameter')
+        suite = hpke.Suite(self.kem, self.kdf, self.aead)
+        info = self.recipient_structure(headers['enc'])
+        enc = base64url_decode(headers['ek'])
+        combined = enc + ek
+        privkey = key.get_op_key('unwrapKey')
+        cek = suite.decrypt(combined, privkey, info=info)
+        if _bitsize(cek) != bitsize:
+            raise InvalidJWEKeyLength(bitsize, _bitsize(cek))
+        return cek
+
+
+class _Hpke0Ke(_HpkeKe):
+
+    name = 'HPKE-0-KE'
+    description = "HPKE Key Encryption using DHKEM(P-256) and AES-128-GCM"
+    keysize = 128
+    kem = hpke.KEM.P256
+    kdf = hpke.KDF.HKDF_SHA256
+    aead = hpke.AEAD.AES_128_GCM
+    kty = 'EC'
+    crv = 'P-256'
+
+
+class _Hpke1Ke(_HpkeKe):
+
+    name = 'HPKE-1-KE'
+    description = "HPKE Key Encryption using DHKEM(P-384) and AES-256-GCM"
+    keysize = 256
+    kem = hpke.KEM.P384
+    kdf = hpke.KDF.HKDF_SHA384
+    aead = hpke.AEAD.AES_256_GCM
+    kty = 'EC'
+    crv = 'P-384'
+
+
+class _Hpke2Ke(_HpkeKe):
+
+    name = 'HPKE-2-KE'
+    description = "HPKE Key Encryption using DHKEM(P-521) and AES-256-GCM"
+    keysize = 256
+    kem = hpke.KEM.P521
+    kdf = hpke.KDF.HKDF_SHA512
+    aead = hpke.AEAD.AES_256_GCM
+    kty = 'EC'
+    crv = 'P-521'
+
+
+class _Hpke3Ke(_HpkeKe):
+
+    name = 'HPKE-3-KE'
+    description = "HPKE Key Encryption using DHKEM(X25519) and AES-128-GCM"
+    keysize = 128
+    kem = hpke.KEM.X25519
+    kdf = hpke.KDF.HKDF_SHA256
+    aead = hpke.AEAD.AES_128_GCM
+    kty = 'OKP'
+    crv = 'X25519'
+
+
+class _Hpke7Ke(_HpkeKe):
+
+    name = 'HPKE-7-KE'
+    description = "HPKE Key Encryption using DHKEM(P-256) and AES-256-GCM"
+    keysize = 256
+    kem = hpke.KEM.P256
+    kdf = hpke.KDF.HKDF_SHA256
+    aead = hpke.AEAD.AES_256_GCM
+    kty = 'EC'
+    crv = 'P-256'
+
+
 class _EdDsa(_RawJWS, JWAAlgorithm):
 
     name = 'EdDSA'
@@ -1300,6 +1418,11 @@ class JWA:
         'A128GCM': _A128Gcm,
         'A192GCM': _A192Gcm,
         'A256GCM': _A256Gcm,
+        'HPKE-0-KE': _Hpke0Ke,
+        'HPKE-1-KE': _Hpke1Ke,
+        'HPKE-2-KE': _Hpke2Ke,
+        'HPKE-3-KE': _Hpke3Ke,
+        'HPKE-7-KE': _Hpke7Ke,
         'BP256R1': _BP256R1,
         'BP384R1': _BP384R1,
         'BP512R1': _BP512R1,
