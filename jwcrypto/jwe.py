@@ -535,7 +535,9 @@ class JWE:
                         o['header'] = json_encode(djwe['header'])
 
             except ValueError as e:
-                data = raw_jwe.split('.')
+                # process up to 5 dots, if we have 5+ dots we get more than 5
+                # chunks and that means we have a malformed JWE
+                data = raw_jwe.split('.', 5)
                 if len(data) != 5:
                     raise InvalidJWEData() from e
                 p = base64url_decode(data[0])

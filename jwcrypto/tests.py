@@ -1188,6 +1188,23 @@ class TestJWS(unittest.TestCase):
 
         self.assertEqual(header, header_copy)
 
+    def test_compact_invalid_dots(self):
+        key = jwk.JWK.generate(kty='oct', size=256)
+        s = jws.JWS(payload='test')
+        s.add_signature(key, protected={"alg": "HS256"})
+        compact = s.serialize(compact=True)
+        self.assertEqual(compact.count('.'), 2)
+
+        token_3_dots = compact + ".extra"
+        token_10_dots = compact + "." + ".".join(["extra"] * 8)
+
+        j = jws.JWS()
+        with self.assertRaises(jws.InvalidJWSObject):
+            j.deserialize(token_3_dots)
+
+        with self.assertRaises(jws.InvalidJWSObject):
+            j.deserialize(token_10_dots)
+
     def test_decrypt_keyset(self):
         ks = jwk.JWKSet()
         key1 = jwk.JWK.generate(kty='oct', alg='HS256', kid='key1')
@@ -1479,6 +1496,22 @@ class TestJWE(unittest.TestCase):
                         unprotected='{"jku":"https://example.com/keys.jwks"}',
                         recipient=E_A1_ex['key'])
             e.serialize(compact=True)
+
+    def test_compact_invalid_dots(self):
+        e = jwe.JWE(E_A1_ex['plaintext'], E_A1_ex['protected'])
+        e.add_recipient(E_A1_ex['key'])
+        compact = e.serialize(compact=True)
+        self.assertEqual(compact.count('.'), 4)
+
+        token_5_dots = compact + ".extra"
+        token_10_dots = compact + "." + ".".join(["extra"] * 6)
+
+        d = jwe.JWE()
+        with self.assertRaises(jwe.InvalidJWEData):
+            d.deserialize(token_5_dots)
+
+        with self.assertRaises(jwe.InvalidJWEData):
+            d.deserialize(token_10_dots)
 
     def test_JWE_Issue_136(self):
         plaintext = "plain"
