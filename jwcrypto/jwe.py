@@ -3,7 +3,7 @@
 import zlib
 
 from jwcrypto import common
-from jwcrypto.common import JWException, JWKeyNotFound
+from jwcrypto.common import JWKeyNotFound
 from jwcrypto.common import JWSEHeaderParameter, JWSEHeaderRegistry
 from jwcrypto.common import base64url_decode, base64url_encode
 from jwcrypto.common import json_decode, json_encode
@@ -50,26 +50,9 @@ default_allowed_algs = [
 """Default allowed algorithms"""
 
 
-class InvalidJWEData(JWException):
-    """Invalid JWE Object.
-
-    This exception is raised when the JWE Object is invalid and/or
-    improperly formatted.
-    """
-
-    def __init__(self, message=None, exception=None):
-        msg = None
-        if message:
-            msg = message
-        else:
-            msg = 'Unknown Data Verification Failure'
-        if exception:
-            msg += ' {%s}' % str(exception)
-        super(InvalidJWEData, self).__init__(msg)
-
-
 # These have been moved to jwcrypto.common, maintain here for backwards compat
 InvalidCEKeyLength = common.InvalidCEKeyLength
+InvalidJWEData = common.InvalidJWEData
 InvalidJWEKeyLength = common.InvalidJWEKeyLength
 InvalidJWEKeyType = common.InvalidJWEKeyType
 InvalidJWEOperation = common.InvalidJWEOperation

@@ -20,6 +20,7 @@ from cryptography.hazmat.primitives.padding import PKCS7
 
 from jwcrypto.common import InvalidCEKeyLength
 from jwcrypto.common import InvalidJWAAlgorithm
+from jwcrypto.common import InvalidJWEData
 from jwcrypto.common import InvalidJWEKeyLength
 from jwcrypto.common import InvalidJWEKeyType
 from jwcrypto.common import InvalidJWEOperation
@@ -764,6 +765,7 @@ class _EcdhEs(_RawKeyMgmt, JWAAlgorithm):
     description = "ECDH-ES using Concat KDF"
     algorithm_usage_location = 'alg'
     algorithm_use = 'kex'
+    allow_ek = False
     keysize = None
 
     def __init__(self):
@@ -844,6 +846,8 @@ class _EcdhEs(_RawKeyMgmt, JWAAlgorithm):
     def unwrap(self, key, bitsize, ek, headers):
         if 'epk' not in headers:
             raise ValueError('Invalid Header, missing "epk" parameter')
+        if len(ek) > 0 and not self.allow_ek:
+            raise InvalidJWEData('Non empty "ek" parameter')
         self._check_key(key)
         dk_size = self.keysize
         if self.keysize is None:
@@ -872,6 +876,7 @@ class _EcdhEsAes128Kw(_EcdhEs):
     keysize = 128
     algorithm_usage_location = 'alg'
     algorithm_use = 'kex'
+    allow_ek = True
 
 
 class _EcdhEsAes192Kw(_EcdhEs):
@@ -881,6 +886,7 @@ class _EcdhEsAes192Kw(_EcdhEs):
     keysize = 192
     algorithm_usage_location = 'alg'
     algorithm_use = 'kex'
+    allow_ek = True
 
 
 class _EcdhEsAes256Kw(_EcdhEs):
@@ -890,6 +896,7 @@ class _EcdhEsAes256Kw(_EcdhEs):
     keysize = 256
     algorithm_usage_location = 'alg'
     algorithm_use = 'kex'
+    allow_ek = True
 
 
 class _EdDsa(_RawJWS, JWAAlgorithm):
