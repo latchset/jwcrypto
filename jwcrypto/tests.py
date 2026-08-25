@@ -1530,6 +1530,27 @@ class TestJWE(unittest.TestCase):
             e2.deserialize(enc, x25519key)
             self.assertEqual(e2.payload, plaintext)
 
+    def test_bare_ecdh_with_ek_fails(self):
+        payload = b'test data'
+        key = jwk.JWK.generate(kty='EC', crv='P-256')
+        jwetoken = jwe.JWE(
+            plaintext=payload,
+            protected=json_encode({'alg': 'ECDH-ES', 'enc': 'A128GCM'}))
+        jwetoken.add_recipient(key)
+        serialized = jwetoken.serialize(compact=True)
+        parts = serialized.split('.')
+        parts[1] = base64url_encode(b'bogus')
+        corrupted = '.'.join(parts)
+        with self.assertRaises(jwe.InvalidJWEData):
+            e = jwe.JWE()
+            e.deserialize(corrupted, key)
+
+        parts[1] = ''
+        restored = '.'.join(parts)
+        e = jwe.JWE()
+        e.deserialize(restored, key)
+        self.assertEqual(e.payload, payload)
+
     def test_decrypt_keyset(self):
         ks = jwk.JWKSet()
         key1 = jwk.JWK.generate(kty='oct', alg='A128KW', kid='key1')

@@ -66,6 +66,24 @@ class InvalidCEKeyLength(JWException):
         super(InvalidCEKeyLength, self).__init__(msg)
 
 
+class InvalidJWEData(JWException):
+    """Invalid JWE Object.
+
+    This exception is raised when the JWE Object is invalid and/or
+    improperly formatted.
+    """
+
+    def __init__(self, message=None, exception=None):
+        msg = None
+        if message:
+            msg = message
+        else:
+            msg = 'Unknown Data Verification Failure'
+        if exception:
+            msg += ' {%s}' % str(exception)
+        super(InvalidJWEData, self).__init__(msg)
+
+
 class InvalidJWEOperation(JWException):
     """Invalid JWS Object.
 
