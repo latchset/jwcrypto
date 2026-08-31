@@ -1639,6 +1639,48 @@ class TestJWE(unittest.TestCase):
         with self.assertRaises(JWKeyNotFound):
             e4.deserialize(e3.serialize(), ks)
 
+    def test_multiple_recipients_keyset(self):
+        ks = jwk.JWKSet()
+        key1 = jwk.JWK.generate(kty='oct', alg='A128KW', kid='key1')
+        key2 = jwk.JWK.generate(kty='oct', alg='A256KW', kid='key2')
+        ks.add(key1)
+        ks.add(key2)
+
+        payload = b'JSON Serialization JWE with multiple recipients'
+        e = jwe.JWE(plaintext=payload,
+                    protected={'enc': 'A128CBC-HS256'})
+        e.add_recipient(key1, header={'alg': 'A128KW', 'kid': 'key1'})
+        e.add_recipient(key2, header={'alg': 'A256KW', 'kid': 'key2'})
+
+        serialized = e.serialize()
+        decoded = json_decode(serialized)
+        self.assertIn('recipients', decoded)
+        self.assertEqual(len(decoded['recipients']), 2)
+
+        e2 = jwe.JWE()
+        e2.deserialize(serialized, ks)
+        self.assertEqual(e2.payload, payload)
+        self.assertEqual(
+            e2.jose_header,
+            [
+                {'enc': 'A128CBC-HS256', 'alg': 'A128KW', 'kid': 'key1'},
+                {'enc': 'A128CBC-HS256', 'alg': 'A256KW', 'kid': 'key2'}
+            ]
+        )
+
+        # Test with keys swapped
+        key1_dict = key1.export(as_dict=True)
+        key1_dict['kid'] = 'key2'
+        key2_dict = key2.export(as_dict=True)
+        key2_dict['kid'] = 'key1'
+        ks_swapped = jwk.JWKSet()
+        ks_swapped.add(jwk.JWK(**key1_dict))
+        ks_swapped.add(jwk.JWK(**key2_dict))
+
+        e3 = jwe.JWE()
+        with self.assertRaises(JWKeyNotFound):
+            e3.deserialize(serialized, ks_swapped)
+
     def test_serialize_not_flattened(self):
         # JWE with flattened=False adds recipients in objects and in serialized
         e = jwe.JWE(E_A1_ex['plaintext'], flattened=False)
