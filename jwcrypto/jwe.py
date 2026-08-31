@@ -162,7 +162,10 @@ class JWE:
             uh = json_decode(self.objects['unprotected'])
             jh = self._merge_headers(jh, uh)
         if header:
-            rh = json_decode(header)
+            if isinstance(header, dict):
+                rh = header
+            else:
+                rh = json_decode(header)
             jh = self._merge_headers(jh, rh)
         return jh
 
@@ -382,11 +385,11 @@ class JWE:
 
         if isinstance(key, JWKSet):
             keys = key
-            if 'kid' in self.jose_header:
-                kid_keys = key.get_keys(self.jose_header['kid'])
+            if 'kid' in jh:
+                kid_keys = key.get_keys(jh['kid'])
                 if not kid_keys:
                     raise JWKeyNotFound('Key ID {} not in key set'.format(
-                                        self.jose_header['kid']))
+                                        jh['kid']))
                 keys = kid_keys
 
             for k in keys:
@@ -565,6 +568,11 @@ class JWE:
 
     @property
     def jose_header(self):
+        if 'recipients' in self.objects:
+            jhl = []
+            for rec in self.objects['recipients']:
+                jhl.append(self._get_jose_header(rec.get('header')))
+            return jhl
         jh = self._get_jose_header(self.objects.get('header'))
         if len(jh) == 0:
             raise InvalidJWEOperation("JOSE Header not available")
