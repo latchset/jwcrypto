@@ -1224,6 +1224,42 @@ class TestJWS(unittest.TestCase):
         with self.assertRaises(JWKeyNotFound):
             s4.deserialize(s3.serialize(), ks)
 
+    def test_multiple_signatures_keyset(self):
+        ks = jwk.JWKSet()
+        key1 = jwk.JWK.generate(kty='oct', alg='HS256', kid='key1')
+        key2 = jwk.JWK.generate(kty='oct', alg='HS256', kid='key2')
+        ks.add(key1)
+        ks.add(key2)
+
+        payload = b'JSON Serialization JWS with multiple signatures'
+        s = jws.JWS(payload=payload)
+        s.add_signature(key1, protected={'alg': 'HS256', 'kid': 'key1'})
+        s.add_signature(key2, protected={'alg': 'HS256'},
+                        header={'kid': 'key2'})
+
+        serialized = s.serialize()
+        decoded = json_decode(serialized)
+        self.assertIn('signatures', decoded)
+        self.assertEqual(len(decoded['signatures']), 2)
+
+        s2 = jws.JWS()
+        s2.deserialize(serialized, ks)
+        self.assertTrue(s2.is_valid)
+        self.assertEqual(s2.payload, payload)
+
+        # Test with keys swapped
+        key1_dict = key1.export(as_dict=True)
+        key1_dict['kid'] = 'key2'
+        key2_dict = key2.export(as_dict=True)
+        key2_dict['kid'] = 'key1'
+        ks_swapped = jwk.JWKSet()
+        ks_swapped.add(jwk.JWK(**key1_dict))
+        ks_swapped.add(jwk.JWK(**key2_dict))
+
+        s3 = jws.JWS()
+        with self.assertRaises(JWKeyNotFound):
+            s3.deserialize(serialized, ks_swapped)
+
 
 E_A1_plaintext = \
     [84, 104, 101, 32, 116, 114, 117, 101, 32, 115, 105, 103, 110, 32,

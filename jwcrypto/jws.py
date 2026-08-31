@@ -299,11 +299,11 @@ class JWS:
             self.verifylog.append("Success")
         elif isinstance(key, JWKSet):
             keys = key
-            if 'kid' in self.jose_header:
-                kid_keys = key.get_keys(self.jose_header['kid'])
+            if 'kid' in chk_hdrs:
+                kid_keys = key.get_keys(chk_hdrs['kid'])
                 if not kid_keys:
                     raise JWKeyNotFound('Key ID {} not in key set'.format(
-                                        self.jose_header['kid']))
+                                        chk_hdrs['kid']))
                 keys = kid_keys
 
             for k in keys:
