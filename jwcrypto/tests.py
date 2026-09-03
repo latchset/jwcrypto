@@ -23,6 +23,146 @@ from jwcrypto.common import json_decode, json_encode
 
 jwe_algs_and_rsa1_5 = jwe.default_allowed_algs + ['RSA1_5']
 
+# draft-ietf-jose-hpke-encrypt-22 Appendix A test vectors
+# (alg, private JWK JSON, compact JWE token)
+hpke_ke_draft_vectors = [
+    # draft-ietf-jose-hpke-encrypt-22 - A.2
+    (
+        'HPKE-0-KE',
+        '{"kty":"EC","crv":"P-256",'
+        '"x":"erH26InyPQifTIwmyKs63u4SUzglAHXNm2ZWT2LQ-rM",'
+        '"y":"GTGOC0_TnYc_Cm4dsgY8qdixil7AObs5-Xtk0QJeoH8",'
+        '"d":"MzJOwOcw1LDGZ-Ia6Zz5ay9zWUZKIhXkBcfq0dPA5Do",'
+        '"alg":"HPKE-0-KE","use":"enc",'
+        '"kid":"23i_7tQXiLxih47kQtE2yHy7d8q253Kp9R9i6aDyHng"}',
+        'eyJhbGciOiJIUEtFLTAtS0UiLCJraWQiOiIyM2lfN3RRWGlMeGlo'
+        'NDdrUXRFMnlIeTdkOHEyNTNLcDlSOWk2YUR5SG5nIiwiZW5jIjoi'
+        'QTEyOEdDTSIsImVrIjoiQk4xRWI1bVFCZTgyLVRpWTJYc0xjWEhm'
+        'b3ZjNWFxajRIRW5Ick10aFFoMDhqUDl5Vjd2U3VBZjZuYjNLQ3pS'
+        'UWJmbHlGV2k3bDlrR3BtTm1xaTNYaW1RIn0'
+        '.lnz6tY7OMgEqr2dUBFLhbRV5SV5NnnE75YoGf8fdCdQ'
+        '.B01l-CsTkWGSh-8o'
+        '.n33IRmokhNrqtaG5AL9COw-bVmYiPqCLBgludwQF3hyMYuagt4xx'
+        'bKA2YdLHzgYk4ZCZQRdK5UJJcIKUsBsWNyDYhS0oZVcxq3wXOeG'
+        '6jkEqUCzTU3PS0JeLW8uihm9gSjlW42dKUiYjqXL8kIJuWbCxqYs'
+        '-Dslm5hfx4u_a06hvIRvJjVVQ4eWZMtUo5nIumyyid9qKwFFo_BL'
+        'XaSxRZ7sa4TSRpu1Qywl8t3HcnnKThFfCSc6jIcJ3O9GIFXMDKqz'
+        'Biciaxjim3xfv6A3qMHmIkF_rTT0dj9qmlolOfZeElX7sseq0EpO'
+        'e9MPwcpFR3mZVUCe74FGUJNj4szJTb8pVgaZ9Yo5rXFKKn9s'
+        '.MCd0fKMDwsgD6MW2XKzWWg',
+    ),
+    # draft-ietf-jose-hpke-encrypt-22 - A.4
+    (
+        'HPKE-1-KE',
+        '{"kty":"EC","crv":"P-384",'
+        '"x":"D7VTLUkObllwTg8aYvZPdcnNINDy25kvNre97TKptpQS'
+        'B6-IjvHLCWQJHzlDiGYA",'
+        '"y":"njG34YWeObrJ8AUOH4lvqspRcCViqbkn2vUPbcTUUSOu'
+        'b44OkVrFqwznzkdIEKrT",'
+        '"d":"DJll4Ommwo21BHxww16GgoGaxXWPKFY6r_ppQ7wRempi'
+        'r7VQ4zr0r8_iqqHf9hUp",'
+        '"alg":"HPKE-1-KE","use":"enc",'
+        '"kid":"dCxtIy9H8XajATicOvCTQMh4ZPgz6YsOK5ssKHeWWEs"}',
+        'eyJhbGciOiJIUEtFLTEtS0UiLCJraWQiOiJkQ3h0SXk5SDhYYWpB'
+        'VGljT3ZDVFFNaDRaUGd6NllzT0s1c3NLSGVXV0VzIiwiZW5jIjoi'
+        'QTI1NkdDTSIsImVrIjoiQkxyVFI4SEpkcUY4eklnc2h5TmtvaVcy'
+        'THplbjdoa2VialhfRDhNMWVtaWg0Y3JlWFVEUnVtRFVRWFlCZjN5'
+        'QXdOVWRaNHoyNUExaF9Bd3hPVTNGUWE3S09UT2ZPNUlYVkItT21I'
+        'cFNVaEpQcHBHSXFyTjJkOWxWNWZpS0djUkVjZyJ9'
+        '.biPJlwnk1MoJKdzAXLS9go5jflQ68qihUJqreC4hALwF9nXjghFz'
+        'KY6yj4hyUtRa'
+        '.schW4QaSX0SNVOqD'
+        '.5rtsaBNI2luA7gSzaHub-dSBOOlJkT7FbwtEoJRx8PMiSqtWIDlv'
+        '21yvUjalft6EYxfQHSjmi0yPVjhjmpCj26Qga2gkoDLxAgOB4tzpI'
+        'sk-gSgHY3YpgZLkSyxx-ZhtaAdXphQAzPmaeDjM8_DRnvSzyH-Hw'
+        'g9HHs7jmIzqJVsoBULQop0Lk7brPXiiB5s08F2Ib6rdercbgDTTZ'
+        'dVXcyiNQhKoGBUOjy50FxW4GkuyTW2MH0_0VecBSrAWVg248pJSn'
+        'PwvVcdCocPTYmFiSw6M9MSwl3A8KKlU33qUYapB75qOUY2zQmh8I'
+        'YFFUiyMwLX50EKws1YSmNGHYbp4iDCQ1ZAqTCwY7oM2JGM'
+        '.PhKLqKcrR4CexYEDXRlEoA',
+    ),
+    # draft-ietf-jose-hpke-encrypt-22 - A.6
+    (
+        'HPKE-2-KE',
+        '{"kty":"EC","crv":"P-521",'
+        '"x":"AKA9Ra4-VaZVMoXlIbU2DNQSiKe92-zXuGI73CtGpibQ'
+        'bmyTpuLV4TN3UWcGHpO8krMaStuxuJOToVLqVUWm0zmF",'
+        '"y":"Ac-o4fIpIKZqPQKtEi7f04_vXnW-3BH2K14WSUp_tWsg'
+        'SuHai8CGuWcwGkB5iKNpwOvh77Br0Vk69orojXETMy7W",'
+        '"d":"AdeDTmkW31gpYbnoI9V297i0tA28dNYR1VS2lRyn04x9'
+        'UQItmnUG7fp2Wc9CQgGd1XCWYjtJsl9IQx8q0ylTKD2T",'
+        '"alg":"HPKE-2-KE","use":"enc",'
+        '"kid":"hsRjjUtVSsbXZr5gfmhzqZ-RSs-K_ofzOV09sHt6x8w"}',
+        'eyJhbGciOiJIUEtFLTItS0UiLCJraWQiOiJoc1JqalV0VlNzYlha'
+        'cjVnZm1oenFaLVJTcy1LX29mek9WMDlzSHQ2eDh3IiwiZW5jIjoi'
+        'QTI1NkdDTSIsImVrIjoiQkFFTUlGcWlGUHVFekhlb1RIVXFHenV0'
+        'MWlVY0VsX0lUWGRjNlJKUEhfUWM4UzdQVkFfcHROMUttLXVMZG9T'
+        'WWxfRmNlMmdabXpwbjlTRWpiZVRVOXMxOGJ3Q1pxUUpWcXhidF9j'
+        'VXk2RklFZGsxUEh6c0F4a1Rfa0NJNjh5R3NJSVZWQ0JBYkROQWhE'
+        'b1NBOWt3UGVMd29ESXlwUVgwWnBnbW9rVFhVUlVJM0NrVlJTUSJ9'
+        '.np-f7Zgo1yJFO4h5HJkPi8EYTsdGFCmnk16aTe4ft5EVXcZhu4HS'
+        'GpWyNTjxbSKT'
+        '.Pe4QDK53sKuyRFcy'
+        '.brG_KUQoD1h52jWgbDb1zFzbMIfWbBcK-naIdYJtYW5iJ6qw8-a-'
+        '9FcXL2x2sIRoMsj2KqylIqNCPE9OYr96GWlsYucz-tRHqcwGkoG6'
+        'JaUIq3OMxr0MekOfWtII8epaldQw1SyNWenaTc2jGjyoA9MJ78VV_'
+        'O4uKORhTi4lP8bcv6X-d3utnIeUSgTUQQc4AWBUoSfymKHeo7gL9'
+        'ACAwoGSI-mgIeDeI-7K5m18VjD_5rLzTFEKVFhrMB_c7mSVd-_nv'
+        '6bVtncrros3_5a4I5C5V0s17cTljDJOTiR2i4s3iPyVaki8544bIB'
+        'U0_t6lHFQtotb5ZL8zUP50iyNeYjbXSdwdn1Es3ain4SA'
+        '.Os8mE9afh0oe6UgoNp6-yw',
+    ),
+    # draft-ietf-jose-hpke-encrypt-22 - A.8
+    (
+        'HPKE-3-KE',
+        '{"kty":"OKP","crv":"X25519",'
+        '"x":"4XxzVQ5b1_2KId4eH7vCgtTMFS-xpFQdlewl7Ldgwmc",'
+        '"d":"nV8mMuP37Pu7zvd7i-Fqg8HLYpu2wWOZFb1FdkpV6iY",'
+        '"alg":"HPKE-3-KE","use":"enc",'
+        '"kid":"rZvhw8SPuKMGlrnzm-J4DZ-G4niXcJkKvb8tAbz4jJc"}',
+        'eyJhbGciOiJIUEtFLTMtS0UiLCJraWQiOiJyWnZodzhTUHVLTUds'
+        'cm56bS1KNERaLUc0bmlYY0prS3ZiOHRBYno0akpjIiwiZW5jIjoi'
+        'QTEyOEdDTSIsImVrIjoiWGJmaDE5cnBibHBDTHNjOGVqelhUSE9S'
+        'Y1hFa0IwUDJaNkhpcGpONV9VdyJ9'
+        '.T5egCQZlUyP8UKtq8XrfHgIbEdNLwID1-nupqh_APHw'
+        '.Q7ejfTauKt1TiYTW'
+        '.6KHlyH3zHQlDPTrw3R1v8csmoLs59QY1B2NpWGhD1eoPdHAriRdh'
+        'z62FY3JbDDykg0u_LfWTs0cMj5xqhAXLYnWFBpWqNlGSAZAcE_S9'
+        'EBAg02ymscpqhRygMhu_mPXpLwr8INYCA59utnQN6d4yHcV3Lgoc'
+        'Tx4OV32wPtm9ztydPGVLA2VQhCDx_AytmkRbiv01WjH71WWvBeSEl'
+        'HBlGlNl-6t1sIv8VaTPUpCO3b_iaoLbiRxhH_zTiLsVjJFiR_GeS'
+        'o7qBnmvEYOvb_QncKGBi3RPwoOJBuI5cEJfVZo2oenqla61H6glW'
+        'OazG6lwtgA0Yz4y0b7reLaYISQ_e9hRlohzGjSsHd6WLYw'
+        '.l7VO2LxXTh-CTI1qDf6FeA',
+    ),
+    # draft-ietf-jose-hpke-encrypt-22 - A.14
+    (
+        'HPKE-7-KE',
+        '{"kty":"EC","crv":"P-256",'
+        '"x":"1nm4Hz__urAJOmnQoT4-Cddab4mIgwNPFpo_mq__Huk",'
+        '"y":"0zf-qAB9KJP6qgtYNSP6MTdVBxzgBachQ2XdgCsOk8o",'
+        '"d":"8CpCdkAF51G_YJPb29O3LKLBKTibK4FHWO9lYehzLqE",'
+        '"alg":"HPKE-7-KE","use":"enc",'
+        '"kid":"SMa7O1lSKSi2LJCin1PfZRYA7KGKky5oSfaMO9UOYWA"}',
+        'eyJhbGciOiJIUEtFLTctS0UiLCJraWQiOiJTTWE3TzFsU0tTaTJM'
+        'SkNpbjFQZlpSWUE3S0dLa3k1b1NmYU1POVVPWVdBIiwiZW5jIjoi'
+        'QTI1NkdDTSIsImVrIjoiQkNreC1vcWRkMG9yNTYydXVJdy1ESzl3'
+        'WnZRYlZMaWs0a1cxQWNXLXhrbTFNelgxMm5CWTAyc0J5b252S3lj'
+        'TmNRZVp1WXh2dmc3RGEwcEQ5WWdOTDRRIn0'
+        '.w3y9z4g5rGR6jFE0-4fnEzw8ggQB-1ECteJLFkG9VOMsD7vUzwjU'
+        'QocHQpza_rn8'
+        '._ZHPJxfrMRpRsti3'
+        '.4-7hvn-TE54CZm2h71DE4B-4m7-162t1GVG8fLfYpotwL5Cit4bO'
+        '4EcTTZshXpFoltYHiyXnkUhTtv6h1yJ691-ZMM8tdYXbNe9W_aYs'
+        '6yeK8s-taWVZo7Lcbo7foXNRHk2h-Rg8l_JBzDoMojW8pV5SHUek'
+        'Kw4jcc88XRyhIRiL1yoQ_nIOrlY2mkvUCcmYaq2JKTwXFp01kM9e'
+        'WBA_kYj0TdVAKnKEsizphFrSiXipoLDSDx0nFq6JiiXnBoqase2U'
+        '9_zqb1i_76PX7oSUuf_oBJL3PF92qNb1rWjhGij7lpff4eA6BuyW'
+        '2NX2baxB5qAZB4KZlFT6w2_LXzytVVEdogi7zmfgmSR4C-Y'
+        '.Bdp4d-yiZdsAul1rM2jmAA',
+    ),
+]
+
 # RFC 7517 - A.1
 PublicKeys = {"keys": [
               {"kty": "EC",
@@ -2815,3 +2955,174 @@ class TestRfc9864(unittest.TestCase):
                 self.assertEqual(len(w), 0)
         finally:
             jwa.default_warn_deprecated_algorithms = old
+
+
+class TestHPKE(unittest.TestCase):
+
+    hpke_ke_algorithms = [
+        ('HPKE-0-KE', 'EC', 'P-256'),
+        ('HPKE-1-KE', 'EC', 'P-384'),
+        ('HPKE-2-KE', 'EC', 'P-521'),
+        ('HPKE-3-KE', 'OKP', 'X25519'),
+        ('HPKE-7-KE', 'EC', 'P-256'),
+    ]
+
+    enc_algorithms = ['A128GCM', 'A256GCM', 'A128CBC-HS256', 'A256CBC-HS512']
+
+    def _roundtrip(self, alg, kty, crv, enc, compact=False):
+        key = jwk.JWK.generate(kty=kty, crv=crv)
+        plaintext = b'HPKE round-trip test payload'
+        protected = json_encode({"alg": alg, "enc": enc})
+        e = jwe.JWE(plaintext, protected=protected)
+        e.add_recipient(key)
+        token = e.serialize(compact=compact)
+        d = jwe.JWE()
+        d.deserialize(token, key)
+        self.assertEqual(d.plaintext, plaintext)
+        return token
+
+    def test_hpke_ke_json_serialization(self):
+        for alg, kty, crv in self.hpke_ke_algorithms:
+            with self.subTest(alg=alg):
+                token = self._roundtrip(alg, kty, crv, 'A128GCM',
+                                        compact=False)
+                parsed = json_decode(token)
+                self.assertIn('encrypted_key', parsed)
+                self.assertIn('iv', parsed)
+                self.assertIn('tag', parsed)
+
+    def test_hpke_ke_compact_serialization(self):
+        for alg, kty, crv in self.hpke_ke_algorithms:
+            with self.subTest(alg=alg):
+                token = self._roundtrip(alg, kty, crv, 'A128GCM',
+                                        compact=True)
+                parts = token.split('.')
+                self.assertEqual(len(parts), 5)
+                ph = json_decode(
+                    base64url_decode(parts[0]).decode('utf-8'))
+                self.assertEqual(ph['alg'], alg)
+                self.assertEqual(ph['enc'], 'A128GCM')
+                self.assertIn('ek', ph)
+
+    def test_hpke_ke_with_various_enc(self):
+        for enc in self.enc_algorithms:
+            with self.subTest(enc=enc):
+                self._roundtrip('HPKE-3-KE', 'OKP', 'X25519', enc)
+
+    def test_hpke_ke_wrong_key_type(self):
+        rsa_key = jwk.JWK.generate(kty='RSA', size=2048)
+        protected = json_encode({"alg": "HPKE-3-KE", "enc": "A128GCM"})
+        e = jwe.JWE(b'test', protected=protected)
+        with self.assertRaises(Exception):
+            e.add_recipient(rsa_key)
+
+    def test_hpke_ke_wrong_curve(self):
+        key = jwk.JWK.generate(kty='EC', crv='P-384')
+        protected = json_encode({"alg": "HPKE-0-KE", "enc": "A128GCM"})
+        e = jwe.JWE(b'test', protected=protected)
+        with self.assertRaises(Exception):
+            e.add_recipient(key)
+
+    def test_hpke_ke_wrong_decrypt_key(self):
+        key1 = jwk.JWK.generate(kty='OKP', crv='X25519')
+        key2 = jwk.JWK.generate(kty='OKP', crv='X25519')
+        protected = json_encode({"alg": "HPKE-3-KE", "enc": "A128GCM"})
+        e = jwe.JWE(b'secret data', protected=protected)
+        e.add_recipient(key1)
+        token = e.serialize()
+        d = jwe.JWE()
+        with self.assertRaises(Exception):
+            d.deserialize(token, key2)
+
+    def test_hpke_ke_multi_recipient(self):
+        hpke_key = jwk.JWK.generate(kty='OKP', crv='X25519')
+        ec_key = jwk.JWK.generate(kty='EC', crv='P-256')
+        plaintext = b'Multi-recipient test'
+        protected = json_encode({"enc": "A128GCM"})
+        e = jwe.JWE(plaintext, protected=protected)
+        e.add_recipient(hpke_key,
+                        header=json_encode({"alg": "HPKE-3-KE"}))
+        e.add_recipient(ec_key,
+                        header=json_encode({"alg": "ECDH-ES+A128KW"}))
+        token = e.serialize()
+
+        d1 = jwe.JWE()
+        d1.deserialize(token, hpke_key)
+        self.assertEqual(d1.plaintext, plaintext)
+
+        d2 = jwe.JWE()
+        d2.deserialize(token, ec_key)
+        self.assertEqual(d2.plaintext, plaintext)
+
+    def test_hpke_ke_large_plaintext(self):
+        key = jwk.JWK.generate(kty='OKP', crv='X25519')
+        plaintext = b'A' * 65536
+        protected = json_encode({"alg": "HPKE-3-KE", "enc": "A256GCM"})
+        e = jwe.JWE(plaintext, protected=protected)
+        e.add_recipient(key)
+        token = e.serialize(compact=True)
+        d = jwe.JWE()
+        d.deserialize(token, key)
+        self.assertEqual(d.plaintext, plaintext)
+
+    def test_hpke_ke_with_compression(self):
+        key = jwk.JWK.generate(kty='OKP', crv='X25519')
+        plaintext = b'compress me ' * 100
+        protected = json_encode(
+            {"alg": "HPKE-3-KE", "enc": "A128GCM", "zip": "DEF"})
+        e = jwe.JWE(plaintext, protected=protected)
+        e.add_recipient(key)
+        token = e.serialize()
+        d = jwe.JWE()
+        d.deserialize(token, key)
+        self.assertEqual(d.plaintext, plaintext)
+
+    def test_hpke_ke_with_aad(self):
+        key = jwk.JWK.generate(kty='OKP', crv='X25519')
+        plaintext = b'AAD test'
+        aad = b'additional authenticated data'
+        protected = json_encode({"alg": "HPKE-3-KE", "enc": "A128GCM"})
+        e = jwe.JWE(plaintext, protected=protected, aad=aad)
+        e.add_recipient(key)
+        token = e.serialize()
+        d = jwe.JWE()
+        d.deserialize(token, key)
+        self.assertEqual(d.plaintext, plaintext)
+
+    def test_hpke_ke_recipient_structure(self):
+        alg = jwa.JWA.keymgmt_alg('HPKE-3-KE')
+        info = alg.recipient_structure('A128GCM')
+        expected = b'JOSE-HPKE rcpt\xffA128GCM\xff'
+        self.assertEqual(info, expected)
+        self.assertEqual(
+            info.hex(),
+            '4a4f53452d48504b452072637074ff4131323847434dff'
+        )
+
+    def test_hpke_ke_public_key_only_encrypts(self):
+        key = jwk.JWK.generate(kty='OKP', crv='X25519')
+        pub_key = jwk.JWK.from_json(key.export_public())
+        protected = json_encode({"alg": "HPKE-3-KE", "enc": "A128GCM"})
+        e = jwe.JWE(b'public key encryption', protected=protected)
+        e.add_recipient(pub_key)
+        token = e.serialize()
+        d = jwe.JWE()
+        d.deserialize(token, key)
+        self.assertEqual(d.plaintext, b'public key encryption')
+
+    hpke_ke_draft_plaintext = (
+        b'You can trust us to stick with you through thick and '
+        b'thin-to the bitter end. And you can trust us to keep '
+        b'any secret of yours-closer than you keep it yourself. '
+        b'But you cannot trust us to let you face trouble alone, '
+        b'and go off without a word. We are your friends, Frodo.'
+    )
+
+    def test_hpke_ke_draft_vectors(self):
+        for alg_name, key_json, compact in hpke_ke_draft_vectors:
+            with self.subTest(alg=alg_name):
+                key = jwk.JWK.from_json(key_json)
+                d = jwe.JWE()
+                d.deserialize(compact, key)
+                self.assertEqual(d.plaintext,
+                                 self.hpke_ke_draft_plaintext)
