@@ -535,12 +535,8 @@ class JWT:
                         cclaims = value
                     else:
                         cclaims = [value]
-                    found = False
-                    for v in cclaims:
-                        if v in tclaims:
-                            found = True
-                            break
-                    if not found:
+                    token_audiences = set(tclaims)
+                    if not any(v in token_audiences for v in cclaims):
                         raise JWTInvalidClaimValue(
                             "Invalid '{}' value. Expected '{}' in '{}'".format(
                                 name, claims[name], value))
