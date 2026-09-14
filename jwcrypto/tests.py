@@ -685,6 +685,11 @@ class TestJWK(unittest.TestCase):
         with self.assertRaises(jwk.InvalidJWKValue):
             jwk.JWK(kty='oct', k=b'\x01')
 
+    def test_key_ops_duplicates(self):
+        jwk.JWK(kty='oct', k='AAAA', key_ops=['sign', 'verify'])
+        with self.assertRaises(jwk.InvalidJWKValue):
+            jwk.JWK(kty='oct', k='AAAA', key_ops=['sign', 'verify', 'sign'])
+
     def test_create_pubKeys_eddsa(self):
         keylist = PublicKeys_EdDsa['keys']
         for key in keylist:
