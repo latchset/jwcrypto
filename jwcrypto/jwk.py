@@ -247,6 +247,16 @@ JWKOperationsRegistry = {'sign': 'Compute digital Signature or MAC',
                          'deriveBits': 'Derive bits not to be used as a key'}
 """Registry of allowed operations"""
 
+# Key Operations registry but augmented with use pair matching.
+JWKOpAndUsePairs = {'sign': 'sig',
+                    'verify': 'sig',
+                    'encrypt': 'enc',
+                    'decrypt': 'enc',
+                    'wrapKey': 'enc',
+                    'unwrapKey': 'enc',
+                    'deriveKey': 'enc',
+                    'deriveBits': 'enc'}
+
 JWKpycaCurveMap = {'secp256r1': 'P-256',
                    'secp384r1': 'P-384',
                    'secp521r1': 'P-521',
@@ -707,23 +717,16 @@ class JWK(dict):
 
         # check key_ops
         if 'key_ops' in newkey:
+            if len(newkey['key_ops']) > len(JWKOperationsRegistry):
+                raise InvalidJWKValue('Unknown or duplicate "key_ops" values')
+
             if len(set(newkey['key_ops'])) != len(newkey['key_ops']):
                 raise InvalidJWKValue('Duplicate values in "key_ops"')
 
-        # check use/key_ops consistency
-        if 'use' in newkey and 'key_ops' in newkey:
-            sigl = ['sign', 'verify']
-            encl = ['encrypt', 'decrypt', 'wrapKey', 'unwrapKey',
-                    'deriveKey', 'deriveBits']
-            if newkey['use'] == 'sig':
-                for op in encl:
-                    if op in newkey['key_ops']:
-                        raise InvalidJWKValue('Incompatible "use" and'
-                                              ' "key_ops" values specified at'
-                                              ' the same time')
-            elif newkey['use'] == 'enc':
-                for op in sigl:
-                    if op in newkey['key_ops']:
+            # check use/key_ops consistency
+            if 'use' in newkey:
+                for op in newkey['key_ops']:
+                    if newkey['use'] != JWKOpAndUsePairs.get(op, 'bad'):
                         raise InvalidJWKValue('Incompatible "use" and'
                                               ' "key_ops" values specified at'
                                               ' the same time')
