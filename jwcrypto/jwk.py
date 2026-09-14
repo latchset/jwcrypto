@@ -707,13 +707,8 @@ class JWK(dict):
 
         # check key_ops
         if 'key_ops' in newkey:
-            for ko in newkey['key_ops']:
-                cnt = 0
-                for cko in newkey['key_ops']:
-                    if ko == cko:
-                        cnt += 1
-                if cnt != 1:
-                    raise InvalidJWKValue('Duplicate values in "key_ops"')
+            if len(set(newkey['key_ops'])) != len(newkey['key_ops']):
+                raise InvalidJWKValue('Duplicate values in "key_ops"')
 
         # check use/key_ops consistency
         if 'use' in newkey and 'key_ops' in newkey:
