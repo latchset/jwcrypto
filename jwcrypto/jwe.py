@@ -33,6 +33,7 @@ JWEHeaderRegistry = {
     'typ': JWSEHeaderParameter('Type', False, True, None),
     'cty': JWSEHeaderParameter('Content Type', False, True, None),
     'crit': JWSEHeaderParameter('Critical', True, True, None),
+    'ek': JWSEHeaderParameter('Encapsulated Key', False, True, None),
 }
 """Registry of valid header parameters"""
 
@@ -44,6 +45,7 @@ default_allowed_algs = [
     'ECDH-ES', 'ECDH-ES+A128KW', 'ECDH-ES+A192KW', 'ECDH-ES+A256KW',
     'A128GCMKW', 'A192GCMKW', 'A256GCMKW',
     'PBES2-HS256+A128KW', 'PBES2-HS384+A192KW', 'PBES2-HS512+A256KW',
+    'HPKE-0-KE', 'HPKE-1-KE', 'HPKE-2-KE', 'HPKE-3-KE', 'HPKE-7-KE',
     # Content Encryption Algorithms
     'A128CBC-HS256', 'A192CBC-HS384', 'A256CBC-HS512',
     'A128GCM', 'A192GCM', 'A256GCM']
