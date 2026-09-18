@@ -25,6 +25,13 @@ JWSHeaderRegistry = {
 }
 """Registry of valid header parameters"""
 
+try:
+    from cryptography.hazmat.primitives.asymmetric \
+        import mldsa as _  # noqa: F401
+    _MLDSA_AVAILABLE = True
+except ImportError:
+    _MLDSA_AVAILABLE = False
+
 default_allowed_algs = [
     'HS256', 'HS384', 'HS512',
     'RS256', 'RS384', 'RS512',
@@ -32,9 +39,11 @@ default_allowed_algs = [
     'PS256', 'PS384', 'PS512',
     'EdDSA', 'ES256K', 'Ed25519',
     'Ed448',
-    'ML-DSA-44', 'ML-DSA-65', 'ML-DSA-87',
 ]
 """Default allowed algorithms"""
+# ML-DSA algorithms depend on pyca cryptography availability
+if _MLDSA_AVAILABLE:
+    default_allowed_algs.extend(['ML-DSA-44', 'ML-DSA-65', 'ML-DSA-87'])
 
 
 class InvalidJWSSignature(JWException):

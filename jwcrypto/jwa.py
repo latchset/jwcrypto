@@ -28,6 +28,16 @@ from jwcrypto.common import base64url_decode, base64url_encode
 from jwcrypto.common import json_decode
 from jwcrypto.jwk import JWK
 
+
+try:
+
+    from cryptography.hazmat.primitives.asymmetric \
+        import mldsa as _  # noqa: F401
+    _MLDSA_AVAILABLE = True
+except ImportError:
+    _MLDSA_AVAILABLE = False
+
+
 # Implements:
 # - RFC 7518: JSON Web Algorithms (JWA)
 # - RFC 8037: CFRG Elliptic Curve Diffie-Hellman (ECDH) and Signatures
@@ -975,11 +985,17 @@ class _RawMLDSA(_RawJWS):
             raise InvalidJWEKeyType(self._alg_name, key.get('alg'))
 
     def sign(self, key, payload):
+        if not _MLDSA_AVAILABLE:
+            raise NotImplementedError(
+                f'{self._alg_name} requires cryptography >= 49.0.0')
         self._check_key(key)
         skey = key.get_op_key('sign')
         return skey.sign(payload, context=b"")
 
     def verify(self, key, payload, signature):
+        if not _MLDSA_AVAILABLE:
+            raise NotImplementedError(
+                f'{self._alg_name} requires cryptography >= 49.0.0')
         self._check_key(key)
         pkey = key.get_op_key('verify')
         pkey.verify(signature, payload, context=b"")
