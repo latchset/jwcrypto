@@ -14,6 +14,11 @@ from jwcrypto.jwk import JWKSet
 default_max_compressed_size = 256 * 1024
 # Limit the maximum plaintext size to 100MB by default.
 default_max_plaintext_size = 100 * 1024 * 1024
+# Limit cumulative PBES2 PBKDF2 iterations across all recipients in one
+# decrypt() call. Equal to 4 * default_max_pbkdf2_iterations (16384).
+default_max_pbes2_decrypt_iterations = 65536
+"""Maximum cumulative PBKDF2 iterations for PBES2 across recipients in one
+decrypt() call. Overridable like other module-level defaults."""
 
 # RFC 7516 - 4.1
 # name: (description, supported?)
@@ -461,9 +466,30 @@ class JWE:
         missingkey = False
 
         if 'recipients' in self.objects:
+            pbes2_iterations = 0
             for rec in self.objects['recipients']:
+                # Bound cumulative PBES2 work before attempting unwrap so a
+                # many-recipient token cannot force unbounded PBKDF2 cost.
+                try:
+                    jh = self._get_jose_header(rec.get('header', None))
+                except Exception:  # pylint: disable=broad-except
+                    jh = {}
+                alg = jh.get('alg', '')
+                if isinstance(alg, str) and alg.startswith('PBES2-'):
+                    p2c = jh.get('p2c')
+                    if isinstance(p2c, int) and p2c > 0:
+                        pbes2_iterations += p2c
+                        if pbes2_iterations > \
+                                default_max_pbes2_decrypt_iterations:
+                            raise InvalidJWEData(
+                                'PBES2 work exceeds maximum allowed '
+                                'iterations (%d)' %
+                                default_max_pbes2_decrypt_iterations)
                 try:
                     self._decrypt(key, rec, max_plaintext=max_plaintext)
+                    # Stop after the first successful recipient.
+                    if self.plaintext is not None:
+                        break
                 except Exception as e:  # pylint: disable=broad-except
                     if isinstance(e, JWKeyNotFound):
                         missingkey = True
