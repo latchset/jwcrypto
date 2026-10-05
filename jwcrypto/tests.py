@@ -1740,44 +1740,48 @@ class TestJWE(unittest.TestCase):
         self.assertTrue(check2.decryptlog[0].startswith('Failed:'))
         self.assertEqual(check2.decryptlog[1], 'Success')
 
-    def test_decrypt_pbes2_recipient_budget(self):
+    def test_decrypt_max_recipients(self):
         key = jwk.JWK.generate(kty='oct', size=256)
         shared = {
-            "alg": "PBES2-HS512+A256KW",
+            "alg": "A256KW",
             "enc": "A256GCM",
-            "p2s": base64url_encode(b'0' * 16),
-            "p2c": 16384,
         }
-        # Enough empty recipients to exceed the PBES2 decrypt budget
-        # (65536) at p2c=16384: 5 * 16384 = 81920.
-        n = 5
+        # More than the default limit is rejected for non-PBES2 as well.
         tok = json_encode({
             "unprotected": shared,
-            "recipients": [{}] * n,
+            "recipients": [{}] * (jwe.default_max_recipients + 1),
             "iv": base64url_encode(b'0' * 12),
             "ciphertext": base64url_encode(b'x' * 16),
             "tag": base64url_encode(b'0' * 16),
         })
         check = jwe.JWE()
         check.deserialize(tok)
-        with self.assertRaisesRegex(jwe.InvalidJWEData,
-                                    'PBES2 work exceeds'):
+        with self.assertRaisesRegex(jwe.InvalidJWEData, 'Too many recipients'):
             check.decrypt(key)
 
-        # Within budget (4 * 16384 == default) still reaches normal failure
-        # rather than the budget error.
-        tok_ok = json_encode({
-            "unprotected": shared,
-            "recipients": [{}] * 4,
-            "iv": base64url_encode(b'0' * 12),
-            "ciphertext": base64url_encode(b'x' * 16),
-            "tag": base64url_encode(b'0' * 16),
-        })
+        # Exactly the default limit decrypts successfully.
+        payload = b'at-limit'
+        enc = jwe.JWE(plaintext=payload,
+                      protected={'enc': 'A256GCM'},
+                      flattened=False)
+        for i in range(jwe.default_max_recipients):
+            enc.add_recipient(key, header={'alg': 'A256KW', 'kid': str(i)})
         check2 = jwe.JWE()
-        check2.deserialize(tok_ok)
-        with self.assertRaises(jwe.InvalidJWEData) as ctx:
-            check2.decrypt(key)
-        self.assertNotIn('PBES2 work exceeds', str(ctx.exception))
+        check2.deserialize(enc.serialize())
+        check2.decrypt(key)
+        self.assertEqual(check2.payload, payload)
+
+        # Overriding the module default allows more recipients.
+        old = jwe.default_max_recipients
+        try:
+            jwe.default_max_recipients = 11
+            check3 = jwe.JWE()
+            check3.deserialize(tok)
+            with self.assertRaises(jwe.InvalidJWEData) as ctx3:
+                check3.decrypt(key)
+            self.assertNotIn('Too many recipients', str(ctx3.exception))
+        finally:
+            jwe.default_max_recipients = old
 
     def test_decrypt_mixed_multi_recipient(self):
         payload = b'mixed-recipients'
