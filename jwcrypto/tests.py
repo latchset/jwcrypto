@@ -1698,6 +1698,115 @@ class TestJWE(unittest.TestCase):
         self.assertNotIn('recipients', e.objects)
         self.assertNotIn('recipients', e.serialize())
 
+    def test_decrypt_early_exit_on_success(self):
+        key = jwk.JWK.from_password('password')
+        wrong = jwk.JWK.from_password('other-password')
+        payload = b'early-exit'
+        enc = jwe.JWE(plaintext=payload,
+                      protected={"alg": "PBES2-HS256+A128KW",
+                                 "enc": "A128GCM",
+                                 "p2c": 1000,
+                                 "p2s": base64url_encode(b"s" * 16)},
+                      flattened=False)
+        # First recipient uses the correct password; later ones do not.
+        enc.add_recipient(key)
+        enc.add_recipient(wrong)
+        enc.add_recipient(wrong)
+        token = enc.serialize()
+
+        check = jwe.JWE()
+        check.deserialize(token)
+        check.decrypt(key)
+        self.assertEqual(check.payload, payload)
+        # Only the successful recipient is attempted; later failures are not
+        # recorded because decrypt stops after the first plaintext.
+        self.assertEqual(check.decryptlog, ['Success'])
+
+        # When the matching recipient is last, prior failures are logged and
+        # decrypt still succeeds.
+        enc2 = jwe.JWE(plaintext=payload,
+                       protected={"alg": "PBES2-HS256+A128KW",
+                                  "enc": "A128GCM",
+                                  "p2c": 1000,
+                                  "p2s": base64url_encode(b"s" * 16)},
+                       flattened=False)
+        enc2.add_recipient(wrong)
+        enc2.add_recipient(key)
+        check2 = jwe.JWE()
+        check2.deserialize(enc2.serialize())
+        check2.decrypt(key)
+        self.assertEqual(check2.payload, payload)
+        self.assertEqual(len(check2.decryptlog), 2)
+        self.assertTrue(check2.decryptlog[0].startswith('Failed:'))
+        self.assertEqual(check2.decryptlog[1], 'Success')
+
+    def test_decrypt_pbes2_recipient_budget(self):
+        key = jwk.JWK.generate(kty='oct', size=256)
+        shared = {
+            "alg": "PBES2-HS512+A256KW",
+            "enc": "A256GCM",
+            "p2s": base64url_encode(b'0' * 16),
+            "p2c": 16384,
+        }
+        # Enough empty recipients to exceed the PBES2 decrypt budget
+        # (65536) at p2c=16384: 5 * 16384 = 81920.
+        n = 5
+        tok = json_encode({
+            "unprotected": shared,
+            "recipients": [{}] * n,
+            "iv": base64url_encode(b'0' * 12),
+            "ciphertext": base64url_encode(b'x' * 16),
+            "tag": base64url_encode(b'0' * 16),
+        })
+        check = jwe.JWE()
+        check.deserialize(tok)
+        with self.assertRaisesRegex(jwe.InvalidJWEData,
+                                    'PBES2 work exceeds'):
+            check.decrypt(key)
+
+        # Within budget (4 * 16384 == default) still reaches normal failure
+        # rather than the budget error.
+        tok_ok = json_encode({
+            "unprotected": shared,
+            "recipients": [{}] * 4,
+            "iv": base64url_encode(b'0' * 12),
+            "ciphertext": base64url_encode(b'x' * 16),
+            "tag": base64url_encode(b'0' * 16),
+        })
+        check2 = jwe.JWE()
+        check2.deserialize(tok_ok)
+        with self.assertRaises(jwe.InvalidJWEData) as ctx:
+            check2.decrypt(key)
+        self.assertNotIn('PBES2 work exceeds', str(ctx.exception))
+
+    def test_decrypt_mixed_multi_recipient(self):
+        payload = b'mixed-recipients'
+        key_aes = jwk.JWK.generate(kty='oct', size=256)
+        key_pbes = jwk.JWK.from_password('mixed-pass')
+        enc = jwe.JWE(plaintext=payload,
+                      protected={'enc': 'A256GCM'},
+                      flattened=False)
+        enc.add_recipient(key_aes, header={'alg': 'A256KW', 'kid': 'aes'})
+        enc.add_recipient(
+            key_pbes,
+            header={"alg": "PBES2-HS256+A128KW",
+                    "kid": "pbes",
+                    "p2c": 1024,
+                    "p2s": base64url_encode(b"t" * 16)})
+        token = enc.serialize()
+
+        # Decrypt with AES key (first recipient).
+        a = jwe.JWE()
+        a.deserialize(token)
+        a.decrypt(key_aes)
+        self.assertEqual(a.payload, payload)
+
+        # Decrypt with PBES2 password (second recipient); first fails quickly.
+        b = jwe.JWE()
+        b.deserialize(token)
+        b.decrypt(key_pbes)
+        self.assertEqual(b.payload, payload)
+
 
 MMA_vector_key = jwk.JWK(**E_A2_key)
 MMA_vector_ok_cek =  \
