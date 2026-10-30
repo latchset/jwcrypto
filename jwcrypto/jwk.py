@@ -748,9 +748,11 @@ class JWK(dict):
         obj = cls()
         try:
             jkey = json_decode(key)
+            obj.import_key(**jkey)
+        except (InvalidJWKType, InvalidJWKValue):
+            raise
         except Exception as e:  # pylint: disable=broad-except
             raise InvalidJWKValue from e
-        obj.import_key(**jkey)
         return obj
 
     def export(self, private_key=True, as_dict=False):

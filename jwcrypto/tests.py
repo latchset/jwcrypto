@@ -507,6 +507,9 @@ class TestJWK(unittest.TestCase):
         y = jwk.JWK.from_json(k.export())
         self.assertEqual(k.export(), y.export())
 
+        with self.assertRaises(jwk.InvalidJWKValue):
+            jwk.JWK.from_json('1')
+
     def test_jwkset(self):
         k = jwk.JWK(**RSAPrivateKey)
         ks = jwk.JWKSet()
