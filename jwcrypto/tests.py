@@ -2190,6 +2190,44 @@ class TestJWT(unittest.TestCase):
         check_claim = {"aud": ["www.example.com", "123"]}
         jwt.JWT(key=key, jwt=sertok, check_claims=check_claim)
 
+    def test_claim_integer_format(self):
+        claims = {"exp": 1300819380}
+        key = jwk.JWK(generate='oct', size=256)
+        token = jwt.JWT(header={"alg": "HS256"}, claims=claims)
+        token.make_signed_token(key)
+        sertok = token.serialize()
+        for invalid in ["123", True, False, 12.34, [1], {"a": 1}]:
+            self.assertRaises(jwt.JWTInvalidClaimFormat, jwt.JWT, key=key,
+                              jwt=sertok, check_claims={"exp": invalid})
+            self.assertRaises(jwt.JWTInvalidClaimFormat, jwt.JWT, key=key,
+                              jwt=sertok, check_claims={"nbf": invalid})
+            self.assertRaises(jwt.JWTInvalidClaimFormat, jwt.JWT, key=key,
+                              jwt=sertok, check_claims={"iat": invalid})
+
+    def test_payload_claims_format(self):
+        key = jwk.JWK(generate='oct', size=256)
+        bad_payloads = [
+            '{"iss": null}',
+            '{"sub": null}',
+            '{"aud": null}',
+            '{"jti": null}',
+            '{"typ": null}',
+            '{"exp": null}',
+            '{"nbf": null}',
+            '{"iat": null}',
+            '{"custom": null}',
+            '{"iat": true}',
+            '{"nbf": false}',
+            '{"exp": "9999999999"}',
+            '{"exp": [1]}',
+        ]
+        for bad in bad_payloads:
+            s = jws.JWS(bad)
+            s.add_signature(key, protected={"alg": "HS256"})
+            tok = s.serialize(compact=True)
+            self.assertRaises(jwt.JWTInvalidClaimFormat, jwt.JWT,
+                              jwt=tok, key=key)
+
     def test_unexpected(self):
         key = jwk.JWK(generate='oct', size=256)
         claims = {"testclaim": "test"}

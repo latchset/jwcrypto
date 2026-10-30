@@ -451,11 +451,12 @@ class JWT:
     def _check_integer_claim(self, name, claims):
         if name not in claims or claims[name] is None:
             return
-        try:
-            int(claims[name])
-        except ValueError as e:
+        if isinstance(claims[name], bool):
             raise JWTInvalidClaimFormat(
-                "Claim %s is not an integer" % (name, )) from e
+                "Claim %s is not an integer" % (name, ))
+        if not isinstance(claims[name], int):
+            raise JWTInvalidClaimFormat(
+                "Claim %s is not an integer" % (name, ))
 
     def _check_exp(self, claim, limit, leeway):
         if claim < limit - leeway:
@@ -494,26 +495,35 @@ class JWT:
         self._check_string_claim('jti', check_claims)
         self._check_string_claim('typ', check_claims)
 
-    def _check_provided_claims(self):
-        # check_claims can be set to False to skip any check
-        if self._check_claims is False:
-            return
-
+    def _check_provided_claims(self, payload):
         try:
-            claims = json_decode(self.claims)
+            if isinstance(payload, dict):
+                claims = copy.deepcopy(payload)
+            else:
+                claims = json_decode(payload)
+
             if not isinstance(claims, dict):
                 raise ValueError()
         except ValueError as e:
-            if self._check_claims is not None:
-                raise JWTInvalidClaimFormat("Claims check requested "
-                                            "but claims is not a json "
-                                            "dict") from e
-            return
+            if self._check_claims is None:
+                return payload
+            raise JWTInvalidClaimFormat("Claims check requested "
+                                        "but claims is not a json "
+                                        "dict") from e
+
+        # check_claims can be set to False to skip any check
+        if self._check_claims is False:
+            return json_encode(claims)
+
+        for k, v in claims.items():
+            if v is None:
+                raise JWTInvalidClaimFormat(
+                    "Invalid Claim format for %s" % (k, ))
 
         self._check_default_claims(claims)
 
         if self._check_claims is None:
-            return
+            return json_encode(claims)
 
         for name, value in self._check_claims.items():
             if name not in claims:
@@ -586,6 +596,8 @@ class JWT:
                     raise JWTInvalidClaimValue(
                         "Invalid '%s' value. Expected '%s' got '%s'" % (
                             name, value, claims[name]))
+
+        return json_encode(claims)
 
     def norm_typ(self, val):
         lc = val.lower()
@@ -671,8 +683,7 @@ class JWT:
         payload = self.token.payload
         if isinstance(payload, bytes):
             payload = payload.decode('utf-8')
-        self.claims = payload
-        self._check_provided_claims()
+        self._claims = self._check_provided_claims(payload)
 
     @staticmethod
     def _is_json_serialization(jwt):
