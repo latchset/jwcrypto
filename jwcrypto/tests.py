@@ -14,11 +14,16 @@ from jwcrypto import jwe
 from jwcrypto import jwk
 from jwcrypto import jws
 from jwcrypto import jwt
+from jwcrypto.common import InvalidJWSEHeader
 from jwcrypto.common import InvalidJWSERegOperation
 from jwcrypto.common import JWKeyNotFound
 from jwcrypto.common import JWSEHeaderParameter
+from jwcrypto.common import JWSEHeaderRegistry
 from jwcrypto.common import base64url_decode, base64url_encode
+from jwcrypto.common import check_crit
 from jwcrypto.common import json_decode, json_encode
+from jwcrypto.common import merge_and_check_headers, merge_headers
+from jwcrypto.common import validate_headers
 
 
 jwe_algs_and_rsa1_5 = jwe.default_allowed_algs + ['RSA1_5']
@@ -1814,6 +1819,55 @@ class TestJWE(unittest.TestCase):
         b.decrypt(key_pbes)
         self.assertEqual(b.payload, payload)
 
+    def test_jwe_zip_in_unprotected_header(self):
+        payload = b'test-zip'
+        key = jwk.JWK.generate(kty='oct', size=128)
+        # In per-recipient header
+        e = jwe.JWE(plaintext=payload,
+                    protected={'alg': 'A128KW', 'enc': 'A128GCM'})
+        with self.assertRaises(jwe.InvalidJWEData):
+            e.add_recipient(key, header={'zip': 'DEF'})
+
+        # In shared unprotected header
+        with self.assertRaises(jwe.InvalidJWEData):
+            jwe.JWE(plaintext=payload,
+                    protected={'alg': 'A128KW', 'enc': 'A128GCM'},
+                    unprotected={'zip': 'DEF'},
+                    recipient=key)
+
+    def test_jwe_crit_in_unprotected_header(self):
+        payload = b'test-crit'
+        key = jwk.JWK.generate(kty='oct', size=128)
+        e = jwe.JWE(plaintext=payload,
+                    protected={'alg': 'A128KW', 'enc': 'A128GCM'})
+        with self.assertRaises(jwe.InvalidJWEData):
+            e.add_recipient(key, header={'crit': ['custom']})
+
+    def test_jwe_crit_validation(self):
+        payload = b'test-crit-val'
+        key = jwk.JWK.generate(kty='oct', size=128)
+        # Empty crit
+        with self.assertRaises(jwe.InvalidJWEData):
+            jwe.JWE(plaintext=payload,
+                    protected={'alg': 'A128KW', 'enc': 'A128GCM',
+                               'crit': []},
+                    recipient=key)
+
+        # Crit item not in headers
+        with self.assertRaises(jwe.InvalidJWEData):
+            jwe.JWE(plaintext=payload,
+                    protected={'alg': 'A128KW', 'enc': 'A128GCM',
+                               'crit': ['kid']},
+                    recipient=key)
+
+        # Unknown crit header
+        with self.assertRaises(jwe.InvalidJWEData):
+            jwe.JWE(plaintext=payload,
+                    protected={'alg': 'A128KW', 'enc': 'A128GCM',
+                               'crit': ['unknown_hdr'],
+                               'unknown_hdr': 'val'},
+                    recipient=key)
+
 
 MMA_vector_key = jwk.JWK(**E_A2_key)
 MMA_vector_ok_cek =  \
@@ -2974,3 +3028,70 @@ class TestRfc9864(unittest.TestCase):
                 self.assertEqual(len(w), 0)
         finally:
             jwa.default_warn_deprecated_algorithms = old
+
+
+class TestCommonHeaderFunctions(unittest.TestCase):
+
+    def test_merge_headers(self):
+        p = {'alg': 'A128KW'}
+        u1 = {'kid': 'k1'}
+        u2 = {'cty': 'text/plain'}
+        merged = merge_headers(p, u1, u2)
+        self.assertEqual(merged, {'alg': 'A128KW', 'kid': 'k1',
+                                  'cty': 'text/plain'})
+
+        # Duplicates across headers
+        with self.assertRaises(InvalidJWSEHeader):
+            merge_headers({'a': 1}, {'a': 2})
+
+        # Mustprotect check
+        reg = JWSEHeaderRegistry(
+            {'must': JWSEHeaderParameter('Must', True, True, None)})
+        with self.assertRaises(InvalidJWSEHeader):
+            merge_headers(None, {'must': 'val'}, registry=reg)
+
+    def test_check_crit(self):
+        reg = JWSEHeaderRegistry(
+            {'c1': JWSEHeaderParameter('C1', True, True, None),
+             'c2': JWSEHeaderParameter('C2', True, False, None)})
+
+        # Non-string header name in crit
+        with self.assertRaises(InvalidJWSEHeader):
+            check_crit(
+                {'crit': [123], 123: 'val'},
+                {'crit': [123], 123: 'val'},
+                registry=reg)
+
+        # Unsupported crit header
+        with self.assertRaises(InvalidJWSEHeader):
+            check_crit(
+                {'crit': ['c2'], 'c2': 'val'},
+                {'crit': ['c2'], 'c2': 'val'},
+                registry=reg)
+
+        # Valid crit
+        check_crit({'crit': ['c1'], 'c1': 'val'}, protected={'crit': ['c1']},
+                   registry=reg)
+
+    def test_validate_headers(self):
+        # b64 boolean check
+        with self.assertRaises(InvalidJWSEHeader):
+            validate_headers({'b64': 'not-a-bool'})
+
+        # check_fn callback check
+        def chk_fn(val):
+            return val == 'ok'
+        reg = JWSEHeaderRegistry(
+            {'custom': JWSEHeaderParameter('Custom', False, True, chk_fn)})
+        validate_headers({'custom': 'ok'}, registry=reg, target='ok')
+        with self.assertRaises(InvalidJWSEHeader):
+            validate_headers({'custom': 'bad'}, registry=reg, target='wrong')
+
+    def test_merge_and_check_headers(self):
+        p = {'alg': 'A128KW', 'crit': ['kid'], 'kid': 'key1'}
+        reg = JWSEHeaderRegistry(
+            {'alg': JWSEHeaderParameter('Alg', False, True, None),
+             'kid': JWSEHeaderParameter('Kid', False, True, None),
+             'crit': JWSEHeaderParameter('Crit', True, True, None)})
+        merged = merge_and_check_headers(p, None, registry=reg)
+        self.assertEqual(merged['kid'], 'key1')
