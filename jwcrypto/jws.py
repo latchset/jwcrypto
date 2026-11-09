@@ -1,8 +1,10 @@
 # Copyright (C) 2015 JWCrypto Project Contributors - see LICENSE file
 
+from jwcrypto.common import InvalidJWSEHeader
 from jwcrypto.common import JWException, JWKeyNotFound
 from jwcrypto.common import JWSEHeaderParameter, JWSEHeaderRegistry
 from jwcrypto.common import base64url_decode, base64url_encode
+from jwcrypto.common import check_crit, merge_headers, validate_headers
 from jwcrypto.common import json_decode, json_encode
 from jwcrypto.jwa import JWA
 from jwcrypto.jwk import JWK, JWKSet
@@ -227,47 +229,17 @@ class JWS:
         return self.objects.get('valid', False)
 
     # TODO: allow caller to specify list of headers it understands
-    # FIXME: Merge and check to be changed to two separate functions
-    def _merge_check_headers(self, protected, *headers):
-        header = None
-        crit = []
-        if protected is not None:
-            if 'crit' in protected:
-                crit = protected['crit']
-                # Check immediately if we support these critical headers
-                for k in crit:
-                    if k not in self.header_registry:
-                        raise InvalidJWSObject(
-                            'Unknown critical header: "%s"' % k)
-                    else:
-                        if not self.header_registry[k].supported:
-                            raise InvalidJWSObject(
-                                'Unsupported critical header: "%s"' % k)
-            header = protected
-            if 'b64' in header:
-                if not isinstance(header['b64'], bool):
-                    raise InvalidJWSObject('b64 header must be a boolean')
+    def _merge_check_headers(self, protected, unprotected):
+        try:
+            merged = merge_headers(protected, unprotected,
+                                   registry=self.header_registry)
+            check_crit(merged, protected, registry=self.header_registry)
+            validate_headers(merged)
+            return merged
+        except InvalidJWSEHeader as e:
+            raise InvalidJWSObject(str(e)) from e
 
-        for hn in headers:
-            if hn is None:
-                continue
-            if header is None:
-                header = {}
-            for h in list(hn.keys()):
-                if h in self.header_registry:
-                    if self.header_registry[h].mustprotect:
-                        raise InvalidJWSObject('"%s" must be protected' % h)
-                if h in header:
-                    raise InvalidJWSObject('Duplicate header: "%s"' % h)
-            header.update(hn)
-
-        for k in crit:
-            if k not in header:
-                raise InvalidJWSObject('Missing critical header "%s"' % k)
-
-        return header
-
-    def _verify(self, alg, key, payload, signature, protected, header=None):
+    def _verify(self, alg, key, payload, signature, protected, unprotected):
         p = {}
         # verify it is a valid JSON object and decode
         if protected is not None:
@@ -275,29 +247,30 @@ class JWS:
             if not isinstance(p, dict):
                 raise InvalidJWSSignature('Invalid Protected header')
         # merge headers, and verify there are no duplicates
-        if header:
-            if not isinstance(header, dict):
+        if unprotected:
+            if not isinstance(unprotected, dict):
                 raise InvalidJWSSignature('Invalid Unprotected header')
 
         # Merge and check (critical) headers
-        chk_hdrs = self._merge_check_headers(p, header)
-        for hdr in chk_hdrs:
-            if hdr in self.header_registry:
-                if not self.header_registry.check_header(hdr, self):
-                    raise InvalidJWSSignature('Failed header check')
+        chk_hdrs = self._merge_check_headers(p, unprotected)
+        try:
+            validate_headers(chk_hdrs, registry=self.header_registry,
+                             target=self)
+        except InvalidJWSEHeader as e:
+            raise InvalidJWSSignature(str(e)) from e
 
         # check 'alg' is present
-        if alg is None and 'alg' not in p:
+        if alg is None and 'alg' not in chk_hdrs:
             raise InvalidJWSSignature('No "alg" in headers')
         if alg:
-            if 'alg' in p and alg != p['alg']:
+            if 'alg' in chk_hdrs and alg != chk_hdrs['alg']:
                 raise InvalidJWSSignature(
                     '"alg" mismatch, requested'
                     f''' "{alg}", found "{p['alg']}"'''
                 )
             resulting_alg = alg
         else:
-            resulting_alg = p['alg']
+            resulting_alg = chk_hdrs['alg']
 
         # the following will verify the "alg" is supported and the signature
         # verifies
