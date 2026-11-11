@@ -19,6 +19,7 @@
                         "python-312",
                         "python-313",
                         "python-314",
+                        "python-315",
                         "doc",
                         "doctest",
                         "sphinx",
@@ -55,6 +56,12 @@
                             "name": "python-314",
                             "python": "3.14",
                             "toxenv": "py314",
+                            "arch": "x64",
+                        },
+                        {
+                            "name": "python-315",
+                            "python": "3.15",
+                            "toxenv": "py315",
                             "arch": "x64",
                         },
                         {
