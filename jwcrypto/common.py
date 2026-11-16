@@ -20,12 +20,17 @@ def base64url_encode(payload):
 def base64url_decode(payload):
     size = len(payload) % 4
     if size == 2:
-        payload += '=='
+        padded = payload + '=='
     elif size == 3:
-        payload += '='
-    elif size != 0:
+        padded = payload + '='
+    elif size == 0:
+        padded = payload
+    else:
         raise ValueError('Invalid base64 string')
-    return urlsafe_b64decode(payload.encode('utf-8'))
+    decoded = urlsafe_b64decode(padded.encode('utf-8'))
+    if base64url_encode(decoded) != payload:
+        raise ValueError('Encoding was not canonical')
+    return decoded
 
 
 # JSON encoding/decoding helpers with good defaults

@@ -1273,6 +1273,22 @@ class TestJWS(unittest.TestCase):
         with self.assertRaises(JWKeyNotFound):
             s3.deserialize(serialized, ks_swapped)
 
+    def test_wycheproof_tcId_374(self):
+        # Wycheproof testvectors_v1/json_web_signature_test.json, tcId 374
+        compact = (
+            "eyJraWQiOiJoczI1Ni1rZXkiLCJhbGciOiJIUzI1NiJ9.AB."
+            "8sL_ycV8G_D-K_2A3I0EW3NoPMeQzv13cAzuHlQ5TAE"
+        )
+        key = jwk.JWK.from_json(
+            '{"kty":"oct","kid":"hs256-key","use":"sig","alg":"HS256",'
+            '"k":"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"}'
+        )
+        obj = jws.JWS()
+        with self.assertRaises(jws.InvalidJWSObject):
+            obj.deserialize(compact)
+        with self.assertRaises(jws.InvalidJWSObject):
+            obj.deserialize(compact, key)
+
 
 E_A1_plaintext = \
     [84, 104, 101, 32, 116, 114, 117, 101, 32, 115, 105, 103, 110, 32,
@@ -2430,7 +2446,8 @@ class TestJWT(unittest.TestCase):
 class ConformanceTests(unittest.TestCase):
 
     def test_unknown_key_params(self):
-        key = jwk.JWK(kty='oct', k='secret', unknown='mystery')
+        key = jwk.JWK(kty='oct', k=base64url_encode(b'secret'),
+                      unknown='mystery')
         self.assertEqual('mystery', key.get('unknown'))
 
     def test_key_ops_values(self):
@@ -3095,3 +3112,68 @@ class TestCommonHeaderFunctions(unittest.TestCase):
              'crit': JWSEHeaderParameter('Crit', True, True, None)})
         merged = merge_and_check_headers(p, None, registry=reg)
         self.assertEqual(merged['kid'], 'key1')
+
+
+class TestBase64URL(unittest.TestCase):
+
+    def test_base64url_decode_valid(self):
+        # Empty string
+        self.assertEqual(base64url_decode(''), b'')
+        # 1 byte
+        self.assertEqual(base64url_decode('AQ'), b'\x01')
+        # 2 bytes
+        self.assertEqual(base64url_decode('AQI'), b'\x01\x02')
+        # 3 bytes
+        self.assertEqual(base64url_decode('AQID'), b'\x01\x02\x03')
+        # URL-safe characters
+        self.assertEqual(base64url_decode('-_-_'), b'\xfb\xff\xbf')
+
+    def test_base64url_decode_non_canonical(self):
+        # Trailing padding '=' is non-canonical
+        with self.assertRaises(ValueError) as ctx:
+            base64url_decode('AQ==')
+        self.assertIn('canonical', str(ctx.exception).lower())
+
+        with self.assertRaises(ValueError) as ctx:
+            base64url_decode('AQI=')
+        self.assertIn('canonical', str(ctx.exception).lower())
+
+        with self.assertRaises(ValueError) as ctx:
+            base64url_decode('AQ=')
+        self.assertIn('canonical', str(ctx.exception).lower())
+
+        # Non-zero padding bits
+        # 'AQ' decodes to b'\x01' with 0000 in unused bits.
+        # 'AR' decodes to b'\x01' with 0001 in unused bits.
+        with self.assertRaises(ValueError) as ctx:
+            base64url_decode('AR')
+        self.assertIn('canonical', str(ctx.exception).lower())
+
+        # Non-URL-safe standard base64 characters (+ and /)
+        with self.assertRaises(ValueError) as ctx:
+            base64url_decode('AQ+A')
+        self.assertIn('canonical', str(ctx.exception).lower())
+
+        with self.assertRaises(ValueError) as ctx:
+            base64url_decode('AQ/A')
+        self.assertIn('canonical', str(ctx.exception).lower())
+
+        # Decodes to the same value but not canonical: AA vs AB
+        with self.assertRaises(ValueError) as ctx:
+            base64url_decode('AB')
+        self.assertIn('canonical', str(ctx.exception).lower())
+
+    def test_base64url_decode_invalid(self):
+        # Invalid length (% 4 == 1)
+        with self.assertRaises(ValueError):
+            base64url_decode('A')
+
+        with self.assertRaises(ValueError):
+            base64url_decode('AAAAA')
+
+    def test_jwk_non_canonical_b64(self):
+        # 'secret' has non-zero padding bits in base64url
+        with self.assertRaises(jwk.InvalidJWKValue):
+            jwk.JWK(kty='oct', k='secret')
+        with self.assertRaises(jwk.InvalidJWKValue):
+            jwk.JWK(kty='oct', k='AQ==')
