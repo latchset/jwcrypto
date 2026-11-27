@@ -1344,6 +1344,33 @@ class TestJWS(unittest.TestCase):
         with self.assertRaises(jws.InvalidJWSObject):
             obj.deserialize(compact, key)
 
+    def test_ecdsa_signature_length_validation(self):
+        for crv, alg, coord_len in [
+            ('P-256', 'ES256', 32),
+            ('P-384', 'ES384', 48),
+            ('P-521', 'ES512', 66),
+        ]:
+            key = jwk.JWK.generate(kty='EC', crv=crv)
+            s = jws.JWS(b'test-payload')
+            s.add_signature(key, protected={'alg': alg})
+            hdr_b64, pay_b64, sig_b64 = s.serialize(compact=True).split('.')
+            raw_sig = base64url_decode(sig_b64)
+            r = raw_sig[:coord_len]
+            s_part = raw_sig[coord_len:]
+
+            for bad_raw_sig in [
+                r + b'\x00' + s_part,
+                b'\x00' + r + b'\x00' + s_part,
+                raw_sig[:-1],
+                b'',
+            ]:
+                bad_tok = '.'.join([
+                    hdr_b64, pay_b64, base64url_encode(bad_raw_sig)
+                ])
+                v = jws.JWS()
+                with self.assertRaises(jws.InvalidJWSSignature):
+                    v.deserialize(bad_tok, key.public())
+
 
 E_A1_plaintext = \
     [84, 104, 101, 32, 116, 114, 117, 101, 32, 115, 105, 103, 110, 32,
