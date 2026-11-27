@@ -206,8 +206,11 @@ class _RawEC(_RawJWS):
 
     def verify(self, key, payload, signature):
         pkey = key.get_op_key('verify', self._curve)
-        r = signature[:len(signature) // 2]
-        s = signature[len(signature) // 2:]
+        byte_length = (pkey.key_size + 7) // 8
+        if len(signature) != byte_length * 2:
+            raise InvalidSignature('Invalid signature length')
+        r = signature[:byte_length]
+        s = signature[byte_length:]
         enc_signature = ec_utils.encode_dss_signature(
             int(hexlify(r), 16), int(hexlify(s), 16))
         pkey.verify(enc_signature, payload, ec.ECDSA(self.hashfn))
